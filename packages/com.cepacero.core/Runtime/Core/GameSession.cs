@@ -39,6 +39,7 @@ namespace CepaCero.Core
         private readonly List<Inventory> _inventories = new List<Inventory>();
         private readonly List<int> _sentInventoryVersion = new List<int>();
         private readonly List<int> _revivingTarget = new List<int>();
+        private readonly List<Int2> _openContainer = new List<Int2>();
         private readonly List<KeyValuePair<int, PlayerIntent>> _intents = new List<KeyValuePair<int, PlayerIntent>>();
         private readonly List<SessionEvent> _events = new List<SessionEvent>();
         private readonly List<Float2> _livingPositions = new List<Float2>();
@@ -99,6 +100,8 @@ namespace CepaCero.Core
 
         public GameSettings Settings { get; }
 
+        public PlayerSettings PlayerSettings => _playerSettings;
+
         public BlockWorld Blocks { get; }
 
         public GroundLayer Ground { get; }
@@ -131,6 +134,22 @@ namespace CepaCero.Core
         /// <summary>Players' inventories, same order as <see cref="Players"/> (empty without items).</summary>
         public IReadOnlyList<Inventory> Inventories => _inventories;
 
+        /// <summary>Marker for "no container open".</summary>
+        public static readonly Int2 NoContainer = new Int2(-1, -1);
+
+        /// <summary>
+        /// Container a player is looking into (the host keeps sending its contents), or
+        /// <see cref="NoContainer"/>. Closed automatically when they walk out of reach.
+        /// </summary>
+        public Int2 OpenContainerOf(int player) => _openContainer[player];
+
+        /// <summary>Contents of the container a player has open, or null.</summary>
+        public Inventory OpenContainerContents(int player)
+        {
+            Int2 cell = _openContainer[player];
+            return cell == NoContainer || ItemRules == null ? null : ItemRules.OpenInReach(_players[player], cell.X, cell.Y);
+        }
+
         /// <summary>Where dead players come back at dawn (the fort). Defaults to the first player's spawn.</summary>
         public Float2 RespawnPoint { get; set; }
 
@@ -158,6 +177,7 @@ namespace CepaCero.Core
             _players.Add(PlayerState.Spawn(position, _playerSettings));
             _inputs.Add(default);
             _revivingTarget.Add(-1);
+            _openContainer.Add(NoContainer);
             if (Data.HasItems)
             {
                 _inventories.Add(Inventory.ForPlayer(Data.Items));
@@ -192,6 +212,7 @@ namespace CepaCero.Core
             }
             MovePlayers();
             ResolveIntents();
+            CloseFarContainers();
             UpdateDownedPlayers();
             AdvanceClock();
             SpawnHorde();
@@ -238,6 +259,10 @@ namespace CepaCero.Core
                     if (result == IntentResult.Ok)
                     {
                         AfterItemAction(p, intent);
+                    }
+                    if (intent.UsesContainer)
+                    {
+                        _openContainer[p] = result == IntentResult.Ok ? new Int2(intent.X, intent.Y) : NoContainer;
                     }
                 }
                 else
@@ -292,6 +317,17 @@ namespace CepaCero.Core
             if (intent.Type == IntentType.PickUp || intent.Type == IntentType.DropStack)
             {
                 _events.Add(new SessionEvent(SessionEventType.GroundItemsChanged, p));
+            }
+        }
+
+        private void CloseFarContainers()
+        {
+            for (int p = 0; p < _openContainer.Count; p++)
+            {
+                if (_openContainer[p] != NoContainer && OpenContainerContents(p) == null)
+                {
+                    _openContainer[p] = NoContainer;
+                }
             }
         }
 
@@ -596,6 +632,7 @@ namespace CepaCero.Core
             _players.Clear();
             _inputs.Clear();
             _revivingTarget.Clear();
+            _openContainer.Clear();
             _inventories.Clear();
             _sentInventoryVersion.Clear();
             foreach (PlayerState p in players)
@@ -603,6 +640,7 @@ namespace CepaCero.Core
                 _players.Add(p);
                 _inputs.Add(default);
                 _revivingTarget.Add(-1);
+                _openContainer.Add(NoContainer);
                 if (Data.HasItems)
                 {
                     _inventories.Add(Inventory.ForPlayer(Data.Items));

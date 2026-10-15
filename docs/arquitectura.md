@@ -91,6 +91,20 @@ data/generated/                         Datos generados desde docs/ (no editar a
 | Inventario propio | A → C (solo al dueño) | `Inventory.Write` completo (decenas de bytes) | Cuando cambia su versión |
 | Contenedor abierto, montones en el suelo | A → C | Contenido completo | Al abrir / al cambiar |
 
+## Protocolo (`CepaCero.Net.Protocol`)
+FishNet solo transporta bytes; los mensajes son nuestros y están probados de extremo a extremo
+sin Unity (`Tests/Net/ProtocolTests.cs`: un cliente reconstruye la partida solo con bytes).
+
+- Cada mensaje viaja como `[tipo (byte)][longitud (ushort)][datos]`; un cliente antiguo **salta**
+  los tipos que no conoce. `Messages.ProtocolVersion` y una huella de los datos de diseño
+  (bloques, zombis, objetos) se comprueban al unirse: mapa o datos distintos → rechazo con mensaje claro.
+- **Anfitrión:** `HostBroadcaster`. Tras cada `GameSession.Step()`: `CollectTick()` una vez y
+  `WriteFor(jugador)` por cada cliente. `WriteJoin` manda todo a quien entra (65×60 tiles ≈ 1,4 KB).
+  `Receive` valida lo que llega: un cliente solo puede enviar entradas e intenciones; la basura se ignora.
+- **Cliente:** `ClientMatchState`. Carga el mismo mapa y los mismos datos y aplica los mensajes;
+  es lo que leerá la vista de Unity. El cliente no simula zombis ni decide nada.
+- Medido (2 jugadores, una noche, ~10 zombis cerca): ~1,2 KB/s de bajada y 0,2 KB/s de subida por cliente.
+
 ## Rendimiento: estrategia y presupuestos
 **Lenguaje.** C# viene con Unity (D-002). En la build final se compila a nativo con **IL2CPP**.
 Lo caro en este juego (pathfinding de hordas, red, muchas entidades) se resuelve con algoritmos y

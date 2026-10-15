@@ -38,7 +38,7 @@ con tests (`scripts/check.sh`). Lo que queda en cada hito es sobre todo la parte
 | Sem. | Ya hecho en el núcleo | Falta (Unity) |
 | --- | --- | --- |
 | 1 | `PlayerMotor` determinista (andar, sprint, stamina, colisión), `PlayerInput` cuantizado | Input System, vista del jugador, cámara Pixel Perfect |
-| 2 | Bytes de red, `PlayerIntent` + `HostIntentRules` (alcance, ritmo, ocupación, daño en el anfitrión) | FishNet + Tugboat, *spawn* de jugadores, predicción con `PlayerMotor` |
+| 2 | **Protocolo completo** (`HostBroadcaster` ↔ `ClientMatchState`, probado de extremo a extremo), `PlayerIntent` + reglas del anfitrión | FishNet + Tugboat, *spawn* de jugadores, predicción con `PlayerMotor` |
 | 3 | `BlockWorld` por chunks: colocar, dañar, puertas, deltas y *snapshots* de chunk | Tilemap ↔ `BlockWorld`, RPCs de intención, envío de deltas |
 | 4 | `FlowField`, `ZombieSimulation` con percepción (vista/oído) y especiales (Gritón, Escupidor, La Mole), codec de 8 B/zombi, réplica | Vista de zombis (pool de sprites), eventos de sonido/efectos |
 | 5 | `GameSession` (bucle completo), `DayNightCycle`, `HordeDirector`; test de aceptación "3 noches" | Luz 2D global y linterna, UI del reloj |

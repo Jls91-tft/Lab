@@ -53,6 +53,31 @@ namespace CepaCero.Util
 
         public void WriteUInt(uint value) => WriteInt(unchecked((int)value));
 
+        /// <summary>Writes a placeholder ushort and returns its position, to be filled with <see cref="PatchUShort"/>.</summary>
+        public int ReserveUShort()
+        {
+            int position = Length;
+            WriteUShort(0);
+            return position;
+        }
+
+        public void PatchUShort(int position, ushort value)
+        {
+            if (position < 0 || position + 2 > Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(position));
+            }
+            _buffer[position] = (byte)value;
+            _buffer[position + 1] = (byte)(value >> 8);
+        }
+
+        public void WriteBytes(ArraySegment<byte> bytes)
+        {
+            Ensure(bytes.Count);
+            Buffer.BlockCopy(bytes.Array, bytes.Offset, _buffer, Length, bytes.Count);
+            Length += bytes.Count;
+        }
+
         public void WriteLong(long value)
         {
             WriteInt(unchecked((int)value));

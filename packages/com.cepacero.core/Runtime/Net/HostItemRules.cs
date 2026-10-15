@@ -89,6 +89,8 @@ namespace CepaCero.Net
                     return Take(players[playerIndex], inv, intent);
                 case IntentType.PutInContainer:
                     return Put(players[playerIndex], inv, intent);
+                case IntentType.OpenContainer:
+                    return OpenInReach(players[playerIndex], intent.X, intent.Y) != null ? IntentResult.Ok : IntentResult.OutOfReach;
                 default:
                     return IntentResult.NotAllowed;
             }

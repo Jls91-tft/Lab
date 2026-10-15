@@ -50,6 +50,21 @@ namespace CepaCero.Util
 
         public uint ReadUInt() => unchecked((uint)ReadInt());
 
+        /// <summary>A sub-reader over the next <paramref name="count"/> bytes; this reader skips past them.</summary>
+        public ByteReader Slice(int count)
+        {
+            Require(count);
+            var slice = new ByteReader(new ArraySegment<byte>(_buffer, Position, count));
+            Position += count;
+            return slice;
+        }
+
+        public void Skip(int count)
+        {
+            Require(count);
+            Position += count;
+        }
+
         public long ReadLong()
         {
             uint low = ReadUInt();

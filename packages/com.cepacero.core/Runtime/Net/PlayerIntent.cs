@@ -22,6 +22,9 @@ namespace CepaCero.Net
         TakeFromContainer = 17,
         PutInContainer = 18,
 
+        /// <summary>Looks inside a container: the host starts sending its contents to this player.</summary>
+        OpenContainer = 19,
+
         // Helping a downed teammate: sent every tick while the key is held.
         Revive = 20,
     }
@@ -80,7 +83,11 @@ namespace CepaCero.Net
 
         public static PlayerIntent ReviveTeammate(int player) => new PlayerIntent { Type = IntentType.Revive, X = (ushort)player };
 
-        public bool IsInventoryAction => Type >= IntentType.SelectHotbar && Type <= IntentType.PutInContainer;
+        public static PlayerIntent Open(int x, int y) => new PlayerIntent { Type = IntentType.OpenContainer, X = (ushort)x, Y = (ushort)y };
+
+        public bool IsInventoryAction => Type >= IntentType.SelectHotbar && Type <= IntentType.OpenContainer;
+
+        public bool UsesContainer => Type == IntentType.OpenContainer || Type == IntentType.TakeFromContainer || Type == IntentType.PutInContainer;
 
         public static PlayerIntent Melee(Float2 aim)
         {
