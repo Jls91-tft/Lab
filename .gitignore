@@ -94,3 +94,9 @@ desktop.ini
 
 # ---------- Claude Code (ajustes locales, no compartidos) ----------
 .claude/settings.local.json
+
+# ---------- dotnet (tests/ y tools/ fuera de Unity) ----------
+[Bb]in/
+# Los .csproj de Unity se regeneran, pero los de tests/ y tools/ son nuestros
+!tests/**/*.csproj
+!tools/**/*.csproj

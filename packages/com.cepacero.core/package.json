@@ -1,0 +1,8 @@
+{
+  "name": "com.cepacero.core",
+  "version": "0.1.0",
+  "displayName": "Cepa Cero Core",
+  "description": "Engine-independent simulation for Cepa Cero: block world, map import, flow fields, zombies, day/night and horde rules.",
+  "unity": "6000.0",
+  "author": { "name": "Cepa Cero" }
+}
