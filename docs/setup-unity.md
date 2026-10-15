@@ -108,6 +108,11 @@ Pendiente: la prueba visual en el editor (§4b-bis), que requiere la ventana de 
 
 ## 4b-bis. Jugar el prototipo de depuración (5 minutos)
 Toda la simulación con cuadrados de colores: no es el juego, es para ver que el núcleo funciona en Unity.
+
+**Prueba de humo automática (confirmada el 15/10/2026, Unity 6000.3.26f1, PlayMode en batch):** `CepaCero/Assets/_Project/Tests/PrototypeSmokeTests.cs`
+arranca `PrototypeGame` 20 s en modo normal y 20 s en modo red en bucle: **2 de 2 en verde**, sin excepciones en consola, con el reloj avanzando y, en modo red,
+tráfico en ambos sentidos (cliente unido como jugador 1, 1555 bytes de unión). Los controles, lo que se ve y la sensación de juego **no** están cubiertos:
+eso sigue siendo la prueba manual de abajo.
 - [ ] *File > New Scene* (Basic 2D o vacía) y guárdala como `Assets/_Project/Scenes/SCN_Prototype.unity`.
 - [ ] *GameObject > Create Empty*, llámalo `Prototype` y en el Inspector *Add Component* → **Prototype Game**.
 - [ ] **Play.** Deberías ver el mapa de prueba (calle, 3 edificios, parque, estanque), tú en azul y zombis de colores
