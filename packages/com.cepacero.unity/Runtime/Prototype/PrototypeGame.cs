@@ -423,10 +423,10 @@ namespace CepaCero.Unity.Prototype
                     Say("Has vuelto al fuerte");
                     break;
                 case SessionEventType.Hungry when e.Player == _me:
-                    Say(e.Value == 0 ? "Tienes hambre: come algo (lata en la mochila, V y Q)" : "Te mueres de hambre: tu vida máxima baja y vas perdiendo vida");
+                    Say(e.Value == 0 ? "Tienes hambre: come algo (5 y Q)" : "Te mueres de hambre: tu vida máxima baja y vas perdiendo vida");
                     break;
                 case SessionEventType.Thirsty when e.Player == _me:
-                    Say(e.Value == 0 ? "Tienes sed: bebe algo" : "Deshidratado: te cansas antes y vas perdiendo vida");
+                    Say(e.Value == 0 ? "Tienes sed: bebe algo (V pone la botella en la mano, Q bebe)" : "Deshidratado: te cansas antes y vas perdiendo vida");
                     break;
                 case SessionEventType.RecipeUnlocked:
                     Say("Muestra analizada: recetas nuevas para el grupo");
@@ -529,12 +529,12 @@ namespace CepaCero.Unity.Prototype
             Hotbar("axe", 1, 1);
             Hotbar("pistol", 1, 2);
             Hotbar("bandage", 3, 3);
+            Hotbar("food_can", 2, 4);
+            inv.Add(items.IndexOf("water_bottle"), 2); // first in the bag, so V swaps it into your hand
             inv.Add(items.IndexOf("pistol_ammo"), 12);
             inv.Add(items.IndexOf("wood"), 40);
             inv.Add(items.IndexOf("nails"), 20);
             inv.Add(items.IndexOf("scrap_cloth"), 6);
-            inv.Add(items.IndexOf("food_can"), 2);
-            inv.Add(items.IndexOf("water_bottle"), 2);
             inv.SelectHotbar(0);
         }
     }

@@ -105,8 +105,8 @@ Toda la simulación con cuadrados de colores: no es el juego, es para ver que el
 - [ ] Controles (también en pantalla): **WASD** moverse · **Shift** correr · **clic izq.** atacar o disparar hacia el ratón ·
   **clic der.** construir en la casilla del ratón · **B** cambiar bloque · **F** romper/talar · **E** puerta o contenedor ·
   **T** coger del contenedor · **G** recoger del suelo · **Q** usar (vendas en el 4) · **1-5** elegir · **R** (mantener) levantar a un compañero caído · **F5/F9** guardar/cargar.
-- [ ] Hambre y sed (D-015, modo duro): en el HUD verás *Hambre* y *Sed* en %. Llevas 2 latas y 2 botellas en la mochila:
-  ponlas en la mano con **V** (equipa la 1.ª de la mochila) y úsalas con **Q**. Con *Survival* en el Inspector puedes probar Off/Soft/Hard.
+- [ ] Hambre y sed (D-015, modo duro): en el HUD verás *Hambre* y *Sed* en %. Llevas 2 latas en el hueco **5** (pulsa 5 y **Q** para comer)
+  y 2 botellas primeras en la mochila (**V** cambia lo que tienes en la mano por la botella; **Q** bebe). Comer o beber con la barra llena no hace nada. Con *Survival* en el Inspector puedes probar Off/Soft/Hard.
 - [ ] Prueba: espera a la noche (unos 2 minutos), constrúyete un fuerte con el clic derecho y aguanta. Abre un contenedor del hospital y mira el diario.
 - [ ] **Prueba de red en bucle**: para Play, marca *Play As Remote Client* en el Inspector y dale a Play otra vez.
   Ahora eres el jugador 1 (azul) de un anfitrión que corre en el mismo proceso; el jugador 0 (gris) se queda quieto en el fuerte.
