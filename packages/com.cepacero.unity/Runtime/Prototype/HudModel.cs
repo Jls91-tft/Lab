@@ -40,5 +40,14 @@ namespace CepaCero.Unity.Prototype
 
         /// <summary>Show the controls panel (toggled with H).</summary>
         public bool ShowHelp;
+
+        /// <summary>Building mode (D-020): pieces, selection, queue.</summary>
+        public PrototypeBuildMode Build;
+
+        /// <summary>Cost line per building piece, same order as PrototypeBuildMode.Pieces.</summary>
+        public string[] BuildCosts;
+
+        /// <summary>What the ghost says: a problem, or how to use the mode.</summary>
+        public string BuildHint;
     }
 }

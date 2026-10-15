@@ -89,6 +89,13 @@ Lo que hace que construir **fluya**:
 - En cooperativo, cualquiera ve los fantasmas de los demás: se puede planear juntos.
 - Después del MVP: guardar y pegar planos.
 
+> **Hecho (16/10/2026, paso 1, sin tocar el núcleo):** B entra y sale; barra de 8 piezas (1-8 o rueda) con nombre y coste;
+> fantasma verde/rojo con el motivo (y azul si solo está lejos); **clic izquierdo** construye y arrastrar hace una línea,
+> **Mayús + arrastrar** el contorno de una habitación; clic derecho o Esc cancelan. Lo arrastrado entra en una **cola de obra**
+> que envía una colocación por cada espera de acción (0,35 s, lo que acepta el anfitrión) y espera a que te acerques a lo lejano.
+> Cambio respecto al plan: se construye con el **clic izquierdo** (en este modo no se ataca). **Pendiente:** desmontar (X) y rotar (R),
+> que necesitan reglas nuevas en el núcleo; van con el paso 2 (capas). Los fantasmas de los compañeros, también con la red.
+
 ## 4. Que se vea bien lo construido
 - **Muros que se unen** (autotiling por material) y fachada en vista 3/4, como los edificios de la ciudad (D-019).
 - **Techos**: una habitación cerrada con suelo muestra techo desde fuera y se **desvanece al entrar** un jugador local

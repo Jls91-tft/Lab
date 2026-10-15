@@ -23,13 +23,13 @@ namespace CepaCero.Unity.Prototype
 
         private static readonly string[] Controls =
         {
-            "WASD moverse · Shift correr",
-            "Clic izq. atacar o disparar · Clic der. construir · B cambiar bloque",
+            "WASD moverse · Shift correr · Clic izq. atacar o disparar",
+            "B modo construcción: 1-8 o rueda elige · clic construye · arrastra línea · Mayús+arrastra habitación · clic der./Esc cancela",
             "F romper o talar · E puerta o contenedor · T coger del contenedor",
             "G recoger del suelo · Q usar · 1-5 elegir · V equipar 1.º de la mochila",
             "C hacer vendas · R (mantener) levantar a un compañero",
             "F5 guardar · F9 cargar · H ocultar esta ayuda",
-            "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos.",
+            "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. En construcción, lo lejano espera a que te acerques.",
         };
 
         private readonly PrototypeArt _art;
@@ -62,7 +62,14 @@ namespace CepaCero.Unity.Prototype
             DrawClock(m);
             if (m.Inventory != null)
             {
-                DrawHotbar(m.Inventory, m.Building);
+                if (m.Build != null && m.Build.Active)
+                {
+                    DrawBuildBar(m);
+                }
+                else
+                {
+                    DrawHotbar(m.Inventory, m.Building);
+                }
                 DrawBag(m.Inventory);
                 if (m.OpenContainer != null)
                 {
@@ -167,6 +174,31 @@ namespace CepaCero.Unity.Prototype
             Sprite("block_" + building, bx + 2f, y + 2f);
             Text(bx + 2f, y, 8f, 8f, "B", PrototypePalette.Pale, _small);
             Text(bx - 20f, y - 12f, Slot + 40f, 11f, "Construir", PrototypePalette.Pale, _smallCenter);
+        }
+
+        /// <summary>Building mode bar (D-020): the 8 pieces, name and cost of the selected one, and the ghost's hint.</summary>
+        private void DrawBuildBar(in HudModel m)
+        {
+            string[] pieces = PrototypeBuildMode.Pieces;
+            float total = pieces.Length * Slot + (pieces.Length - 1) * Gap;
+            float x0 = (Width - total) / 2f;
+            float y = Height - Slot - 4f;
+            for (int i = 0; i < pieces.Length; i++)
+            {
+                float x = x0 + i * (Slot + Gap);
+                Sprite(i == m.Build.Selected ? "ui_slot_selected" : "ui_slot", x, y);
+                Sprite("block_" + pieces[i], x + 2f, y + 2f);
+                Text(x + 2f, y, 8f, 8f, (i + 1).ToString(), PrototypePalette.Pale, _small);
+            }
+            string key = m.Build.SelectedKey;
+            string cost = m.BuildCosts != null ? m.BuildCosts[m.Build.Selected] : "";
+            float panelW = Math.Max(total, 200f);
+            float px = (Width - panelW) / 2f;
+            Panel(px, y - 30f, panelW, 27f);
+            Text(px + 4f, y - 28f, panelW - 8f, 11f,
+                string.IsNullOrEmpty(cost) ? PrototypeBuildMode.Name(key) : $"{PrototypeBuildMode.Name(key)} · {cost}",
+                PrototypePalette.Yellow, _smallCenter);
+            Text(px + 4f, y - 17f, panelW - 8f, 11f, m.BuildHint ?? "", PrototypePalette.Pale, _smallCenter);
         }
 
         private void DrawBag(Inventory inv)

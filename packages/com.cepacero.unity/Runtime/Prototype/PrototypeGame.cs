@@ -31,7 +31,6 @@ namespace CepaCero.Unity.Prototype
     {
         private const string SaveFile = "prototype.sav";
 
-        private static readonly string[] BuildKeys = { "wood_wall", "metal_wall", "door", "spike_trap", "fence", "chest", "workbench", "concrete_wall" };
 
         [Tooltip("Map relative to the repository root: an osm2tiles output or the test fixture.")]
         [SerializeField] private string _mapPath = "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json";
@@ -67,7 +66,11 @@ namespace CepaCero.Unity.Prototype
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
-        private int _build;
+        private readonly PrototypeBuildMode _buildMode = new PrototypeBuildMode();
+        private PrototypeBuildView _buildView;
+        private RecipeBook _recipes;
+        private BlockWorld _viewBlocks;
+        private GroundLayer _viewGround;
         private int _zombiesShown;
         private double _netTime;
         private long _bytesDown;
@@ -153,7 +156,12 @@ namespace CepaCero.Unity.Prototype
             {
                 _me = 0;
             }
+            _viewBlocks = viewBlocks;
+            _viewGround = viewGround;
+            // The host pays from the session's book (it knows the unlocked recipes); a client builds its own.
+            _recipes = Remote ? new RecipeBook(_data.RecipesData, _data.Items) : _session.Recipes;
             _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
+            _buildView = new PrototypeBuildView(_viewRoot, _art);
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
             _decor = new PrototypeDecorView(decor, _art, _viewRoot);
@@ -233,6 +241,8 @@ namespace CepaCero.Unity.Prototype
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
+            _buildMode.UpdatePreview(_input.MouseWorld.Tile, _input.Sprint, BuildContext());
+            _buildView.Draw(_buildMode);
             UpdateCursor();
             PlaceCamera(MyState.Position);
         }
@@ -243,7 +253,7 @@ namespace CepaCero.Unity.Prototype
             PlayerState me = MyState;
             Float2 mouse = _input.MouseWorld;
             var tile = new Int2((int)Math.Floor(mouse.X), (int)Math.Floor(mouse.Y));
-            bool visible = !me.IsDowned && _map.Blocks.InBounds(tile.X, tile.Y);
+            bool visible = !me.IsDowned && !_buildMode.Active && _map.Blocks.InBounds(tile.X, tile.Y); // the ghost replaces it
             Float2 toTile = new Float2(tile.X + 0.5f, tile.Y + 0.5f) - me.Position;
             _entities.SetCursor(visible, tile, toTile.LengthSquared <= _playerSettings.Reach * _playerSettings.Reach);
         }
@@ -287,7 +297,10 @@ namespace CepaCero.Unity.Prototype
                 Water = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyWater : Messages.QuantizeBar(MyState.Water),
                 Inventory = MyInventory,
                 OpenContainer = Remote ? _client.OpenContainerContents : _session.OpenContainerContents(_me),
-                Building = BuildKeys[_build],
+                Building = _buildMode.SelectedKey,
+                Build = _buildMode,
+                BuildCosts = BuildCosts(),
+                BuildHint = BuildHint(),
                 Message = Time.time < _messageUntil ? _message : "",
                 Diary = Time.time < _diaryUntil ? _diaryText : "",
                 Network = Remote
@@ -322,6 +335,87 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
+        // ------------------------------------------------------- building mode
+
+        private PrototypeBuildMode.Context BuildContext() => new PrototypeBuildMode.Context(
+            _viewBlocks, _viewGround, _playerSettings, MyState.Position,
+            Remote ? _client.Players : _session.Players, MyInventory, _recipes);
+
+        /// <summary>Left click builds, dragging makes a line (Shift: a room outline), right click or Escape cancels.</summary>
+        private void QueueBuilding(Int2 tile)
+        {
+            if (_input.Hotbar >= 0)
+            {
+                _buildMode.Select(_input.Hotbar);
+            }
+            if (_input.Scroll != 0)
+            {
+                _buildMode.Scroll(_input.Scroll);
+            }
+            if (_input.Place || _input.Cancel)
+            {
+                _buildMode.Cancel();
+            }
+            else
+            {
+                if (_input.Attack)
+                {
+                    _buildMode.BeginDrag(tile);
+                }
+                if (_input.AttackReleased && _buildMode.DragStart.HasValue)
+                {
+                    _buildMode.UpdatePreview(tile, _input.Sprint, BuildContext());
+                    if (_buildMode.EndDrag() == 0)
+                    {
+                        Say(FirstProblem());
+                    }
+                }
+            }
+            if (_buildMode.TryNext(Time.time, BuildContext(), out PlayerIntent place))
+            {
+                Send(place);
+            }
+        }
+
+        private string[] BuildCosts()
+        {
+            var costs = new string[PrototypeBuildMode.Pieces.Length];
+            for (int i = 0; i < costs.Length; i++)
+            {
+                costs[i] = PrototypeBuildMode.CostText(PrototypeBuildMode.Pieces[i], _recipes, _data.Items);
+            }
+            return costs;
+        }
+
+        private string BuildHint()
+        {
+            if (!_buildMode.Active)
+            {
+                return "";
+            }
+            string problem = FirstProblem();
+            if (!string.IsNullOrEmpty(problem))
+            {
+                return problem;
+            }
+            string queued = _buildMode.Queue.Count > 0 ? $" · En cola: {_buildMode.Queue.Count}" : "";
+            return _buildMode.DragStart.HasValue
+                ? $"{_buildMode.Preview.Count} piezas: suelta para construir{queued}"
+                : $"Clic: construir · Arrastra: línea · Mayús + arrastra: habitación · Clic der./Esc: cancelar{queued}";
+        }
+
+        private string FirstProblem()
+        {
+            foreach (PrototypeBuildMode.Verdict v in _buildMode.Verdicts)
+            {
+                if (v != PrototypeBuildMode.Verdict.Ok)
+                {
+                    return PrototypeBuildMode.Explain(v);
+                }
+            }
+            return "";
+        }
+
         private void QueueActions()
         {
             PlayerState me = MyState;
@@ -330,22 +424,26 @@ namespace CepaCero.Unity.Prototype
             Inventory inv = MyInventory;
             BlockWorld blocks = _map.Blocks; // same registry and size on host and client
 
-            if (_input.Hotbar >= 0)
+            if (_input.ToggleBuild)
             {
-                Send(PlayerIntent.Select(_input.Hotbar));
+                _buildMode.Toggle();
+                Say(_buildMode.Active ? "Modo construcción (B para salir)" : "Modo construcción cerrado");
             }
-            if (_input.CycleBuild)
+            if (_buildMode.Active)
             {
-                _build = (_build + 1) % BuildKeys.Length;
+                QueueBuilding(tile);
             }
-            if (_input.Attack && aim.LengthSquared > 0f)
+            else
             {
-                ItemDefinition weapon = inv.EquippedDefinition;
-                Send(weapon != null && weapon.IsRanged ? PlayerIntent.Ranged(aim) : PlayerIntent.Melee(aim));
-            }
-            if (_input.Place && blocks.InBounds(tile.X, tile.Y))
-            {
-                Send(PlayerIntent.Place(tile.X, tile.Y, blocks.Registry.Get(BuildKeys[_build]).Id));
+                if (_input.Hotbar >= 0 && _input.Hotbar < inv.HotbarSlots)
+                {
+                    Send(PlayerIntent.Select(_input.Hotbar));
+                }
+                if (_input.Attack && aim.LengthSquared > 0f)
+                {
+                    ItemDefinition weapon = inv.EquippedDefinition;
+                    Send(weapon != null && weapon.IsRanged ? PlayerIntent.Ranged(aim) : PlayerIntent.Melee(aim));
+                }
             }
             if (_input.Harvest && blocks.InBounds(tile.X, tile.Y))
             {

@@ -27,7 +27,17 @@ namespace CepaCero.Unity.Prototype
         public bool Take;
         public bool PickUp;
         public bool Use;
-        public bool CycleBuild;
+        /// <summary>B: enter or leave the building mode (D-020).</summary>
+        public bool ToggleBuild;
+
+        /// <summary>Left button released (ends a building drag).</summary>
+        public bool AttackReleased;
+
+        /// <summary>Escape (cancels a drag, then the build queue).</summary>
+        public bool Cancel;
+
+        /// <summary>Mouse wheel notches since the last tick (picks the building piece).</summary>
+        public int Scroll;
         public bool EquipFromBag;
         public bool CraftBandage;
         public bool Save;
@@ -56,7 +66,8 @@ namespace CepaCero.Unity.Prototype
             Take |= kb.tKey.wasPressedThisFrame;
             PickUp |= kb.gKey.wasPressedThisFrame;
             Use |= kb.qKey.wasPressedThisFrame;
-            CycleBuild |= kb.bKey.wasPressedThisFrame;
+            ToggleBuild |= kb.bKey.wasPressedThisFrame;
+            Cancel |= kb.escapeKey.wasPressedThisFrame;
             EquipFromBag |= kb.vKey.wasPressedThisFrame;
             CraftBandage |= kb.cKey.wasPressedThisFrame;
             Save |= kb.f5Key.wasPressedThisFrame;
@@ -70,11 +81,17 @@ namespace CepaCero.Unity.Prototype
             if (kb.digit3Key.wasPressedThisFrame) { Hotbar = 2; }
             if (kb.digit4Key.wasPressedThisFrame) { Hotbar = 3; }
             if (kb.digit5Key.wasPressedThisFrame) { Hotbar = 4; }
+            if (kb.digit6Key.wasPressedThisFrame) { Hotbar = 5; } // 6-8 only pick building pieces
+            if (kb.digit7Key.wasPressedThisFrame) { Hotbar = 6; }
+            if (kb.digit8Key.wasPressedThisFrame) { Hotbar = 7; }
 
             if (mouse != null && camera != null)
             {
                 Attack |= mouse.leftButton.wasPressedThisFrame;
+                AttackReleased |= mouse.leftButton.wasReleasedThisFrame;
                 Place |= mouse.rightButton.wasPressedThisFrame;
+                float wheel = mouse.scroll.ReadValue().y;
+                Scroll += wheel > 0f ? -1 : wheel < 0f ? 1 : 0;
                 Vector2 screen = mouse.position.ReadValue();
                 Vector3 world = camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -camera.transform.position.z));
                 MouseWorld = new Float2(world.x, world.y);
@@ -84,8 +101,10 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Clears the latched presses once the simulation tick has used them.</summary>
         public void ClearPresses()
         {
-            Attack = Place = Harvest = Interact = Take = PickUp = Use = CycleBuild = EquipFromBag = CraftBandage = Save = Load = false;
+            Attack = Place = Harvest = Interact = Take = PickUp = Use = ToggleBuild = EquipFromBag = CraftBandage = Save = Load = false;
+            AttackReleased = Cancel = false;
             Hotbar = -1;
+            Scroll = 0;
         }
     }
 }
