@@ -1,6 +1,6 @@
 # Propuesta: objetos, inventario, botín y crafteo
 
-*15/10/2026 · **Propuesta pendiente de OK de Javier.** No hay código todavía.*
+*15/10/2026 · **Aceptada (D-012).** Las 5 recomendaciones de abajo están aprobadas.*
 
 Encaja con el pilar 4, *accesible pero profundo*: menos microgestión que Project Zomboid y
 más decisiones que Core Keeper.

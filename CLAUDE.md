@@ -27,7 +27,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
   entrada y red (D-010, `docs/arquitectura.md`). CI en GitHub Actions con `scripts/check.sh` (D-011).
 
 **Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta ·
-carpetas de `Assets/` y asmdefs de Unity · inventario y crafteo (`docs/propuesta-inventario.md`) · versión exacta de Unity (propuesta en
+carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta en
 `docs/setup-unity.md`) · nombre definitivo.
 
 ## Reglas de arquitectura (red desde el día 1)
@@ -88,4 +88,5 @@ carpetas de `Assets/` y asmdefs de Unity · inventario y crafteo (`docs/propuest
 | `docs/lore.md` | La cepa, cómo se descubre y el diario |
 | `docs/plan.md` | Hitos semanales del prototipo |
 | `docs/setup-unity.md` | Instalación de Unity y del MCP |
-| `docs/propuesta-inventario.md` | Propuesta de objetos, inventario, botín y crafteo (pendiente de OK) |
+| `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
+| `docs/objetos.md`, `docs/recetas.md`, `docs/botin.md` | Datos de objetos, recetas y tablas de botín (YAML → `data/generated/`) |

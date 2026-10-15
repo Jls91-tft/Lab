@@ -21,10 +21,22 @@ antigua como **Sustituida por D-XXX**.
 | Paleta | ~32 colores cerrada |
 | Carpetas de `Assets/` y asmdefs de Unity | Propuesta en `docs/arquitectura.md`; se cierra con el proyecto creado |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
-| Objetos, inventario, botín y crafteo | **Propuesta** en `docs/propuesta-inventario.md` (5 preguntas) |
+| Hambre y sed | Sin decidir: de momento la comida solo cura un poco |
+| Grupo entero caído a la vez | Aplicado: reaparecen al amanecer; `PermaDeath` como opción. Confirmar |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-013 · 15/10/2026 · Guardado sin zombis y zombis que no saben dónde estás
+- **Estado:** Aceptada
+- **Decisión:** las partidas guardadas no incluyen los zombis vivos; cargar de noche reinicia la horda de esa noche. Los zombis colocados de día empiezan sin saber dónde están los jugadores (vista y oído); la horda nocturna sí lo sabe.
+- **Motivo:** guardados pequeños y robustos; el sigilo de día da sentido al ruido y a la luz (pilares 3 y 4).
+
+## D-012 · 15/10/2026 · Objetos, inventario, botín y crafteo
+- **Estado:** Aceptada (las 5 recomendaciones de `docs/propuesta-inventario.md`)
+- **Decisión:** inventario por **huecos** (20 + 5 de acceso rápido; lo grande ocupa más); el botín **no reaparece** por defecto (opción de partida); **fuego amigo desactivado** por defecto (opción); al caer, un compañero puede **levantarte** (30 s para morir desangrado); al morir, la mochila se queda en el suelo y se reaparece al amanecer en el fuerte; **pistola** con poca munición en el MVP. Objetos, recetas y tablas de botín son datos en `docs/` (como el bestiario).
+- **Motivo:** accesible pero con decisiones (pilar 4); la escasez y el ruido del arma de fuego dan tensión; levantar al compañero refuerza el cooperativo (pilar 1).
+- **Añadido por Claude, pendiente de confirmar:** si cae todo el grupo a la vez, todos reaparecen al amanecer sin mochila; la opción `PermaDeath` hace que la partida termine.
 
 ## D-011 · 15/10/2026 · CI con GitHub Actions
 - **Estado:** Aceptada
