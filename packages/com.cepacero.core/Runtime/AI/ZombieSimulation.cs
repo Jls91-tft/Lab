@@ -264,7 +264,7 @@ namespace CepaCero.AI
 
             int nearest = NearestPlayer(pos, players, out float playerDistance);
             if (nearest >= 0 && playerDistance <= def.attack_range + PlayerRadius + _radius[type]
-                && HasClearLine(pos, players[nearest]))
+                && TileCollision.HasClearLine(pos, players[nearest], _blocks))
             {
                 Face(i, players[nearest] - pos);
                 _state[i] = ZombieState.AttackingPlayer;
@@ -312,7 +312,8 @@ namespace CepaCero.AI
 
             Float2 velocity = desired.Normalized * speed + Separation(i, pos) * SeparationStrength;
             Face(i, desired);
-            _pos[i] = MoveWithCollision(pos, velocity * dt, _radius[type]);
+            // Bodies are a bit smaller than their sprite so crowds flow through doors.
+            _pos[i] = TileCollision.Move(pos, velocity * dt, _radius[type] * 0.8f, _blocks, _ground);
         }
 
         private float SprintSpeed(int i, ZombieDefinition def, float dt, bool seesPlayer)
@@ -402,43 +403,6 @@ namespace CepaCero.AI
             return push;
         }
 
-        private Float2 MoveWithCollision(Float2 pos, Float2 delta, float radius)
-        {
-            Float2 target = pos + delta;
-            if (IsFree(target, radius))
-            {
-                return target;
-            }
-            var xOnly = new Float2(target.X, pos.Y);
-            if (IsFree(xOnly, radius))
-            {
-                return xOnly;
-            }
-            var yOnly = new Float2(pos.X, target.Y);
-            return IsFree(yOnly, radius) ? yOnly : pos;
-        }
-
-        // A zombie is a circle; check the cells under its bounding box.
-        private bool IsFree(Float2 p, float radius)
-        {
-            float r = radius * 0.8f;
-            int minX = (int)MathF.Floor(p.X - r);
-            int maxX = (int)MathF.Floor(p.X + r);
-            int minY = (int)MathF.Floor(p.Y - r);
-            int maxY = (int)MathF.Floor(p.Y + r);
-            for (int y = minY; y <= maxY; y++)
-            {
-                for (int x = minX; x <= maxX; x++)
-                {
-                    if (_blocks.IsSolid(x, y) || GroundLayer.WalkCost(_ground.Get(x, y)) == 0)
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         private void Face(int i, Float2 direction)
         {
             if (direction.LengthSquared < 1e-8f)
@@ -448,22 +412,6 @@ namespace CepaCero.AI
             float angle = MathF.Atan2(direction.Y, direction.X);
             int sector = (int)MathF.Round(angle / (2f * MathF.PI) * 16f);
             _facing[i] = (byte)((sector % 16 + 16) % 16);
-        }
-
-        // No hitting through walls: sample the segment every quarter tile.
-        private bool HasClearLine(Float2 from, Float2 to)
-        {
-            Float2 delta = to - from;
-            int samples = Math.Max(1, (int)MathF.Ceiling(delta.Length * 4f));
-            for (int s = 1; s < samples; s++)
-            {
-                Int2 t = (from + delta * (s / (float)samples)).Tile;
-                if (_blocks.IsSolid(t.X, t.Y))
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private static int NearestPlayer(Float2 pos, IReadOnlyList<Float2> players, out float distance)
