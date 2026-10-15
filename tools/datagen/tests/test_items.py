@@ -15,7 +15,7 @@ def _item(**kw):
 
 def test_real_docs_build_and_cross_check():
     outputs = build_all()
-    assert len(outputs) == 4
+    assert len(outputs) == 6  # bestiary, items, recipes, loot, diary, strings
 
 
 def test_weapons_are_flattened():

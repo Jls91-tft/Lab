@@ -59,6 +59,7 @@ packages/com.cepacero.core/             Simulación sin motor (paquete UPM local
     Player/  Movimiento determinista (predicción), entradas cuantizadas
     Net/     Intenciones del cliente y su validación en el anfitrión (sin FishNet)
     Items/   Objetos, inventario, recetas, botín, contenedores y montones en el suelo
+    Lore/    Diario compartido del grupo (disparadores de docs/lore.md)
     Core/    GameSession (bucle de partida del anfitrión), GameData y SaveGame
   Tests/    CepaCero.Core.Tests.asmdef  NUnit (corren en Unity Test Runner y en dotnet)
 

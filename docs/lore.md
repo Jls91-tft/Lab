@@ -41,51 +41,88 @@ Las entradas se guardan en el **diario** del jugador. En cooperativo, el diario 
 lo que encuentra un jugador lo leen todos (estado del grupo, sincronizado por el anfitrión).
 
 ## Primeras entradas del diario
-Formato pensado para datos: `id`, `fuente`, `desbloqueo`, `texto`.
+Cada entrada es un bloque `yaml` que `tools/datagen` convierte en `data/generated/diary.json`.
+Se desbloquea para **todo el grupo** cuando se cumple su `trigger`:
 
----
-**`diary_001` · Nota en una nevera · inicio de la partida**
-> "Lunes. Papá sigue con la tos del viñedo. Dice que es alergia al cierzo, que todos los años
-> igual. Hoy ha mordido al perro. He cerrado la puerta de su cuarto con llave."
+| `trigger` | Cuándo |
+| --- | --- |
+| `match_start` | Al empezar la partida |
+| `first_container` | La primera vez que alguien abre un contenedor del mapa |
+| `night_started:N` | Al empezar la noche N |
+| `night_survived:N` | Al amanecer tras la noche N, con alguien en pie |
+| `building_kind:K` | La primera vez que se abre un contenedor de un edificio de categoría K (osm2tiles) |
+| `sample:ID` | Al analizar la muestra ID |
 
----
-**`diary_002` · Mensaje de contestador · primer edificio saqueado**
-> "Soy Marta, del centro de salud. Si oye esto, no vaya a urgencias. Repito: no vaya a urgencias.
-> Están llevando a todos al hospital y... (se oye un golpe) ...cierre las ventanas. Es el aire."
+El texto va sin formato (lo pinta la UI del juego) y en español; la traducción irá a las tablas de localización.
 
----
-**`diary_003` · Folleto empapado · calle**
-> *"Agrogénica del Ebro. Viñas que no tienen sed. Con tecnología CZ-0, el futuro del campo
-> aragonés crece aunque no llueva."* Alguien ha escrito encima con rotulador: **ASESINOS**.
-
----
-**`diary_004` · Diario del jugador · primera noche superada**
-> "Los que brillan son peores. Cuanto más verde, más listos. Esta noche han rodeado la barricada
-> en lugar de empujar. Como si aprendieran."
-
----
-**`diary_005` · Muestra de La Mole · al derrotarla**
-> *Análisis:* tejido muscular colonizado por micelio al 80 %. El hongo ha fabricado fibras
-> parecidas a cables bajo la piel. Las fibras fallan con un impacto seco contra metal: se
-> "desconectan" unos segundos. **Receta desbloqueada: muro de hormigón.**
-
----
-**`diary_006` · Informe interno · laboratorio del polígono**
-> "CONFIDENCIAL. Ensayo CZ-0/14: colonización de tejido animal confirmada en ratas expuestas a
-> esporas en suspensión. Recomendación: suspender la floración en parcelas exteriores.
-> Respuesta de dirección: *mantener el calendario; la cosecha no puede esperar*."
-
----
-**`diary_007` · Grabación del hospital · ala de aislamiento**
-> "Paciente cero. Varón, 34 años, temporero. Constantes estables aunque no responde a estímulos.
-> Los demás infectados del ala se han quedado quietos desde que lo trajimos. Lo... miran.
-> Todos hacia su habitación."
-
----
-**`diary_008` · Muestra de Paciente Cero · post-MVP**
-> *Análisis:* el micelio del paciente cero emite señales químicas que coordinan a los demás
-> huéspedes. No es un individuo: es un **nodo**. Si hay un nodo, hay una red.
-> **Receta desbloqueada: antídoto experimental.** *(Gancho para la siguiente ciudad.)*
+```yaml
+id: diary_001
+source: Nota en una nevera
+trigger: match_start
+text: |
+  "Lunes. Papá sigue con la tos del viñedo. Dice que es alergia al cierzo, que todos los años
+  igual. Hoy ha mordido al perro. He cerrado la puerta de su cuarto con llave."
+```
+```yaml
+id: diary_002
+source: Mensaje de contestador
+trigger: first_container
+text: |
+  "Soy Marta, del centro de salud. Si oye esto, no vaya a urgencias. Repito: no vaya a urgencias.
+  Están llevando a todos al hospital y... (se oye un golpe) ...cierre las ventanas. Es el aire."
+```
+```yaml
+id: diary_003
+source: Folleto empapado
+trigger: night_started:1
+text: |
+  "Agrogénica del Ebro. Viñas que no tienen sed. Con tecnología CZ-0, el futuro del campo
+  aragonés crece aunque no llueva." Alguien ha escrito encima con rotulador: ASESINOS.
+```
+```yaml
+id: diary_004
+source: Diario del grupo
+trigger: night_survived:1
+text: |
+  "Los que brillan son peores. Cuanto más verde, más listos. Esta noche han rodeado la barricada
+  en lugar de empujar. Como si aprendieran."
+```
+```yaml
+id: diary_005
+source: Muestra de La Mole
+trigger: sample:sample_brute
+text: |
+  Análisis: tejido muscular colonizado por micelio al 80 %. El hongo ha fabricado fibras
+  parecidas a cables bajo la piel. Las fibras fallan con un impacto seco contra metal: se
+  "desconectan" unos segundos. Receta desbloqueada: muro de hormigón.
+```
+```yaml
+id: diary_006
+source: Informe interno
+trigger: building_kind:industrial
+text: |
+  "CONFIDENCIAL. Ensayo CZ-0/14: colonización de tejido animal confirmada en ratas expuestas a
+  esporas en suspensión. Recomendación: suspender la floración en parcelas exteriores.
+  Respuesta de dirección: mantener el calendario; la cosecha no puede esperar."
+```
+```yaml
+id: diary_007
+source: Grabación del hospital
+trigger: building_kind:medical
+text: |
+  "Paciente cero. Varón, 34 años, temporero. Constantes estables aunque no responde a estímulos.
+  Los demás infectados del ala se han quedado quietos desde que lo trajimos. Lo... miran.
+  Todos hacia su habitación."
+```
+```yaml
+id: diary_008
+source: Muestra del Paciente Cero
+trigger: sample:sample_zero
+text: |
+  Análisis: el micelio del paciente cero emite señales químicas que coordinan a los demás
+  huéspedes. No es un individuo: es un nodo. Si hay un nodo, hay una red.
+  Receta desbloqueada: antídoto experimental.
+```
 
 ## Ganchos para más adelante
 - **"Vota la siguiente ciudad":** la red de nodos explica que la cepa aparezca en otras ciudades.

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CepaCero.AI;
 using CepaCero.Core;
 using CepaCero.Items;
+using CepaCero.Lore;
 using CepaCero.Player;
 using CepaCero.Rules;
 using CepaCero.Util;
@@ -27,6 +28,7 @@ namespace CepaCero.Net.Protocol
         private readonly List<ZombieEvent> _zombieEvents = new List<ZombieEvent>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
         private readonly float _maxStamina;
+        private readonly HashSet<string> _unlockedSamples = new HashSet<string>(StringComparer.Ordinal);
 
         public ClientMatchState(string mapName, BlockWorld blocks, GroundLayer ground, GameData data, float maxStamina = 100f)
         {
@@ -40,7 +42,17 @@ namespace CepaCero.Net.Protocol
             {
                 MyInventory = Inventory.ForPlayer(data.Items);
             }
+            if (data.Diary != null)
+            {
+                Diary = new TeamDiary(data.Diary);
+            }
         }
+
+        /// <summary>The group's diary as the host reports it (null without diary data).</summary>
+        public TeamDiary Diary { get; }
+
+        /// <summary>Samples the group has analysed (their recipes are unlocked).</summary>
+        public IReadOnlyCollection<string> UnlockedSamples => _unlockedSamples;
 
         public bool HasJoined { get; private set; }
 
@@ -140,6 +152,9 @@ namespace CepaCero.Net.Protocol
                     case MessageType.GroundPiles:
                         RequireItems(type);
                         ReadPiles(payload);
+                        break;
+                    case MessageType.TeamProgress:
+                        ReadProgress(payload);
                         break;
                     default:
                         break; // newer host, older client: skip what we do not understand
@@ -258,6 +273,20 @@ namespace CepaCero.Net.Protocol
                     pile.Stacks.Add(s);
                 }
                 _piles.Add(pile);
+            }
+        }
+
+        private void ReadProgress(ByteReader r)
+        {
+            int samples = r.ReadUShort();
+            for (int i = 0; i < samples; i++)
+            {
+                _unlockedSamples.Add(r.ReadString());
+            }
+            int diary = r.ReadUShort();
+            for (int i = 0; i < diary; i++)
+            {
+                Diary?.Unlock(r.ReadString());
             }
         }
 

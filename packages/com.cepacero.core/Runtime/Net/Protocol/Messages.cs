@@ -255,6 +255,29 @@ namespace CepaCero.Net.Protocol
             }
         }
 
+        public static void WriteTeamProgress(ByteWriter w, GameSession session)
+        {
+            using (Begin(w, MessageType.TeamProgress))
+            {
+                var samples = new List<string>();
+                if (session.Recipes != null)
+                {
+                    samples.AddRange(session.Recipes.UnlockedSamples);
+                }
+                w.WriteUShort((ushort)samples.Count);
+                foreach (string s in samples)
+                {
+                    w.WriteString(s);
+                }
+                IReadOnlyList<int> diary = session.Diary?.Unlocked ?? (IReadOnlyList<int>)Array.Empty<int>();
+                w.WriteUShort((ushort)diary.Count);
+                foreach (int entry in diary)
+                {
+                    w.WriteString(session.Diary.Entries[entry].id);
+                }
+            }
+        }
+
         // ---------------------------------------------------- client → host
 
         public static void WriteInput(ByteWriter w, uint tick, PlayerInput input)

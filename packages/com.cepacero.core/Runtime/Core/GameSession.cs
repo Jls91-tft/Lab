@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CepaCero.AI;
 using CepaCero.Items;
+using CepaCero.Lore;
 using CepaCero.Map;
 using CepaCero.Net;
 using CepaCero.Player;
@@ -54,6 +55,7 @@ namespace CepaCero.Core
         private readonly float _dt;
         private readonly ushort _chestId;
 
+        private readonly List<int> _newDiary = new List<int>();
         private int _loudActions;
         private bool _respawnPointSet;
 
@@ -95,6 +97,10 @@ namespace CepaCero.Core
                     Containers.PlaceInBuildings(buildings, blocks, ground, data.Loot, _rng);
                 }
             }
+            if (data.Diary != null)
+            {
+                Diary = new TeamDiary(data.Diary);
+            }
             blocks.TypeChanged += OnBlockTypeChanged;
         }
 
@@ -128,6 +134,9 @@ namespace CepaCero.Core
         public ContainerStore Containers { get; }
 
         public GroundItems GroundItems { get; }
+
+        /// <summary>The group's shared diary (null without diary data).</summary>
+        public TeamDiary Diary { get; }
 
         public IReadOnlyList<PlayerState> Players => _players;
 
@@ -260,6 +269,10 @@ namespace CepaCero.Core
             {
                 return;
             }
+            if (Clock.Tick == 0)
+            {
+                FireDiary("match_start");
+            }
             MovePlayers();
             ResolveIntents();
             CloseFarContainers();
@@ -313,6 +326,12 @@ namespace CepaCero.Core
                     if (intent.UsesContainer)
                     {
                         _openContainer[p] = result == IntentResult.Ok ? new Int2(intent.X, intent.Y) : NoContainer;
+                        string kind = result == IntentResult.Ok ? Containers.KindAt(new Int2(intent.X, intent.Y)) : null;
+                        if (!string.IsNullOrEmpty(kind))
+                        {
+                            FireDiary("first_container");
+                            FireDiary("building_kind:" + kind);
+                        }
                     }
                 }
                 else
@@ -363,6 +382,7 @@ namespace CepaCero.Core
             if (ItemRules.LastUnlockedSample != null)
             {
                 _events.Add(new SessionEvent(SessionEventType.RecipeUnlocked, p));
+                FireDiary("sample:" + ItemRules.LastUnlockedSample);
             }
             if (intent.Type == IntentType.PickUp || intent.Type == IntentType.DropStack)
             {
@@ -536,12 +556,14 @@ namespace CepaCero.Core
                 _backlog.Clear();
                 _loudActions = 0;
                 _events.Add(new SessionEvent(SessionEventType.NightStarted, value: Clock.Day, phase: phase));
+                FireDiary("night_started:" + Clock.Day);
             }
             else if (phase == DayPhase.Dawn)
             {
                 if (AnyoneStanding())
                 {
                     NightsSurvived++;
+                    FireDiary("night_survived:" + Clock.Day);
                 }
                 RespawnTheDead();
                 if (Settings.LootRespawn && Containers != null)
@@ -629,6 +651,20 @@ namespace CepaCero.Core
                 _spill.Clear();
                 Data.Loot.RollDrop(Catalog[death.ZombieType], _spill, _rng);
                 DropPile(death.Position, _spill);
+            }
+        }
+
+        private void FireDiary(string trigger)
+        {
+            if (Diary == null)
+            {
+                return;
+            }
+            _newDiary.Clear();
+            Diary.Fire(trigger, _newDiary);
+            foreach (int entry in _newDiary)
+            {
+                _events.Add(new SessionEvent(SessionEventType.DiaryUnlocked, value: entry));
             }
         }
 

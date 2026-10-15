@@ -22,6 +22,9 @@ namespace CepaCero.Core
 
         /// <summary>A pile appeared or changed on the ground (Value = pile id).</summary>
         GroundItemsChanged = 13,
+
+        /// <summary>A diary entry was found (Value = index in the diary data).</summary>
+        DiaryUnlocked = 14,
     }
 
     /// <summary>Match-level happenings the host broadcasts (UI, music, results of intents).</summary>

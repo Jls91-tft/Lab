@@ -30,6 +30,7 @@ namespace CepaCero.Net.Protocol
         private readonly int[] _sentContainerVersion = new int[GameSession.MaxPlayers];
         private readonly bool[] _joined = new bool[GameSession.MaxPlayers];
         private bool _pilesChanged;
+        private bool _progressChanged;
         private bool _phaseChanged;
 
         public HostBroadcaster(GameSession session, string mapName)
@@ -69,10 +70,12 @@ namespace CepaCero.Net.Protocol
             _session.Zombies.DrainEvents(_zombieEvents);
             _pilesChanged = false;
             _phaseChanged = false;
+            _progressChanged = false;
             foreach (SessionEvent e in _events)
             {
                 _pilesChanged |= e.Type == SessionEventType.GroundItemsChanged;
                 _phaseChanged |= e.Type == SessionEventType.PhaseChanged;
+                _progressChanged |= e.Type == SessionEventType.RecipeUnlocked || e.Type == SessionEventType.DiaryUnlocked;
             }
         }
 
@@ -90,6 +93,7 @@ namespace CepaCero.Net.Protocol
                 }
             }
             Messages.WritePlayerStates(w, (uint)_session.Clock.Tick, _session.Players, MaxStamina);
+            Messages.WriteTeamProgress(w, _session);
             if (_session.Data.HasItems)
             {
                 Messages.WriteGroundPiles(w, _session.GroundItems.Piles);
@@ -125,6 +129,10 @@ namespace CepaCero.Net.Protocol
             if (_phaseChanged || tick % ClockEveryTicks == 0)
             {
                 Messages.WriteClock(w, tick);
+            }
+            if (_progressChanged)
+            {
+                Messages.WriteTeamProgress(w, _session);
             }
             if (_session.Data.HasItems)
             {

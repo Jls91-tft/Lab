@@ -37,6 +37,9 @@ namespace CepaCero.Items
 
         public bool Has(Int2 cell) => _containers.ContainsKey(cell);
 
+        /// <summary>Building kind of a map container ("" for player chests, null if there is none).</summary>
+        public string KindAt(Int2 cell) => _containers.TryGetValue(cell, out Entry e) ? e.Kind : null;
+
         /// <summary>
         /// Places containers inside each building, against an inner wall when possible
         /// (cupboards and shelves), with the match seed. Call once after importing the map.

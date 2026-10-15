@@ -20,6 +20,9 @@ namespace CepaCero.Net.Protocol
         ContainerContents = 10,
         GroundPiles = 11,
 
+        /// <summary>What the group has unlocked: analysed samples (recipes) and diary entries.</summary>
+        TeamProgress = 12,
+
         // Client → host
         Input = 20,
         Intent = 21,

@@ -1,0 +1,67 @@
+"key","es","en"
+"zombie.walker.name","Caminante","Walker"
+"zombie.walker.weakness","Fuego y golpes a la cabeza; muy lento en giros",""
+"zombie.runner.name","Corredor","Runner"
+"zombie.runner.weakness","Se agota tras ~6 s de carrera; poca vida",""
+"zombie.screamer.name","Gritón","Screamer"
+"zombie.screamer.weakness","Interrumpir la carga del grito (1,5 s) con un golpe o disparo; frágil a balas",""
+"zombie.spitter.name","Escupidor","Spitter"
+"zombie.spitter.weakness","Cuerpo a cuerpo (no huye bien); los muros de metal y hormigón apenas se corroen",""
+"zombie.armored.name","Acorazado",""
+"zombie.armored.weakness","Espalda y flancos; gira lento; el ácido funde la coraza",""
+"zombie.sapper.name","Zapador",""
+"zombie.sapper.weakness","Ignora a los jugadores: fácil de cazar si alguien sale del fuerte",""
+"zombie.brute.name","La Mole","The Brute"
+"zombie.brute.weakness","Atraerlo contra un muro de metal: aturdido 4 s con daño doble",""
+"zombie.patient_zero.name","Paciente Cero",""
+"zombie.patient_zero.weakness","Fuego; matar a sus invocados antes de que se cure",""
+"item.wood.name","Madera",""
+"item.metal_scrap.name","Chatarra",""
+"item.scrap_cloth.name","Trapos",""
+"item.tape.name","Cinta americana",""
+"item.nails.name","Clavos",""
+"item.concrete_mix.name","Saco de cemento",""
+"item.metal_plate.name","Placa de metal",""
+"item.bone_claw.name","Garra de hueso",""
+"item.vocal_gland.name","Glándula vocal",""
+"item.acid_sac.name","Saco de ácido",""
+"item.sample_brute.name","Muestra de La Mole",""
+"item.sample_zero.name","Muestra del Paciente Cero",""
+"item.bat.name","Bate",""
+"item.knife.name","Cuchillo de cocina",""
+"item.axe.name","Hacha",""
+"item.pistol.name","Pistola",""
+"item.pistol_ammo.name","Balas de pistola",""
+"item.bandage_dirty.name","Venda sucia",""
+"item.bandage.name","Venda",""
+"item.medkit.name","Botiquín",""
+"item.food_can.name","Lata de comida",""
+"item.water_bottle.name","Botella de agua",""
+"diary.diary_001.source","Nota en una nevera",""
+"diary.diary_001.text","""Lunes. Papá sigue con la tos del viñedo. Dice que es alergia al cierzo, que todos los años
+igual. Hoy ha mordido al perro. He cerrado la puerta de su cuarto con llave.""",""
+"diary.diary_002.source","Mensaje de contestador",""
+"diary.diary_002.text","""Soy Marta, del centro de salud. Si oye esto, no vaya a urgencias. Repito: no vaya a urgencias.
+Están llevando a todos al hospital y... (se oye un golpe) ...cierre las ventanas. Es el aire.""",""
+"diary.diary_003.source","Folleto empapado",""
+"diary.diary_003.text","""Agrogénica del Ebro. Viñas que no tienen sed. Con tecnología CZ-0, el futuro del campo
+aragonés crece aunque no llueva."" Alguien ha escrito encima con rotulador: ASESINOS.",""
+"diary.diary_004.source","Diario del grupo",""
+"diary.diary_004.text","""Los que brillan son peores. Cuanto más verde, más listos. Esta noche han rodeado la barricada
+en lugar de empujar. Como si aprendieran.""",""
+"diary.diary_005.source","Muestra de La Mole",""
+"diary.diary_005.text","Análisis: tejido muscular colonizado por micelio al 80 %. El hongo ha fabricado fibras
+parecidas a cables bajo la piel. Las fibras fallan con un impacto seco contra metal: se
+""desconectan"" unos segundos. Receta desbloqueada: muro de hormigón.",""
+"diary.diary_006.source","Informe interno",""
+"diary.diary_006.text","""CONFIDENCIAL. Ensayo CZ-0/14: colonización de tejido animal confirmada en ratas expuestas a
+esporas en suspensión. Recomendación: suspender la floración en parcelas exteriores.
+Respuesta de dirección: mantener el calendario; la cosecha no puede esperar.""",""
+"diary.diary_007.source","Grabación del hospital",""
+"diary.diary_007.text","""Paciente cero. Varón, 34 años, temporero. Constantes estables aunque no responde a estímulos.
+Los demás infectados del ala se han quedado quietos desde que lo trajimos. Lo... miran.
+Todos hacia su habitación.""",""
+"diary.diary_008.source","Muestra del Paciente Cero",""
+"diary.diary_008.text","Análisis: el micelio del paciente cero emite señales químicas que coordinan a los demás
+huéspedes. No es un individuo: es un nodo. Si hay un nodo, hay una red.
+Receta desbloqueada: antídoto experimental.",""

@@ -51,10 +51,13 @@ namespace CepaCero.Tests.TestSupport
         public static LootRoller Loot(ItemCatalog items) => new LootRoller(LootData(), items);
 
         /// <summary>Everything a full match needs (zombies, items, recipes, loot).</summary>
+        public static CepaCero.Lore.DiaryData DiaryData() =>
+            FromJson<CepaCero.Lore.DiaryData>(File.ReadAllText(RepoFile("data/generated/diary.json")));
+
         public static CepaCero.Core.GameData GameData()
         {
             ItemCatalog items = Items();
-            return new CepaCero.Core.GameData(Catalog(), items, RecipesData(), LootData());
+            return new CepaCero.Core.GameData(Catalog(), items, RecipesData(), LootData(), DiaryData());
         }
 
         /// <summary>Parses JSON with the same rules Unity's JsonUtility uses (public fields, exact names).</summary>

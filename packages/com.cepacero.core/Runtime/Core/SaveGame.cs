@@ -13,7 +13,7 @@ namespace CepaCero.Core
     /// and progress. The ground is not saved: it comes from the map file,
     /// identified by name and size. Zombies are not saved either (D-013).
     ///
-    /// Layout v2 (little-endian):
+    /// Layout v3 (little-endian):
     ///   magic "CCSV" (uint) · version (ushort) · map name (string) · width, height (ushort)
     ///   tick (long) · nights survived, zombies killed (int) · respawn x, y (float)
     ///   block keys: count (ushort) + key (string) each    ← old saves load after blocks are added or reordered
@@ -21,13 +21,14 @@ namespace CepaCero.Core
     ///   players: count (byte) + x, y, stamina, downed seconds (float), health (int), dead (byte), inventory
     ///   unlocked samples: count (ushort) + id (string) each
     ///   containers (<see cref="ContainerStore.Write"/>) · ground piles: count (int) + x, y, stacks
+    ///   diary: count (ushort) + entry id (string) each, in discovery order
     ///   chunks: count (ushort) + <see cref="BlockWorld.WriteChunk"/> each
     ///   checksum: FNV-1a 32 of everything before it (uint)
     /// </summary>
     public static class SaveGame
     {
         public const uint Magic = 0x56534343; // "CCSV"
-        public const ushort Version = 2;
+        public const ushort Version = 3;
 
         public static void Write(GameSession session, string mapName, ByteWriter writer)
         {
@@ -95,6 +96,20 @@ namespace CepaCero.Core
                         writer.WriteUShort(pile.Stacks[k].Durability);
                     }
                 }
+            }
+
+            var diary = new List<string>();
+            if (session.Diary != null)
+            {
+                foreach (int entry in session.Diary.Unlocked)
+                {
+                    diary.Add(session.Diary.Entries[entry].id);
+                }
+            }
+            writer.WriteUShort((ushort)diary.Count);
+            foreach (string id in diary)
+            {
+                writer.WriteString(id);
             }
 
             BlockWorld blocks = session.Blocks;
@@ -213,6 +228,13 @@ namespace CepaCero.Core
                     }
                 }
 
+                int diaryCount = reader.ReadUShort();
+                var diary = new List<string>(diaryCount);
+                for (int i = 0; i < diaryCount; i++)
+                {
+                    diary.Add(reader.ReadString());
+                }
+
                 int chunks = reader.ReadUShort();
                 if (chunks != blocks.ChunksX * blocks.ChunksY)
                 {
@@ -242,6 +264,10 @@ namespace CepaCero.Core
                 foreach (KeyValuePair<Float2, List<ItemStack>> pile in piles)
                 {
                     session.GroundItems.Drop(pile.Key, pile.Value);
+                }
+                foreach (string id in diary)
+                {
+                    session.Diary?.Unlock(id);
                 }
             }
             catch (FormatException) when (unknown.Count > 0)

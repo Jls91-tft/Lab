@@ -1,0 +1,55 @@
+{
+  "format": "cepacero.diary",
+  "version": 1,
+  "source": "docs/lore.md",
+  "entries": [
+    {
+      "id": "diary_001",
+      "source": "Nota en una nevera",
+      "trigger": "match_start",
+      "text": "\"Lunes. Papá sigue con la tos del viñedo. Dice que es alergia al cierzo, que todos los años\nigual. Hoy ha mordido al perro. He cerrado la puerta de su cuarto con llave.\""
+    },
+    {
+      "id": "diary_002",
+      "source": "Mensaje de contestador",
+      "trigger": "first_container",
+      "text": "\"Soy Marta, del centro de salud. Si oye esto, no vaya a urgencias. Repito: no vaya a urgencias.\nEstán llevando a todos al hospital y... (se oye un golpe) ...cierre las ventanas. Es el aire.\""
+    },
+    {
+      "id": "diary_003",
+      "source": "Folleto empapado",
+      "trigger": "night_started:1",
+      "text": "\"Agrogénica del Ebro. Viñas que no tienen sed. Con tecnología CZ-0, el futuro del campo\naragonés crece aunque no llueva.\" Alguien ha escrito encima con rotulador: ASESINOS."
+    },
+    {
+      "id": "diary_004",
+      "source": "Diario del grupo",
+      "trigger": "night_survived:1",
+      "text": "\"Los que brillan son peores. Cuanto más verde, más listos. Esta noche han rodeado la barricada\nen lugar de empujar. Como si aprendieran.\""
+    },
+    {
+      "id": "diary_005",
+      "source": "Muestra de La Mole",
+      "trigger": "sample:sample_brute",
+      "text": "Análisis: tejido muscular colonizado por micelio al 80 %. El hongo ha fabricado fibras\nparecidas a cables bajo la piel. Las fibras fallan con un impacto seco contra metal: se\n\"desconectan\" unos segundos. Receta desbloqueada: muro de hormigón."
+    },
+    {
+      "id": "diary_006",
+      "source": "Informe interno",
+      "trigger": "building_kind:industrial",
+      "text": "\"CONFIDENCIAL. Ensayo CZ-0/14: colonización de tejido animal confirmada en ratas expuestas a\nesporas en suspensión. Recomendación: suspender la floración en parcelas exteriores.\nRespuesta de dirección: mantener el calendario; la cosecha no puede esperar.\""
+    },
+    {
+      "id": "diary_007",
+      "source": "Grabación del hospital",
+      "trigger": "building_kind:medical",
+      "text": "\"Paciente cero. Varón, 34 años, temporero. Constantes estables aunque no responde a estímulos.\nLos demás infectados del ala se han quedado quietos desde que lo trajimos. Lo... miran.\nTodos hacia su habitación.\""
+    },
+    {
+      "id": "diary_008",
+      "source": "Muestra del Paciente Cero",
+      "trigger": "sample:sample_zero",
+      "text": "Análisis: el micelio del paciente cero emite señales químicas que coordinan a los demás\nhuéspedes. No es un individuo: es un nodo. Si hay un nodo, hay una red.\nReceta desbloqueada: antídoto experimental."
+    }
+  ]
+}

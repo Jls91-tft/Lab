@@ -51,7 +51,7 @@ carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta 
 
 ## Convenciones C#
 - Identificadores y comentarios de código en **inglés**; documentación en **español**.
-- Namespace `CepaCero.<Área>` (`Core`, `Net`, `World`, `AI`, `Player`, `UI`). Una clase por archivo; archivo = clase.
+- Namespace `CepaCero.<Área>` (`Core`, `Net`, `World`, `AI`, `Player`, `Items`, `Lore`, `UI`). Una clase por archivo; archivo = clase.
 - `PascalCase` para tipos, métodos, propiedades y constantes; `camelCase` para locales y parámetros;
   campos privados `_camelCase`; interfaces `IThing`; booleanos `isX`/`hasX`/`canX`.
 - Campos serializados: `[SerializeField] private`, nunca `public` para exponer en el inspector.
@@ -74,7 +74,7 @@ carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta 
 - **`scripts/check.sh`** (`--fast` sin estrés): todo lo que no necesita Unity. Pasarlo antes de cada commit.
 - `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity.
 - `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
-- `tools/datagen/`: `python -m datagen` regenera `data/generated/*.json` (bestiario, objetos, recetas, botín) desde `docs/`.
+- `tools/datagen/`: `python -m datagen` regenera `data/generated/` (bestiario, objetos, recetas, botín, diario y `loc/strings.csv`) desde `docs/`. Traducciones en `docs/traducciones/<idioma>.csv`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
 
 ## docs/
@@ -85,7 +85,7 @@ carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta 
 | `docs/arquitectura.md` | Capas, estructura del repo y modelo de red |
 | `docs/decisiones.md` | Registro de decisiones (fecha, decisión, motivo) |
 | `docs/bestiario.md` | Zombis con estadísticas (se convertirá en datos) |
-| `docs/lore.md` | La cepa, cómo se descubre y el diario |
+| `docs/lore.md` | La cepa, cómo se descubre y el diario (entradas en YAML con disparadores) |
 | `docs/plan.md` | Hitos semanales del prototipo |
 | `docs/setup-unity.md` | Instalación de Unity y del MCP |
 | `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
