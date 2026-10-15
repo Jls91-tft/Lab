@@ -1,0 +1,17 @@
+{
+    "name": "CepaCero.Unity",
+    "rootNamespace": "CepaCero.Unity",
+    "references": [
+        "CepaCero.Core",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

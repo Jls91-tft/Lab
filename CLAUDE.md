@@ -26,8 +26,10 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - **Simulación sin motor** en `packages/com.cepacero.core` (paquete UPM local); Unity solo vista,
   entrada y red (D-010, `docs/arquitectura.md`). CI en GitHub Actions con `scripts/check.sh` (D-011).
 
-**Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta ·
-carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta en
+**Propuesta pendiente (D-014)**: código de Unity en `packages/com.cepacero.unity` (incluye `PrototypeGame`, prototipo
+de depuración); `Assets/` solo contenido. Ese código aún no se ha compilado contra Unity real.
+
+**Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta · versión exacta de Unity (propuesta en
 `docs/setup-unity.md`) · nombre definitivo.
 
 ## Reglas de arquitectura (red desde el día 1)

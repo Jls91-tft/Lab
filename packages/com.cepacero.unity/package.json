@@ -1,0 +1,10 @@
+{
+  "name": "com.cepacero.unity",
+  "version": "0.1.0",
+  "displayName": "Cepa Cero Unity",
+  "description": "Unity side of Cepa Cero: views, input and (later) FishNet glue on top of com.cepacero.core. Includes a debug prototype that plays the core simulation with coloured squares.",
+  "unity": "6000.0",
+  "author": {
+    "name": "Cepa Cero"
+  }
+}

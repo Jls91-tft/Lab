@@ -78,6 +78,7 @@ Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
   {
     "dependencies": {
       "com.cepacero.core": "file:../../packages/com.cepacero.core",
+      "com.cepacero.unity": "file:../../packages/com.cepacero.unity",
       // … lo que ya hubiera, sin tocar …
     },
     "testables": ["com.cepacero.core"]
@@ -85,14 +86,29 @@ Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
   ```
   (`file:` es relativo a la carpeta `Packages/`: sube a `CepaCero/` y luego a la raíz del repo.)
   Si `testables` ya existía, añade el nombre a la lista.
-- [ ] Abre el proyecto. En *Window > Package Manager → In Project* debe aparecer **Cepa Cero Core 0.1.0**.
+- [ ] Abre el proyecto. En *Window > Package Manager → In Project* deben aparecer **Cepa Cero Core 0.1.0** y **Cepa Cero Unity 0.1.0**.
+  Comprueba también que está **Input System** (la plantilla Universal 2D lo trae; si no, instálalo desde *Unity Registry*).
 - [ ] Consola sin errores rojos. Si hay alguno, cópiamelo **tal cual**: será una diferencia del compilador de Unity con .NET.
 - [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **144 tests en verde** (o más, si seguimos añadiendo).
   El de rendimiento (`DeliciasSizedFieldBuildsFastEnough`) escribe el tiempo en el log: pásamelo.
 - [ ] Unity habrá creado archivos `.meta` dentro de `packages/com.cepacero.core/`. **Se versionan**:
   ```bash
-  git add CepaCero packages && git commit -m "Unity: enlazar com.cepacero.core y metas" && git push
+  git add CepaCero packages && git commit -m "Unity: enlazar los paquetes de Cepa Cero y metas" && git push
   ```
+
+## 4b-bis. Jugar el prototipo de depuración (5 minutos)
+Toda la simulación con cuadrados de colores: no es el juego, es para ver que el núcleo funciona en Unity.
+- [ ] *File > New Scene* (Basic 2D o vacía) y guárdala como `Assets/_Project/Scenes/SCN_Prototype.unity`.
+- [ ] *GameObject > Create Empty*, llámalo `Prototype` y en el Inspector *Add Component* → **Prototype Game**.
+- [ ] **Play.** Deberías ver el mapa de prueba (calle, 3 edificios, parque, estanque), tú en azul y zombis de colores
+  (caminante verde grisáceo, corredor amarillo verdoso, gritón morado, escupidor verde chillón, La Mole rojo oscuro).
+- [ ] Controles (también en pantalla): **WASD** moverse · **Shift** correr · **clic izq.** atacar o disparar hacia el ratón ·
+  **clic der.** construir en la casilla del ratón · **B** cambiar bloque · **F** romper/talar · **E** puerta o contenedor ·
+  **T** coger del contenedor · **G** recoger del suelo · **Q** usar (vendas en el 4) · **1-5** elegir · **F5/F9** guardar/cargar.
+- [ ] Prueba: espera a la noche (unos 2 minutos), constrúyete un fuerte con el clic derecho y aguanta. Abre un contenedor del hospital y mira el diario.
+- [ ] Para jugar en Delicias real: en el Inspector cambia *Map Path* a `tools/osm2tiles/out/delicias-test.map.json` (§4c).
+- [ ] Pásame **todo lo que salga en rojo en la consola** y lo que te parezca raro o aburrido. El código de esta parte no lo he podido
+  compilar contra Unity (solo contra una imitación de su API), así que algún error de compilación es posible.
 
 ## 4c. Pruebas fuera de Unity (opcional, 10 minutos)
 Necesitan Python 3.11+ y el **.NET 8 SDK** (gratis, de Microsoft: `winget install Microsoft.DotNet.SDK.8` en Windows).
@@ -132,4 +148,5 @@ Paquete **`com.unity.ai.assistant`** (Unity AI Assistant, en beta). Pasos según
 3. Si el MCP pide pago o no, y si conectó.
 4. Cualquier error de la consola de Unity (copiar y pegar).
 5. Resultado del Test Runner (cuántos en verde y el tiempo del test de rendimiento).
+5b. Si el prototipo arrancó: qué viste y los errores de consola.
 6. Si hiciste el §4c: la imagen `delicias-test.preview.png` y la salida de simbench con Delicias.

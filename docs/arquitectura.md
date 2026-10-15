@@ -47,7 +47,10 @@ CepaCero/                               Proyecto Unity (lo creas esta noche)
       UI/       CepaCero.Unity.UI
     Data/                               ScriptableObjects (SO_*)
     Prefabs/ Scenes/ Sprites/ Tiles/ Audio/ Settings/
-  Packages/manifest.json                → "com.cepacero.core": "file:../../packages/com.cepacero.core"
+  Packages/manifest.json                → "com.cepacero.core" y "com.cepacero.unity" con file:../../packages/…
+
+packages/com.cepacero.unity/            Código de Unity (propuesta D-014): vistas, entrada, red con FishNet
+  Runtime/Prototype/                    Prototipo de depuración: PrototypeGame juega el núcleo con cuadrados
 
 packages/com.cepacero.core/             Simulación sin motor (paquete UPM local)
   Runtime/  CepaCero.Core.asmdef        noEngineReferences = true
