@@ -1,0 +1,425 @@
+{
+  "format": "cepacero.bestiary",
+  "version": 1,
+  "source": "docs/bestiario.md",
+  "zombies": [
+    {
+      "id": "walker",
+      "name": "Caminante",
+      "tier": "common",
+      "mvp": true,
+      "size_tiles": 0.8,
+      "health": 60,
+      "health_per_extra_player": 0.0,
+      "speed": 1.2,
+      "damage": 10,
+      "damage_type": "blunt",
+      "attack_interval": 1.5,
+      "attack_range": 0.8,
+      "structure_damage": 8,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 8.0,
+      "detect_hearing": 12.0,
+      "behavior": [
+        "wander",
+        "follow_noise",
+        "chase",
+        "attack_blocking_structure"
+      ],
+      "damage_taken": {
+        "blunt": 1.0,
+        "sharp": 1.0,
+        "ballistic": 1.0,
+        "fire": 1.5,
+        "acid": 1.0
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{}",
+      "weakness": "Fuego y golpes a la cabeza; muy lento en giros",
+      "loot": [
+        {
+          "item": "scrap_cloth",
+          "min": 0,
+          "max": 1,
+          "chance": 0.3
+        },
+        {
+          "item": "bandage_dirty",
+          "min": 0,
+          "max": 1,
+          "chance": 0.05
+        }
+      ],
+      "visual": "Silueta encorvada, piel gris verdosa, brazos colgando; ojos con brillo verde tenue de noche",
+      "audio": "Gemido grave y arrastre de pies; gruñido corto al atacar"
+    },
+    {
+      "id": "runner",
+      "name": "Corredor",
+      "tier": "common",
+      "mvp": true,
+      "size_tiles": 0.7,
+      "health": 40,
+      "health_per_extra_player": 0.0,
+      "speed": 4.8,
+      "damage": 8,
+      "damage_type": "blunt",
+      "attack_interval": 0.8,
+      "attack_range": 0.8,
+      "structure_damage": 4,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 12.0,
+      "detect_hearing": 10.0,
+      "behavior": [
+        "wander",
+        "chase_sprint",
+        "exhaust_after_seconds_6",
+        "rest_seconds_3"
+      ],
+      "damage_taken": {
+        "blunt": 1.2,
+        "sharp": 1.2,
+        "ballistic": 1.0,
+        "fire": 1.0,
+        "acid": 1.0
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{}",
+      "weakness": "Se agota tras ~6 s de carrera; poca vida",
+      "loot": [
+        {
+          "item": "scrap_cloth",
+          "min": 0,
+          "max": 1,
+          "chance": 0.2
+        },
+        {
+          "item": "food_can",
+          "min": 0,
+          "max": 1,
+          "chance": 0.08
+        }
+      ],
+      "visual": "Silueta erguida e inclinada hacia delante, ropa de deporte rasgada, venas verdes en el cuello",
+      "audio": "Jadeo rápido y chillido agudo al detectarte"
+    },
+    {
+      "id": "screamer",
+      "name": "Gritón",
+      "tier": "special",
+      "mvp": true,
+      "size_tiles": 0.8,
+      "health": 80,
+      "health_per_extra_player": 0.0,
+      "speed": 2.0,
+      "damage": 0,
+      "damage_type": "blunt",
+      "attack_interval": 0.0,
+      "attack_range": 0.0,
+      "structure_damage": 0,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 14.0,
+      "detect_hearing": 14.0,
+      "behavior": [
+        "keep_distance_6",
+        "scream_on_sight",
+        "flee_when_hit"
+      ],
+      "damage_taken": {
+        "blunt": 1.0,
+        "sharp": 1.0,
+        "ballistic": 1.5,
+        "fire": 1.0,
+        "acid": 1.0
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{\"scream\": {\"ally_speed_buff\": 1.3, \"buff_seconds\": 8, \"cooldown\": 12, \"noise_radius\": 40, \"windup\": 1.5}}",
+      "weakness": "Interrumpir la carga del grito (1,5 s) con un golpe o disparo; frágil a balas",
+      "loot": [
+        {
+          "item": "vocal_gland",
+          "min": 1,
+          "max": 1,
+          "chance": 1.0
+        },
+        {
+          "item": "scrap_cloth",
+          "min": 0,
+          "max": 2,
+          "chance": 0.4
+        }
+      ],
+      "visual": "Mandíbula desencajada, cuello hinchado que brilla verde al cargar el grito; aspecto delgado",
+      "audio": "Inspiración silbante de aviso (carga) y grito desgarrado que retumba con eco"
+    },
+    {
+      "id": "spitter",
+      "name": "Escupidor",
+      "tier": "special",
+      "mvp": true,
+      "size_tiles": 0.9,
+      "health": 70,
+      "health_per_extra_player": 0.0,
+      "speed": 1.5,
+      "damage": 15,
+      "damage_type": "acid",
+      "attack_interval": 3.0,
+      "attack_range": 7.0,
+      "structure_damage": 10,
+      "structure_multipliers": {
+        "wood": 3.0,
+        "metal": 0.5,
+        "concrete": 0.25
+      },
+      "detect_sight": 10.0,
+      "detect_hearing": 10.0,
+      "behavior": [
+        "keep_distance_5",
+        "spit_projectile",
+        "target_wood_walls"
+      ],
+      "damage_taken": {
+        "blunt": 1.0,
+        "sharp": 1.0,
+        "ballistic": 1.0,
+        "fire": 1.2,
+        "acid": 0.0
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{\"acid_pool\": {\"dps\": 6, \"radius\": 1.0, \"seconds\": 5}}",
+      "weakness": "Cuerpo a cuerpo (no huye bien); los muros de metal y hormigón apenas se corroen",
+      "loot": [
+        {
+          "item": "acid_sac",
+          "min": 1,
+          "max": 1,
+          "chance": 1.0
+        }
+      ],
+      "visual": "Torso hinchado con bolsas verdes translúcidas; goteo verde brillante en la boca",
+      "audio": "Gorgoteo constante; arcada húmeda antes de escupir; chisporroteo al corroer"
+    },
+    {
+      "id": "armored",
+      "name": "Acorazado",
+      "tier": "special",
+      "mvp": false,
+      "size_tiles": 1.0,
+      "health": 250,
+      "health_per_extra_player": 0.0,
+      "speed": 1.0,
+      "damage": 20,
+      "damage_type": "blunt",
+      "attack_interval": 2.0,
+      "attack_range": 1.0,
+      "structure_damage": 25,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 8.0,
+      "detect_hearing": 10.0,
+      "behavior": [
+        "chase",
+        "face_target",
+        "shield_bash"
+      ],
+      "damage_taken": {
+        "blunt": 0.8,
+        "sharp": 0.5,
+        "ballistic": 0.7,
+        "fire": 1.0,
+        "acid": 2.0
+      },
+      "armor_front_arc_degrees": 120.0,
+      "armor_front_multiplier": 0.1,
+      "spawn_condition": "",
+      "ability_json": "{}",
+      "weakness": "Espalda y flancos; gira lento; el ácido funde la coraza",
+      "loot": [
+        {
+          "item": "metal_plate",
+          "min": 1,
+          "max": 2,
+          "chance": 0.8
+        }
+      ],
+      "visual": "Silueta ancha y cuadrada, placas oscuras con reflejo; marcas verdes en las juntas",
+      "audio": "Pasos pesados metálicos; golpe sordo cuando le aciertas de frente"
+    },
+    {
+      "id": "sapper",
+      "name": "Zapador",
+      "tier": "special",
+      "mvp": false,
+      "size_tiles": 0.9,
+      "health": 150,
+      "health_per_extra_player": 0.0,
+      "speed": 1.4,
+      "damage": 12,
+      "damage_type": "blunt",
+      "attack_interval": 1.2,
+      "attack_range": 0.8,
+      "structure_damage": 45,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 6.0,
+      "detect_hearing": 8.0,
+      "behavior": [
+        "seek_nearest_player_structure",
+        "attack_structure",
+        "ignore_players_unless_adjacent"
+      ],
+      "damage_taken": {
+        "blunt": 1.0,
+        "sharp": 1.0,
+        "ballistic": 1.2,
+        "fire": 1.0,
+        "acid": 1.0
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "blocks_placed_by_team > 150",
+      "ability_json": "{}",
+      "weakness": "Ignora a los jugadores: fácil de cazar si alguien sale del fuerte",
+      "loot": [
+        {
+          "item": "bone_claw",
+          "min": 1,
+          "max": 2,
+          "chance": 0.7
+        }
+      ],
+      "visual": "Brazos alargados terminados en garras de hueso; caminar a cuatro patas",
+      "audio": "Rascado continuo y crujido de madera astillándose"
+    },
+    {
+      "id": "brute",
+      "name": "La Mole",
+      "tier": "miniboss",
+      "mvp": true,
+      "size_tiles": 2.0,
+      "health": 1500,
+      "health_per_extra_player": 0.5,
+      "speed": 1.8,
+      "damage": 40,
+      "damage_type": "blunt",
+      "attack_interval": 2.5,
+      "attack_range": 1.5,
+      "structure_damage": 150,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 12.0,
+      "detect_hearing": 20.0,
+      "behavior": [
+        "chase",
+        "charge_when_blocked",
+        "slam_area"
+      ],
+      "damage_taken": {
+        "blunt": 0.6,
+        "sharp": 1.0,
+        "ballistic": 0.8,
+        "fire": 1.0,
+        "acid": 1.2
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{\"charge\": {\"breaks_blocks\": [\"wood\", \"concrete\"], \"cooldown\": 10, \"speed\": 6.0, \"stunned_by\": [\"metal\"], \"windup\": 1.2}, \"slam\": {\"cooldown\": 8, \"damage\": 25, \"knockback\": 3, \"radius\": 2.5}, \"stun\": {\"damage_taken_multiplier\": 2.0, \"seconds\": 4}}",
+      "weakness": "Atraerlo contra un muro de metal: aturdido 4 s con daño doble",
+      "loot": [
+        {
+          "item": "sample_brute",
+          "min": 1,
+          "max": 1,
+          "chance": 1.0
+        },
+        {
+          "item": "metal_scrap",
+          "min": 3,
+          "max": 6,
+          "chance": 1.0
+        }
+      ],
+      "visual": "El doble de alto que un jugador; espalda deformada con bultos verdes; casco de obra incrustado",
+      "audio": "Respiración profunda; bramido y temblor de cámara antes de la carga; estruendo al romper muros"
+    },
+    {
+      "id": "patient_zero",
+      "name": "Paciente Cero",
+      "tier": "miniboss",
+      "mvp": false,
+      "size_tiles": 1.2,
+      "health": 2500,
+      "health_per_extra_player": 0.5,
+      "speed": 2.5,
+      "damage": 30,
+      "damage_type": "blunt",
+      "attack_interval": 1.5,
+      "attack_range": 1.2,
+      "structure_damage": 60,
+      "structure_multipliers": {
+        "wood": 1.0,
+        "metal": 1.0,
+        "concrete": 1.0
+      },
+      "detect_sight": 16.0,
+      "detect_hearing": 16.0,
+      "behavior": [
+        "summon_horde",
+        "drain_allies_to_heal",
+        "teleport_through_vents"
+      ],
+      "damage_taken": {
+        "blunt": 1.0,
+        "sharp": 1.0,
+        "ballistic": 1.0,
+        "fire": 1.5,
+        "acid": 0.5
+      },
+      "armor_front_arc_degrees": 0.0,
+      "armor_front_multiplier": 1.0,
+      "spawn_condition": "",
+      "ability_json": "{\"drain\": {\"cooldown\": 15, \"heal_per_ally\": 100, \"radius\": 4}, \"summon\": {\"cooldown\": 20, \"count\": 8}}",
+      "weakness": "Fuego; matar a sus invocados antes de que se cure",
+      "loot": [
+        {
+          "item": "sample_zero",
+          "min": 1,
+          "max": 1,
+          "chance": 1.0
+        }
+      ],
+      "visual": "Bata de hospital, vías intravenosas colgando que brillan verde; filamentos que le salen de la espalda",
+      "audio": "Susurro coral (muchas voces); pitido de monitor cardiaco distorsionado al invocar"
+    }
+  ]
+}

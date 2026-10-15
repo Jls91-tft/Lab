@@ -43,7 +43,7 @@ namespace CepaCero.Rules
             }
             noiseBonus = Math.Clamp(noiseBonus, 0f, 1f);
             double raw = _settings.HordeBase * Math.Pow(_settings.HordeGrowth, night - 1) * (1.0 + 0.5 * noiseBonus);
-            int total = (int)Math.Min(_settings.HordeMax, Math.Round(raw));
+            int total = (int)Math.Min(_settings.HordeMax, Math.Round(raw, MidpointRounding.AwayFromZero));
 
             var plan = new HordePlan(night);
             bool boss = _settings.BossEveryNights > 0 && night % _settings.BossEveryNights == 0;
@@ -53,7 +53,7 @@ namespace CepaCero.Rules
                 total = Math.Max(0, total - 1);
             }
 
-            int specials = night >= _settings.SpecialsFromNight ? Math.Max(1, (int)Math.Round(total * _settings.SpecialShare)) : 0;
+            int specials = night >= _settings.SpecialsFromNight ? Math.Max(1, (int)Math.Round(total * _settings.SpecialShare, MidpointRounding.AwayFromZero)) : 0;
             specials = Math.Min(specials, total);
             int screamers = (specials + 1) / 2;
             int spitters = specials - screamers;
@@ -61,7 +61,7 @@ namespace CepaCero.Rules
             // Runners: none on night 1, then a growing share up to 30 %.
             float runnerShare = Math.Min(0.3f, 0.06f * (night - 1));
             int commons = total - specials;
-            int runners = (int)Math.Round(commons * runnerShare);
+            int runners = (int)Math.Round(commons * runnerShare, MidpointRounding.AwayFromZero);
 
             plan.Add(Walker, commons - runners);
             plan.Add(Runner, runners);
