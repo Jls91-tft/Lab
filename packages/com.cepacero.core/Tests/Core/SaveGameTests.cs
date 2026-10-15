@@ -117,7 +117,8 @@ namespace CepaCero.Tests.Core
 
             var missing = new BlockRegistry();
             missing.Add(new BlockType(0, "air", 0, BlockMaterial.None, isSolid: false));
-            Assert.Throws<FormatException>(() => SaveGame.Load(data, NewSession(missing), "test-map"), "unknown block keys");
+            var ex = Assert.Throws<FormatException>(() => SaveGame.Load(data, NewSession(missing), "test-map"));
+            StringAssert.Contains("wood_wall", ex.Message, "names the blocks this version does not know");
         }
 
         [Test]

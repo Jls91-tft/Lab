@@ -14,7 +14,7 @@ namespace CepaCero.Core
     /// Layout (little-endian):
     ///   magic "CCSV" (uint) · version (ushort) · map name (string) · width, height (ushort)
     ///   tick (long) · nights survived, zombies killed (int)
-    ///   block keys: count (ushort) + key (string) each   ← lets old saves load after new blocks are added
+    ///   block keys: count (ushort) + key (string) each   ← old saves load after blocks are added or reordered
     ///   players: count (byte) + x, y, stamina (float), health (int) each
     ///   chunks: count (ushort) + <see cref="BlockWorld.WriteChunk"/> each
     ///   checksum: FNV-1a 32 of everything before it (uint)
@@ -103,16 +103,22 @@ namespace CepaCero.Core
             int nights = reader.ReadInt();
             int kills = reader.ReadInt();
 
+            // Blocks this version does not know are only a problem if the world actually uses them.
             int keyCount = reader.ReadUShort();
             var remap = new ushort[keyCount];
+            var unknown = new List<string>();
             for (int i = 0; i < keyCount; i++)
             {
                 string key = reader.ReadString();
-                if (!blocks.Registry.TryGet(key, out BlockType type))
+                if (blocks.Registry.TryGet(key, out BlockType type))
                 {
-                    throw new FormatException($"Save uses block '{key}', unknown to this version of the game.");
+                    remap[i] = type.Id;
                 }
-                remap[i] = type.Id;
+                else
+                {
+                    remap[i] = ushort.MaxValue;
+                    unknown.Add(key);
+                }
             }
 
             int playerCount = reader.ReadByte();
@@ -134,7 +140,14 @@ namespace CepaCero.Core
             }
             for (int c = 0; c < chunks; c++)
             {
-                blocks.ReadChunk(reader, remap);
+                try
+                {
+                    blocks.ReadChunk(reader, remap);
+                }
+                catch (FormatException) when (unknown.Count > 0)
+                {
+                    throw new FormatException($"Save uses blocks unknown to this version of the game: {string.Join(", ", unknown)}.");
+                }
             }
             if (reader.Remaining != 0)
             {

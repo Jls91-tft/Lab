@@ -58,6 +58,8 @@ namespace CepaCero.World
             r.Add(new BlockType(6, "wood_wall", 100, BlockMaterial.Wood, isSolid: true));
             r.Add(new BlockType(7, "metal_wall", 300, BlockMaterial.Metal, isSolid: true));
             r.Add(new BlockType(8, "concrete_wall", 600, BlockMaterial.Concrete, isSolid: true));
+            r.Add(new BlockType(9, "workbench", 150, BlockMaterial.Wood, isSolid: true));
+            r.Add(new BlockType(10, "chest", 150, BlockMaterial.Wood, isSolid: true));
             return r;
         }
     }
