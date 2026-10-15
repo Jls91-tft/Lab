@@ -14,6 +14,10 @@ namespace CepaCero.Unity.Prototype
     {
         public Float2 Move;
         public bool Sprint;
+
+        /// <summary>Held, not latched: helping a teammate up needs the key kept down.</summary>
+        public bool Revive;
+
         public Float2 MouseWorld;
 
         public bool Attack;
@@ -42,6 +46,7 @@ namespace CepaCero.Unity.Prototype
             float y = (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f);
             Move = new Float2(x, y);
             Sprint = kb.leftShiftKey.isPressed;
+            Revive = kb.rKey.isPressed;
 
             Harvest |= kb.fKey.wasPressedThisFrame;
             Interact |= kb.eKey.wasPressedThisFrame;

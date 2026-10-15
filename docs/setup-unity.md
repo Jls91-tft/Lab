@@ -89,7 +89,7 @@ Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
 - [ ] Abre el proyecto. En *Window > Package Manager → In Project* deben aparecer **Cepa Cero Core 0.1.0** y **Cepa Cero Unity 0.1.0**.
   Comprueba también que está **Input System** (la plantilla Universal 2D lo trae; si no, instálalo desde *Unity Registry*).
 - [ ] Consola sin errores rojos. Si hay alguno, cópiamelo **tal cual**: será una diferencia del compilador de Unity con .NET.
-- [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **144 tests en verde** (o más, si seguimos añadiendo).
+- [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **145 tests en verde** (o más, si seguimos añadiendo).
   El de rendimiento (`DeliciasSizedFieldBuildsFastEnough`) escribe el tiempo en el log: pásamelo.
 - [ ] Unity habrá creado archivos `.meta` dentro de `packages/com.cepacero.core/`. **Se versionan**:
   ```bash
@@ -104,8 +104,13 @@ Toda la simulación con cuadrados de colores: no es el juego, es para ver que el
   (caminante verde grisáceo, corredor amarillo verdoso, gritón morado, escupidor verde chillón, La Mole rojo oscuro).
 - [ ] Controles (también en pantalla): **WASD** moverse · **Shift** correr · **clic izq.** atacar o disparar hacia el ratón ·
   **clic der.** construir en la casilla del ratón · **B** cambiar bloque · **F** romper/talar · **E** puerta o contenedor ·
-  **T** coger del contenedor · **G** recoger del suelo · **Q** usar (vendas en el 4) · **1-5** elegir · **F5/F9** guardar/cargar.
+  **T** coger del contenedor · **G** recoger del suelo · **Q** usar (vendas en el 4) · **1-5** elegir · **R** (mantener) levantar a un compañero caído · **F5/F9** guardar/cargar.
 - [ ] Prueba: espera a la noche (unos 2 minutos), constrúyete un fuerte con el clic derecho y aguanta. Abre un contenedor del hospital y mira el diario.
+- [ ] **Prueba de red en bucle**: para Play, marca *Play As Remote Client* en el Inspector y dale a Play otra vez.
+  Ahora eres el jugador 1 (azul) de un anfitrión que corre en el mismo proceso; el jugador 0 (gris) se queda quieto en el fuerte.
+  Tus controles viajan como bytes del protocolo y todo lo que ves sale de la réplica del cliente: si algo se ve distinto
+  al modo normal (zombis que saltan, contenedores que no abren, inventario que no cambia), es un fallo de red y quiero saberlo.
+  La línea cian del HUD muestra los KB/s de bajada y subida. Si un zombi tumba al jugador 0, mantén **R** a su lado para levantarlo.
 - [ ] Para jugar en Delicias real: en el Inspector cambia *Map Path* a `tools/osm2tiles/out/delicias-test.map.json` (§4c).
 - [ ] Pásame **todo lo que salga en rojo en la consola** y lo que te parezca raro o aburrido. El código de esta parte no lo he podido
   compilar contra Unity (solo contra una imitación de su API), así que algún error de compilación es posible.
