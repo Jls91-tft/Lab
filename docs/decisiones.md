@@ -20,6 +20,7 @@ antigua como **Sustituida por D-XXX**.
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
 | ~~Paleta~~ | Cerrado: paleta propia de 32 colores, generada por código (D-018) |
 | Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
+| Construcción (capas, catálogo, modo construcción, ventanas y barricadas) | Propuesta en `docs/propuesta-construccion.md`, pendiente de OK |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
