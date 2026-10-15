@@ -33,4 +33,31 @@ namespace CepaCero.AI
             Position = position;
         }
     }
+
+    public enum ZombieEventType : byte
+    {
+        Scream = 1,
+        ScreamInterrupted = 2,
+        Spit = 3,
+        AcidSplash = 4,
+        ChargeStart = 5,
+        Stunned = 6,
+        Slam = 7,
+        Noticed = 8,
+    }
+
+    /// <summary>Something clients should see or hear (sound, particles, camera shake). Sent as a reliable event.</summary>
+    public readonly struct ZombieEvent
+    {
+        public readonly ZombieEventType Type;
+        public readonly ushort ZombieId;
+        public readonly Float2 Position;
+
+        public ZombieEvent(ZombieEventType type, ushort zombieId, Float2 position)
+        {
+            Type = type;
+            ZombieId = zombieId;
+            Position = position;
+        }
+    }
 }

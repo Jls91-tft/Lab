@@ -19,6 +19,13 @@ de alrededor es solo explicación. Las claves van en inglés porque pasan tal cu
 
 Tipos de daño: `blunt` (contundente), `sharp` (cortante), `ballistic` (balas), `fire` (fuego), `acid` (ácido).
 Sentidos: `detect_sight` (vista, se reduce de noche ×0,5), `detect_hearing` (oído, radio que se suma al ruido emitido).
+Un zombi colocado en el mapa empieza **sin saber** dónde están los jugadores hasta que los ve u oye; la horda nocturna llega sabiéndolo.
+
+Habilidades (`ability`): cada una admite solo estos parámetros (lo valida `tools/datagen`):
+`cooldown`, `windup`, `radius`/`noise_radius`, `seconds`/`buff_seconds`, `speed`, `damage`,
+`ally_speed_buff`/`damage_taken_multiplier` (multiplicador), `knockback`, `count`, `heal_per_ally`, `dps`,
+`breaks_blocks` y `stunned_by` (listas de `wood`, `metal`, `concrete`).
+Implementadas en la simulación: `scream`, `acid_pool` (con `spit_projectile`), `charge`, `stun` y `slam`.
 Silueta/tamaño en tiles para el *placeholder* del prototipo (formas básicas).
 
 ## Resumen

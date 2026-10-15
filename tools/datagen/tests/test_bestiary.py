@@ -35,7 +35,12 @@ def test_runtime_shape_is_jsonutility_friendly():
     assert set(spitter["damage_taken"]) == {"blunt", "sharp", "ballistic", "fire", "acid"}
     assert spitter["loot"] == [{"item": "acid_sac", "min": 1, "max": 1, "chance": 1.0}]
     brute = next(z for z in doc["zombies"] if z["id"] == "brute")
-    assert json.loads(brute["ability_json"])["charge"]["stunned_by"] == ["metal"]
+    charge = next(a for a in brute["abilities"] if a["type"] == "charge")
+    assert charge["stunned_by"] == ["metal"] and charge["breaks"] == ["wood", "concrete"]
+    assert charge["speed"] == 6.0 and charge["windup"] == 1.2
+    screamer = next(z for z in doc["zombies"] if z["id"] == "screamer")
+    scream = screamer["abilities"][0]
+    assert (scream["type"], scream["radius"], scream["multiplier"], scream["seconds"]) == ("scream", 40.0, 1.3, 8.0)
 
 
 def test_generated_file_is_up_to_date():
@@ -78,7 +83,7 @@ def test_defaults_are_filled_in():
     z = to_runtime(yaml_entry())
     assert z["damage_taken"]["fire"] == 2.0 and z["damage_taken"]["acid"] == 1.0
     assert z["structure_multipliers"] == {"wood": 1.0, "metal": 1.0, "concrete": 1.0}
-    assert z["damage_type"] == "blunt" and z["ability_json"] == "{}"
+    assert z["damage_type"] == "blunt" and z["abilities"] == []
 
 
 @pytest.mark.parametrize("overrides, message", [
@@ -93,6 +98,13 @@ def test_defaults_are_filled_in():
 def test_invalid_entries_are_rejected(overrides, message):
     with pytest.raises(BestiaryError, match=message):
         to_runtime(_entry(**overrides))
+
+
+def test_unknown_ability_parameters_are_rejected():
+    with pytest.raises(BestiaryError, match="unknown parameter 'laser'"):
+        to_runtime(_entry(ability={"scream": {"laser": 1}}))
+    with pytest.raises(BestiaryError, match="list of"):
+        to_runtime(_entry(ability={"charge": {"breaks_blocks": ["glass"]}}))
 
 
 def test_missing_key_is_reported():

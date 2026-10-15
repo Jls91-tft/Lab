@@ -40,7 +40,7 @@ namespace CepaCero.AI
         public float armor_front_arc_degrees;
         public float armor_front_multiplier;
         public string spawn_condition;
-        public string ability_json;
+        public AbilityData[] abilities;
         public string weakness;
         public LootEntry[] loot;
         public string visual;
@@ -54,6 +54,50 @@ namespace CepaCero.AI
         }
 
         public bool HasBehavior(string tag) => behavior != null && Array.IndexOf(behavior, tag) >= 0;
+
+        /// <summary>Ability record by type ("scream", "charge"...), or null.</summary>
+        public AbilityData GetAbility(string type)
+        {
+            if (abilities == null)
+            {
+                return null;
+            }
+            foreach (AbilityData a in abilities)
+            {
+                if (a.type == type)
+                {
+                    return a;
+                }
+            }
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// One special ability with a fixed set of parameters; each ability uses
+    /// the ones it needs (see docs/bestiario.md and tools/datagen).
+    /// </summary>
+    [Serializable]
+    public sealed class AbilityData
+    {
+        public string type;
+        public float cooldown;
+        public float windup;
+        public float radius;
+        public float seconds;
+        public float speed;
+        public float damage;
+        public float multiplier = 1f;
+        public float knockback;
+        public int count;
+        public float heal;
+        public float dps;
+        public string[] breaks;
+        public string[] stunned_by;
+
+        public bool Breaks(string material) => breaks != null && Array.IndexOf(breaks, material) >= 0;
+
+        public bool IsStunnedBy(string material) => stunned_by != null && Array.IndexOf(stunned_by, material) >= 0;
     }
 
     [Serializable]

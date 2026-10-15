@@ -1,7 +1,7 @@
 """docs/bestiario.md (YAML blocks) → data/generated/bestiary.json.
 
-The JSON layout is JsonUtility-friendly (no dictionaries): loot becomes a
-list of objects and free-form ability blocks are kept as a JSON string.
+The JSON layout is JsonUtility-friendly (no free-form dictionaries): loot
+and abilities become lists of fixed-shape records.
 """
 
 from __future__ import annotations
@@ -29,8 +29,47 @@ REQUIRED = {
 }
 
 
+# Ability blocks in the docs use descriptive keys; the runtime uses one fixed
+# record per ability (JsonUtility cannot read free-form dictionaries).
+ABILITY_FIELDS = {
+    "cooldown": "cooldown", "windup": "windup", "radius": "radius", "noise_radius": "radius",
+    "seconds": "seconds", "buff_seconds": "seconds", "speed": "speed", "damage": "damage",
+    "ally_speed_buff": "multiplier", "damage_taken_multiplier": "multiplier", "knockback": "knockback",
+    "count": "count", "heal_per_ally": "heal", "dps": "dps",
+    "breaks_blocks": "breaks", "stunned_by": "stunned_by",
+}
+ABILITY_DEFAULTS = {
+    "cooldown": 0.0, "windup": 0.0, "radius": 0.0, "seconds": 0.0, "speed": 0.0, "damage": 0.0,
+    "multiplier": 1.0, "knockback": 0.0, "count": 0, "heal": 0.0, "dps": 0.0, "breaks": [], "stunned_by": [],
+}
+
+
 class BestiaryError(ValueError):
     pass
+
+
+def _abilities(zid: str, raw: dict) -> list[dict]:
+    if not isinstance(raw, dict):
+        raise BestiaryError(f"{zid}: 'ability' must be a mapping of ability name → parameters")
+    out = []
+    for name, params in raw.items():
+        if not isinstance(params, dict):
+            raise BestiaryError(f"{zid}: ability '{name}' needs parameters")
+        record = {"type": name, **{k: (list(v) if isinstance(v, list) else v) for k, v in ABILITY_DEFAULTS.items()}}
+        for key, value in params.items():
+            if key not in ABILITY_FIELDS:
+                raise BestiaryError(f"{zid}: ability '{name}' has unknown parameter '{key}' (known: {sorted(ABILITY_FIELDS)})")
+            field = ABILITY_FIELDS[key]
+            if field in ("breaks", "stunned_by"):
+                if not (isinstance(value, list) and all(m in MATERIALS for m in value)):
+                    raise BestiaryError(f"{zid}: ability '{name}'.{key} must be a list of {MATERIALS}")
+                record[field] = list(value)
+            elif field == "count":
+                record[field] = int(value)
+            else:
+                record[field] = float(value)
+        out.append(record)
+    return out
 
 
 def parse_markdown(text: str) -> list[dict]:
@@ -104,7 +143,7 @@ def to_runtime(entry: dict) -> dict:
         "armor_front_arc_degrees": float(armor.get("front_arc_degrees", 0.0)),
         "armor_front_multiplier": float(armor.get("front_multiplier", 1.0)),
         "spawn_condition": entry.get("spawn_condition", ""),
-        "ability_json": json.dumps(entry.get("ability", {}), ensure_ascii=False, sort_keys=True),
+        "abilities": _abilities(entry["id"], entry.get("ability", {})),
         "weakness": entry["weakness"],
         "loot": [{"item": k, "min": v[0], "max": v[1], "chance": float(v[2])} for k, v in entry["loot"].items()],
         "visual": entry["visual"],

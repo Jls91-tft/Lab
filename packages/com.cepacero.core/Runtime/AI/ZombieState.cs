@@ -8,5 +8,17 @@ namespace CepaCero.AI
         AttackingBlock = 2,
         AttackingPlayer = 3,
         Resting = 4,
+
+        /// <summary>Screamer charging its scream (interruptible).</summary>
+        Screaming = 5,
+
+        /// <summary>La Mole winding up or running a charge.</summary>
+        Charging = 6,
+
+        /// <summary>La Mole after hitting metal: takes extra damage.</summary>
+        Stunned = 7,
+
+        /// <summary>Has not noticed anyone yet.</summary>
+        Unaware = 8,
     }
 }

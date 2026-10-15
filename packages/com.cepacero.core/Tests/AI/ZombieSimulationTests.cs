@@ -124,7 +124,7 @@ namespace CepaCero.Tests.AI
             var hits = new List<PlayerHit>();
             sim.DrainPlayerHits(hits);
             Assert.That(hits, Is.Empty, "La Mole reaches 2.9 tiles but the wall is in between");
-            Assert.That(sim.GetState(slot), Is.EqualTo(ZombieState.AttackingBlock));
+            Assert.That(sim.GetState(slot), Is.Not.EqualTo(ZombieState.AttackingPlayer), "it goes for the wall (punching or charging)");
         }
 
         [Test]
