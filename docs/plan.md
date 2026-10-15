@@ -48,9 +48,10 @@ con tests (`scripts/check.sh`). Lo que queda en cada hito es sobre todo la parte
 | — | `SaveGame` v2: mundo, jugadores, inventarios, contenedores, objetos en el suelo y recetas, con checksum y compatibilidad | Menú de guardado, ruta de archivos |
 
 **Hecho además:** trampas de pinchos, zombis de día que deambulan (`PopulateMap`), diario
-compartido con disparadores (`docs/lore.md`), tabla de textos para localización (`data/generated/loc/strings.csv`).
+compartido con disparadores (`docs/lore.md`), tabla de textos para localización (`data/generated/loc/strings.csv`),
+hambre y sed duras y configurables (D-015).
 
-**Pendiente de la lógica** (sin Unity, para cuando toque): hambre y sed (sin decidir),
+**Pendiente de la lógica** (sin Unity, para cuando toque):
 Acorazado y Paciente Cero (post-MVP), mutación adaptativa del Zapador (post-MVP).
 
 ## Semana 0 · Setup (esta noche)

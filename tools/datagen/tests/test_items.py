@@ -25,6 +25,11 @@ def test_weapons_are_flattened():
     assert item_to_runtime(_item())["is_weapon"] is False
 
 
+def test_food_fills_bars():
+    can = item_to_runtime(_item(id="can", category="food", food=40, heal=5))
+    assert can["food"] == 40 and can["water"] == 0 and can["heal"] == 5
+
+
 @pytest.mark.parametrize("overrides, message", [
     ({"category": "gadget"}, "category"),
     ({"stack": 0}, "stack"),
@@ -33,6 +38,8 @@ def test_weapons_are_flattened():
     ({"weapon": {"damage": 1, "laser": 2}}, "weapon accepts"),
     ({"weapon": {"damage": 1, "arc": 90, "ammo": "x"}}, "melee"),
     ({"id": "Bad"}, "snake_case"),
+    ({"category": "food", "food": 150}, "full bar"),
+    ({"water": 20}, "food items"),
 ])
 def test_invalid_items(overrides, message):
     with pytest.raises(DataError, match=message):

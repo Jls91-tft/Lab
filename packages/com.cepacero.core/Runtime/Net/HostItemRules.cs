@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CepaCero.Items;
 using CepaCero.Player;
+using CepaCero.Rules;
 using CepaCero.Util;
 using CepaCero.World;
 
@@ -18,6 +19,7 @@ namespace CepaCero.Net
 
         private readonly BlockWorld _blocks;
         private readonly PlayerSettings _settings;
+        private readonly GameSettings _game;
         private readonly ItemCatalog _items;
         private readonly RecipeBook _recipes;
         private readonly LootRoller _loot;
@@ -27,8 +29,9 @@ namespace CepaCero.Net
         private readonly ushort _workbench;
 
         public HostItemRules(BlockWorld blocks, PlayerSettings settings, ItemCatalog items, RecipeBook recipes, LootRoller loot,
-            ContainerStore containers, GroundItems ground, DeterministicRandom rng)
+            ContainerStore containers, GroundItems ground, DeterministicRandom rng, GameSettings game = null)
         {
+            _game = game;
             _blocks = blocks;
             _settings = settings;
             _items = items;
@@ -132,17 +135,23 @@ namespace CepaCero.Net
                 LastUnlockedSample = def.id;
                 return IntentResult.Ok;
             }
-            if (def.heal <= 0)
-            {
-                return IntentResult.NothingToUse;
-            }
             PlayerState state = players[playerIndex];
-            if (state.Health >= _settings.MaxHealth)
+            int maxHealth = SurvivalRules.MaxHealth(state, _game, _settings);
+            bool hasBars = _game != null && _game.Survival != SurvivalMode.Off;
+            bool feeds = hasBars && ((def.food > 0 && state.Food < SurvivalRules.Full) || (def.water > 0 && state.Water < SurvivalRules.Full));
+            bool heals = def.heal > 0 && state.Health < maxHealth;
+            if (!feeds && !heals)
             {
                 return IntentResult.NothingToUse;
             }
             inv.Remove(equipped.Item, 1);
-            int healed = Math.Min(def.heal, _settings.MaxHealth - state.Health);
+            if (hasBars)
+            {
+                state.Food = Math.Min(SurvivalRules.Full, state.Food + def.food);
+                state.Water = Math.Min(SurvivalRules.Full, state.Water + def.water);
+                maxHealth = SurvivalRules.MaxHealth(state, _game, _settings); // eating lifts the hunger cap
+            }
+            int healed = Math.Max(0, Math.Min(def.heal, maxHealth - state.Health));
             state.Health += healed;
             players[playerIndex] = state;
             LastHeal = healed;

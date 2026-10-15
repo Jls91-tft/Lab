@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CepaCero.Items;
 using CepaCero.Player;
+using CepaCero.Rules;
 using CepaCero.Util;
 using CepaCero.World;
 
@@ -13,12 +14,13 @@ namespace CepaCero.Core
     /// and progress. The ground is not saved: it comes from the map file,
     /// identified by name and size. Zombies are not saved either (D-013).
     ///
-    /// Layout v3 (little-endian):
+    /// Layout v4 (little-endian; v3 is still read, without the bars):
     ///   magic "CCSV" (uint) · version (ushort) · map name (string) · width, height (ushort)
     ///   tick (long) · nights survived, zombies killed (int) · respawn x, y (float)
     ///   block keys: count (ushort) + key (string) each    ← old saves load after blocks are added or reordered
     ///   item keys:  count (ushort) + id (string) each     ← same for items (0 = match without items)
-    ///   players: count (byte) + x, y, stamina, downed seconds (float), health (int), dead (byte), inventory
+    ///   players: count (byte) + x, y, stamina, downed seconds (float), health (int), dead (byte),
+    ///            food, water (float, v4), inventory
     ///   unlocked samples: count (ushort) + id (string) each
     ///   containers (<see cref="ContainerStore.Write"/>) · ground piles: count (int) + x, y, stacks
     ///   diary: count (ushort) + entry id (string) each, in discovery order
@@ -28,7 +30,7 @@ namespace CepaCero.Core
     public static class SaveGame
     {
         public const uint Magic = 0x56534343; // "CCSV"
-        public const ushort Version = 3;
+        public const ushort Version = 4;
 
         public static void Write(GameSession session, string mapName, ByteWriter writer)
         {
@@ -67,6 +69,8 @@ namespace CepaCero.Core
                 writer.WriteFloat(s.DownedSeconds);
                 writer.WriteInt(s.Health);
                 writer.WriteByte(s.IsDead ? (byte)1 : (byte)0);
+                writer.WriteFloat(s.Food);
+                writer.WriteFloat(s.Water);
                 if (items != null)
                 {
                     session.Inventories[p].Write(writer);
@@ -147,7 +151,7 @@ namespace CepaCero.Core
                 throw new FormatException("Not a Cepa Cero save file.");
             }
             ushort version = reader.ReadUShort();
-            if (version != Version)
+            if (version != Version && version != 3)
             {
                 throw new FormatException($"Unsupported save version {version} (this build reads v{Version}).");
             }
@@ -182,14 +186,22 @@ namespace CepaCero.Core
                 var inventories = new List<Inventory>(playerCount);
                 for (int i = 0; i < playerCount; i++)
                 {
-                    players.Add(new PlayerState
+                    var state = new PlayerState
                     {
                         Position = new Float2(reader.ReadFloat(), reader.ReadFloat()),
                         Stamina = reader.ReadFloat(),
                         DownedSeconds = reader.ReadFloat(),
                         Health = reader.ReadInt(),
                         IsDead = reader.ReadByte() != 0,
-                    });
+                        Food = SurvivalRules.Full, // v3 had no bars: start them full
+                        Water = SurvivalRules.Full,
+                    };
+                    if (version >= 4)
+                    {
+                        state.Food = Clamp(reader.ReadFloat());
+                        state.Water = Clamp(reader.ReadFloat());
+                    }
+                    players.Add(state);
                     if (hasItems)
                     {
                         Inventory inv = Inventory.ForPlayer(items);
@@ -292,6 +304,8 @@ namespace CepaCero.Core
             }
             return remap;
         }
+
+        private static float Clamp(float bar) => float.IsNaN(bar) ? SurvivalRules.Full : Math.Max(0f, Math.Min(SurvivalRules.Full, bar));
 
         private static uint Fnv1a(byte[] data, int offset, int count)
         {

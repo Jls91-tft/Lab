@@ -20,6 +20,11 @@ namespace CepaCero.Unity.Prototype
         public int ZombiesKilled;
 
         public PlayerState Me;
+
+        /// <summary>Food and water bars in whole percents; −1 when hunger and thirst are off.</summary>
+        public int Food;
+        public int Water;
+
         public Inventory Inventory;
         public Inventory OpenContainer;
         public string Building;

@@ -33,6 +33,7 @@ namespace CepaCero.Core
         private const float SpawnMaxRadius = 40f;
         private const float LoudNoise = 5f;
         private const int LoudActionsForFullBonus = 100;
+        private const float LowBar = 25f;
 
         private readonly PlayerSettings _playerSettings;
         private readonly List<PlayerState> _players = new List<PlayerState>();
@@ -89,7 +90,7 @@ namespace CepaCero.Core
             {
                 Recipes = new RecipeBook(data.RecipesData, data.Items);
                 Containers = new ContainerStore(data.Items);
-                ItemRules = new HostItemRules(blocks, playerSettings, data.Items, Recipes, data.Loot, Containers, GroundItems, _rng);
+                ItemRules = new HostItemRules(blocks, playerSettings, data.Items, Recipes, data.Loot, Containers, GroundItems, _rng, settings);
                 Rules.Inventories = _inventories;
                 Rules.CanAffordBlock = (p, type) => Recipes.TryPayForBlock(_inventories[p], blocks.Registry[type].Key);
                 if (buildings != null && data.Loot != null)
@@ -276,6 +277,7 @@ namespace CepaCero.Core
             MovePlayers();
             ResolveIntents();
             CloseFarContainers();
+            UpdateSurvival();
             UpdateDownedPlayers();
             AdvanceClock();
             SpawnHorde();
@@ -294,7 +296,8 @@ namespace CepaCero.Core
             for (int p = 0; p < _players.Count; p++)
             {
                 PlayerState state = _players[p];
-                float noise = PlayerMotor.Step(ref state, _inputs[p], _dt, Blocks, Ground, _playerSettings);
+                float noise = PlayerMotor.Step(ref state, _inputs[p], _dt, Blocks, Ground, _playerSettings,
+                    SurvivalRules.StaminaRegenFactor(state, Settings));
                 _players[p] = state;
                 Zombies.EmitNoise(state.Position, noise);
             }
@@ -398,6 +401,34 @@ namespace CepaCero.Core
                 {
                     _openContainer[p] = NoContainer;
                 }
+            }
+        }
+
+        private void UpdateSurvival()
+        {
+            for (int p = 0; p < _players.Count; p++)
+            {
+                PlayerState state = _players[p];
+                float food = state.Food;
+                float water = state.Water;
+                int damage = SurvivalRules.Tick(ref state, Settings, Clock.Tick);
+                state.Health = Math.Min(state.Health, SurvivalRules.MaxHealth(state, Settings, _playerSettings));
+                _players[p] = state;
+                ReportBar(SessionEventType.Hungry, p, food, state.Food);
+                ReportBar(SessionEventType.Thirsty, p, water, state.Water);
+                Hurt(p, damage);
+            }
+        }
+
+        private void ReportBar(SessionEventType type, int p, float before, float after)
+        {
+            if (before > LowBar && after <= LowBar)
+            {
+                _events.Add(new SessionEvent(type, p, 0));
+            }
+            if (before > 0f && after <= 0f)
+            {
+                _events.Add(new SessionEvent(type, p, 1));
             }
         }
 

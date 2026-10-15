@@ -1,7 +1,7 @@
 # Propuesta: hambre y sed
 
-**Estado: propuesta, pendiente de tu OK.** Es la única decisión de diseño abierta (`docs/decisiones.md`).
-De momento la lata y el agua solo curan un poco (`docs/objetos.md`).
+**Estado: decidida en D-015 (`docs/decisiones.md`): opción C (dura) por defecto, con el ajuste Off/Soft/Hard.**
+Lo que sigue es la propuesta original; los valores finales están en D-015 (el agua dura 2 días, no 3).
 
 ## El problema
 Hambre y sed dan motivo para salir de día y hacen que el botín importe. El riesgo es la gestión aburrida:

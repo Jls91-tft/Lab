@@ -20,10 +20,20 @@ antigua como **Sustituida por D-XXX**.
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
-| Hambre y sed | Sin decidir: de momento la comida solo cura un poco. Propuesta en `docs/propuesta-hambre-sed.md` |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-015 · 15/10/2026 · Hambre y sed duras, configurables
+- **Estado:** Aceptada (OK de Javier el 15/10/2026: opción C y ajuste de partida).
+- **Decisión:** cada jugador tiene barras de **hambre y sed** (0-100). Ajuste de partida `Survival = Off | Soft | Hard`, **Hard por defecto**.
+  - Ritmo: la comida dura **3 días** de juego y el agua **2** (con días de 15 min, unos 45 y 30 min reales). Lata y botella rellenan 40.
+  - Barras vacías (Soft y Hard): sin comida la vida máxima baja al 75 %; sin agua la stamina se recupera a la mitad.
+  - Solo Hard: sin comida pierdes 1 de vida cada 10 s y sin agua 1 cada 5 s, hasta caer (y solo, morir).
+  - Caídos y muertos no gastan barras; al reaparecer vuelven llenas. Avisos al 25 % y al vaciarse.
+  - Red: el anfitrión las calcula; su dueño las recibe en el mensaje `Vitals` (2 bytes, solo cuando cambia un 1 %). Protocolo v2, guardado v4 (lee v3 con las barras llenas).
+- **Motivo:** dar peso al saqueo de día y a las tablas de botín de comida; el ajuste mantiene la partida accesible (pilar 4) para quien no lo quiera.
+- **Alternativas:** A (sin barras) y B (castigan sin matar) quedan como `Off` y `Soft`. Propuesta completa en `docs/propuesta-hambre-sed.md`.
 
 ## D-014 · 15/10/2026 · Código de Unity en un paquete local (`com.cepacero.unity`)
 - **Estado:** Aceptada (OK de Javier el 15/10/2026).

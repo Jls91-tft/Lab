@@ -19,7 +19,7 @@ BUILDABLE_BLOCKS = ("wood_wall", "metal_wall", "concrete_wall", "door", "fence",
 BUILDING_KINDS = ("generic", "residential", "commercial", "food", "hardware", "medical",
                   "police", "school", "religious", "office", "industrial", "garage")
 WEAPON_KEYS = {"damage", "damage_type", "range", "cooldown", "noise", "arc", "ammo"}
-ITEM_KEYS = {"id", "name", "category", "stack", "size", "weapon", "tool_power", "durability", "heal"}
+ITEM_KEYS = {"id", "name", "category", "stack", "size", "weapon", "tool_power", "durability", "heal", "food", "water"}
 RECIPE_KEYS = {"id", "result", "result_block", "count", "ingredients", "station", "unlocked_by"}
 
 _ID = re.compile(r"[a-z][a-z0-9_]*")
@@ -65,6 +65,9 @@ def item_to_runtime(entry: dict) -> dict:
             raise DataError(f"{zid}: unknown weapon damage_type")
         if "ammo" in weapon and "arc" in weapon:
             raise DataError(f"{zid}: a weapon is either melee (arc) or ranged (ammo)")
+    for bar in ("food", "water"):
+        if bar in entry and (_number(entry, bar, 0, zid) > 100 or entry.get("category") != "food"):
+            raise DataError(f"{zid}: '{bar}' is for food items and goes up to 100 (a full bar)")
     return {
         "id": zid,
         "name": entry["name"],
@@ -74,6 +77,8 @@ def item_to_runtime(entry: dict) -> dict:
         "durability": int(_number(entry, "durability", 0, zid)),
         "tool_power": int(_number(entry, "tool_power", 0, zid)),
         "heal": int(_number(entry, "heal", 0, zid)),
+        "food": int(_number(entry, "food", 0, zid)),
+        "water": int(_number(entry, "water", 0, zid)),
         "is_weapon": bool(weapon),
         "damage": int(_number(weapon, "damage", 0, zid)),
         "damage_type": weapon.get("damage_type", "blunt"),

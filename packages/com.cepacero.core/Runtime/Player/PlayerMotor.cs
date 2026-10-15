@@ -12,7 +12,7 @@ namespace CepaCero.Player
     {
         /// <summary>Advances one tick. Returns the noise radius the footsteps made (0 = silent).</summary>
         public static float Step(ref PlayerState state, in PlayerInput input, float dt, BlockWorld blocks,
-            GroundLayer ground, PlayerSettings settings)
+            GroundLayer ground, PlayerSettings settings, float staminaRegenFactor = 1f)
         {
             if (state.IsDowned)
             {
@@ -38,7 +38,7 @@ namespace CepaCero.Player
             }
             else
             {
-                state.Stamina = System.Math.Min(settings.MaxStamina, state.Stamina + settings.StaminaRegenPerSecond * dt);
+                state.Stamina = System.Math.Min(settings.MaxStamina, state.Stamina + settings.StaminaRegenPerSecond * staminaRegenFactor * dt);
             }
 
             if (!moving)

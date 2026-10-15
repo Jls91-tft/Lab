@@ -26,6 +26,9 @@ namespace CepaCero.Net.Protocol
         /// <summary>Cells of every container (map cupboards and player chests), so clients can show and open them.</summary>
         ContainerList = 13,
 
+        /// <summary>The receiving player's own food and water bars (D-015), sent when they change by 1 %.</summary>
+        Vitals = 14,
+
         // Client → host
         Input = 20,
         Intent = 21,

@@ -27,6 +27,10 @@ namespace CepaCero.Items
         public int durability;
         public int tool_power;
         public int heal;
+
+        /// <summary>Food and water bar points restored when used (D-015).</summary>
+        public int food;
+        public int water;
         public bool is_weapon;
         public int damage;
         public string damage_type;

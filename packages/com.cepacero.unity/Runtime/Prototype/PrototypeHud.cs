@@ -36,7 +36,13 @@ namespace CepaCero.Unity.Prototype
                 _sb.Append("   Abatidos: ").Append(m.ZombiesKilled);
             }
             _sb.Append('\n');
-            _sb.Append("Vida <b>").Append(m.Me.Health).Append("</b>   Stamina ").Append((int)m.Me.Stamina)
+            _sb.Append("Vida <b>").Append(m.Me.Health).Append("</b>   Stamina ").Append((int)m.Me.Stamina);
+            if (m.Food >= 0)
+            {
+                AppendBar("Hambre", m.Food);
+                AppendBar("Sed", m.Water);
+            }
+            _sb
                .Append(m.Me.IsDead ? "   <color=red>MUERTO: reapareces al amanecer</color>" : m.Me.IsDowned ? "   <color=orange>CAÍDO: que te levanten (R)</color>" : "").Append('\n');
             _sb.Append("Construir (B): <b>").Append(m.Building).Append("</b>");
             if (!string.IsNullOrEmpty(m.Network))
@@ -82,6 +88,12 @@ namespace CepaCero.Unity.Prototype
             {
                 GUI.Box(new Rect(Screen.width - 430, 170, 420, 160), "<b>Diario</b>\n" + m.Diary, _box);
             }
+        }
+
+        private void AppendBar(string label, int value)
+        {
+            string color = value <= 0 ? "red" : value <= 25 ? "orange" : "white";
+            _sb.Append("   ").Append(label).Append(" <color=").Append(color).Append('>').Append(value).Append("%</color>");
         }
 
         private void AppendBag(Inventory inv)

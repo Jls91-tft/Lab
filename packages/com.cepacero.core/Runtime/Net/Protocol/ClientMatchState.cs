@@ -69,6 +69,12 @@ namespace CepaCero.Net.Protocol
 
         public Inventory MyInventory { get; }
 
+        /// <summary>This player's food bar, 0-100 in whole percents (D-015).</summary>
+        public int MyFood { get; private set; } = 100;
+
+        /// <summary>This player's water bar, 0-100 in whole percents.</summary>
+        public int MyWater { get; private set; } = 100;
+
         /// <summary>Cell of the container this player is looking into, or <see cref="GameSession.NoContainer"/>.</summary>
         public Int2 OpenContainer { get; private set; } = GameSession.NoContainer;
 
@@ -144,6 +150,10 @@ namespace CepaCero.Net.Protocol
                         break;
                     case MessageType.Clock:
                         Clock.SetTick(payload.ReadLong());
+                        break;
+                    case MessageType.Vitals:
+                        MyFood = Math.Min(100, (int)payload.ReadByte());
+                        MyWater = Math.Min(100, (int)payload.ReadByte());
                         break;
                     case MessageType.Inventory:
                         RequireItems(type);

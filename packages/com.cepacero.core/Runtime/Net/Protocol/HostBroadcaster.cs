@@ -29,6 +29,7 @@ namespace CepaCero.Net.Protocol
         private readonly Int2[] _sentContainerCell = new Int2[GameSession.MaxPlayers];
         private readonly int[] _sentContainerVersion = new int[GameSession.MaxPlayers];
         private readonly bool[] _joined = new bool[GameSession.MaxPlayers];
+        private readonly int[] _sentVitals = new int[GameSession.MaxPlayers];
         private bool _pilesChanged;
         private bool _progressChanged;
         private int _sentContainerCount = -1;
@@ -100,6 +101,8 @@ namespace CepaCero.Net.Protocol
             }
             Messages.WritePlayerStates(w, (uint)_session.Clock.Tick, _session.Players, MaxStamina);
             Messages.WriteTeamProgress(w, _session);
+            _sentVitals[player] = -1;
+            WriteVitalsFor(player, w);
             if (_session.Data.HasItems)
             {
                 Messages.WriteContainerList(w, _session.Containers);
@@ -141,9 +144,23 @@ namespace CepaCero.Net.Protocol
             {
                 Messages.WriteTeamProgress(w, _session);
             }
+            WriteVitalsFor(player, w);
             if (_session.Data.HasItems)
             {
                 WriteItemsFor(player, w);
+            }
+        }
+
+        private void WriteVitalsFor(int player, ByteWriter w)
+        {
+            PlayerState s = _session.Players[player];
+            byte food = Messages.QuantizeBar(s.Food);
+            byte water = Messages.QuantizeBar(s.Water);
+            int packed = (food << 8) | water;
+            if (packed != _sentVitals[player])
+            {
+                Messages.WriteVitals(w, food, water);
+                _sentVitals[player] = packed;
             }
         }
 

@@ -14,9 +14,10 @@ Datos **iniciales** del MVP (D-012). Igual que el bestiario: cada objeto es un b
 | `tool_power` | no | daño a bloques por golpe (el puño hace 8) |
 | `durability` | no | usos antes de romperse (armas y herramientas) |
 | `heal` | no | vida que cura al usarlo |
+| `food`, `water` | no | puntos de las barras de hambre y sed que rellena (solo `category: food`, hasta 100) |
 
 Referencias del jugador: vida 100; puño 8 de daño y 8 a bloques.
-*Hambre y sed: sin decidir; de momento la comida solo cura un poco.*
+*Hambre y sed (D-015): `food` y `water` rellenan esas barras (100 = llena); `heal` cura además un poco. Con el ajuste de partida `Survival = Off` solo cuenta `heal`.*
 
 ## Materiales
 ```yaml
@@ -170,6 +171,7 @@ name: Lata de comida
 category: food
 stack: 10
 heal: 5
+food: 40
 ```
 ```yaml
 id: water_bottle
@@ -177,4 +179,5 @@ name: Botella de agua
 category: food
 stack: 10
 heal: 2
+water: 40
 ```

@@ -28,6 +28,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 
 - **Código de Unity** en `packages/com.cepacero.unity` (D-014; incluye `PrototypeGame`, prototipo de depuración);
   `CepaCero/Assets/_Project/` solo contenido. Aún no compilado contra Unity real.
+- **Hambre y sed** duras por defecto, configurables Off/Soft/Hard (D-015, `SurvivalRules`).
 
 **Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta · versión exacta de Unity (propuesta en
 `docs/setup-unity.md`) · nombre definitivo.
@@ -91,5 +92,5 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 | `docs/plan.md` | Hitos semanales del prototipo |
 | `docs/setup-unity.md` | Instalación de Unity y del MCP |
 | `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
-| `docs/propuesta-hambre-sed.md` | Propuesta de hambre y sed (pendiente de OK) |
+| `docs/propuesta-hambre-sed.md` | Propuesta de hambre y sed (decidida en D-015: dura, configurable) |
 | `docs/objetos.md`, `docs/recetas.md`, `docs/botin.md` | Datos de objetos, recetas y tablas de botín (YAML → `data/generated/`) |

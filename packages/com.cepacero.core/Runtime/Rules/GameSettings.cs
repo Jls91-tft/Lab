@@ -69,6 +69,27 @@ namespace CepaCero.Rules
         /// <summary>If everyone is down or dead at once, the match ends (otherwise all respawn at dawn).</summary>
         public bool PermaDeath = false;
 
+        // ---- Hunger and thirst (D-015) --------------------------------------
+        public SurvivalMode Survival = SurvivalMode.Hard;
+
+        /// <summary>Full day cycles a full food bar lasts.</summary>
+        public float FoodLastsDays = 3f;
+
+        /// <summary>Full day cycles a full water bar lasts.</summary>
+        public float WaterLastsDays = 2f;
+
+        /// <summary>Hard mode: seconds per health point lost with an empty food bar.</summary>
+        public float StarvingSecondsPerHealth = 10f;
+
+        /// <summary>Hard mode: seconds per health point lost with an empty water bar.</summary>
+        public float ThirstSecondsPerHealth = 5f;
+
+        /// <summary>Health cap with an empty food bar, as a share of the maximum.</summary>
+        public float HungryMaxHealthFactor = 0.75f;
+
+        /// <summary>Stamina regeneration with an empty water bar, as a share of the normal rate.</summary>
+        public float ThirstyStaminaRegenFactor = 0.5f;
+
         public void Validate()
         {
             if (TickRate < 1 || TickRate > 120)
@@ -90,6 +111,11 @@ namespace CepaCero.Rules
             if (BleedOutSeconds <= 0f || ReviveSeconds <= 0f)
             {
                 throw new ArgumentOutOfRangeException(nameof(BleedOutSeconds));
+            }
+            if (FoodLastsDays <= 0f || WaterLastsDays <= 0f || StarvingSecondsPerHealth <= 0f || ThirstSecondsPerHealth <= 0f
+                || HungryMaxHealthFactor <= 0f || HungryMaxHealthFactor > 1f || ThirstyStaminaRegenFactor < 0f || ThirstyStaminaRegenFactor > 1f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(Survival), "Invalid hunger and thirst settings.");
             }
         }
     }

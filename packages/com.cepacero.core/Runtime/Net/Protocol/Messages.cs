@@ -17,7 +17,7 @@ namespace CepaCero.Net.Protocol
     public static class Messages
     {
         /// <summary>Bump on any incompatible change; Welcome refuses mismatches.</summary>
-        public const ushort ProtocolVersion = 1;
+        public const ushort ProtocolVersion = 2;
 
         public const byte FlagSprinting = 1;
         public const byte FlagDowned = 2;
@@ -204,6 +204,22 @@ namespace CepaCero.Net.Protocol
             {
                 w.WriteLong(tick);
             }
+        }
+
+        /// <summary>Bars quantised to whole percents: 2 bytes, only for their owner.</summary>
+        public static void WriteVitals(ByteWriter w, byte food, byte water)
+        {
+            using (Begin(w, MessageType.Vitals))
+            {
+                w.WriteByte(food);
+                w.WriteByte(water);
+            }
+        }
+
+        /// <summary>A bar (0-100) as the byte <see cref="WriteVitals"/> sends.</summary>
+        public static byte QuantizeBar(float value)
+        {
+            return (byte)Math.Max(0, Math.Min(100, (int)Math.Ceiling(value))); // ceil: a nearly empty bar is not shown as empty
         }
 
         public static void WriteInventory(ByteWriter w, Inventory inventory)

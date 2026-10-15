@@ -25,6 +25,12 @@ namespace CepaCero.Core
 
         /// <summary>A diary entry was found (Value = index in the diary data).</summary>
         DiaryUnlocked = 14,
+
+        /// <summary>A food bar ran low (Value 0) or empty (Value 1).</summary>
+        Hungry = 15,
+
+        /// <summary>A water bar ran low (Value 0) or empty (Value 1).</summary>
+        Thirsty = 16,
     }
 
     /// <summary>Match-level happenings the host broadcasts (UI, music, results of intents).</summary>

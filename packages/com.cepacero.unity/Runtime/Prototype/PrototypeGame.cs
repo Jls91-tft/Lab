@@ -241,6 +241,8 @@ namespace CepaCero.Unity.Prototype
                 ZombiesShown = _zombiesShown,
                 ZombiesKilled = Remote ? -1 : _session.ZombiesKilled,
                 Me = MyState,
+                Food = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyFood : Messages.QuantizeBar(MyState.Food),
+                Water = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyWater : Messages.QuantizeBar(MyState.Water),
                 Inventory = MyInventory,
                 OpenContainer = Remote ? _client.OpenContainerContents : _session.OpenContainerContents(_me),
                 Building = BuildKeys[_build],
@@ -420,6 +422,12 @@ namespace CepaCero.Unity.Prototype
                 case SessionEventType.PlayerRespawned when e.Player == _me:
                     Say("Has vuelto al fuerte");
                     break;
+                case SessionEventType.Hungry when e.Player == _me:
+                    Say(e.Value == 0 ? "Tienes hambre: come algo (lata en la mochila, V y Q)" : "Te mueres de hambre: tu vida máxima baja y vas perdiendo vida");
+                    break;
+                case SessionEventType.Thirsty when e.Player == _me:
+                    Say(e.Value == 0 ? "Tienes sed: bebe algo" : "Deshidratado: te cansas antes y vas perdiendo vida");
+                    break;
                 case SessionEventType.RecipeUnlocked:
                     Say("Muestra analizada: recetas nuevas para el grupo");
                     break;
@@ -525,6 +533,8 @@ namespace CepaCero.Unity.Prototype
             inv.Add(items.IndexOf("wood"), 40);
             inv.Add(items.IndexOf("nails"), 20);
             inv.Add(items.IndexOf("scrap_cloth"), 6);
+            inv.Add(items.IndexOf("food_can"), 2);
+            inv.Add(items.IndexOf("water_bottle"), 2);
             inv.SelectHotbar(0);
         }
     }

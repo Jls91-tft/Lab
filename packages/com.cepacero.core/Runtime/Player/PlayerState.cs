@@ -10,6 +10,10 @@ namespace CepaCero.Player
         public bool IsSprinting;
         public int Health;
 
+        /// <summary>Hunger and thirst bars, 0 (empty) to 100 (full). See SurvivalRules (D-015).</summary>
+        public float Food;
+        public float Water;
+
         /// <summary>Seconds spent on the ground (bleeds out at GameSettings.BleedOutSeconds).</summary>
         public float DownedSeconds;
 
@@ -27,6 +31,8 @@ namespace CepaCero.Player
             Position = position,
             Stamina = settings.MaxStamina,
             Health = settings.MaxHealth,
+            Food = 100f,
+            Water = 100f,
         };
     }
 }
