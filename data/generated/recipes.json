@@ -82,6 +82,24 @@
       "unlocked_by": ""
     },
     {
+      "id": "build_spike_trap",
+      "result": "",
+      "result_block": "spike_trap",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 6
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
       "id": "build_workbench",
       "result": "",
       "result_block": "workbench",

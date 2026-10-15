@@ -4,7 +4,7 @@ namespace CepaCero.World
     public sealed class BlockType
     {
         public BlockType(ushort id, string key, ushort maxHealth, BlockMaterial material, bool isSolid,
-            bool isIndestructible = false, ushort toggleTo = 0)
+            bool isIndestructible = false, ushort toggleTo = 0, int contactDamage = 0, int contactWear = 0)
         {
             Id = id;
             Key = key;
@@ -13,6 +13,8 @@ namespace CepaCero.World
             IsSolid = isSolid;
             IsIndestructible = isIndestructible;
             ToggleTo = toggleTo;
+            ContactDamage = contactDamage;
+            ContactWear = contactWear;
         }
 
         public ushort Id { get; }
@@ -31,6 +33,14 @@ namespace CepaCero.World
 
         /// <summary>Block this one becomes when toggled (doors). 0 = not toggleable.</summary>
         public ushort ToggleTo { get; }
+
+        /// <summary>Damage dealt to a zombie standing on it, once per <c>ZombieSimulation.TrapInterval</c> (traps).</summary>
+        public int ContactDamage { get; }
+
+        /// <summary>Health the block loses each time it hurts someone (traps wear out).</summary>
+        public int ContactWear { get; }
+
+        public bool IsTrap => ContactDamage > 0;
 
         public bool IsAir => Id == BlockRegistry.AirId;
 

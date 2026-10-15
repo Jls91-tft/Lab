@@ -88,6 +88,7 @@ namespace CepaCero.AI
         private readonly bool[] _chargeHit;
         private readonly float[] _sprintTime;
         private readonly float[] _restTime;
+        private readonly float[] _trapCooldown;
         private readonly byte[] _facing;
         private readonly int[] _nextInCell;
         private readonly Stack<int> _free = new Stack<int>();
@@ -149,6 +150,7 @@ namespace CepaCero.AI
             _chargeHit = new bool[capacity];
             _sprintTime = new float[capacity];
             _restTime = new float[capacity];
+            _trapCooldown = new float[capacity];
             _facing = new byte[capacity];
             _nextInCell = new int[capacity];
             for (int i = capacity - 1; i >= 0; i--)
@@ -205,6 +207,9 @@ namespace CepaCero.AI
         /// Zombies farther away idle until they get closer; the horde spawns well inside it.
         /// </summary>
         public int FlowMaxDistance { get; set; } = 10 * 80;
+
+        /// <summary>Seconds between two hits of the same trap on the same zombie.</summary>
+        public float TrapInterval { get; set; } = 0.5f;
 
         /// <summary>Scales every zombie's sight range. The match sets 0.5 at night (docs/bestiario.md).</summary>
         public float SightMultiplier { get; set; } = 1f;
@@ -266,6 +271,7 @@ namespace CepaCero.AI
             _chargeHit[slot] = false;
             _sprintTime[slot] = 0f;
             _restTime[slot] = 0f;
+            _trapCooldown[slot] = 0f;
             _facing[slot] = 0;
             return slot;
         }
@@ -356,6 +362,10 @@ namespace CepaCero.AI
                 if (_alive[i])
                 {
                     TickZombie(i, dt, players);
+                }
+                if (_alive[i])
+                {
+                    CheckTrap(i, dt);
                 }
             }
             UpdateProjectiles(dt, players);
@@ -866,6 +876,33 @@ namespace CepaCero.AI
             BlockMaterial.Concrete => "concrete",
             _ => "",
         };
+
+        // ----------------------------------------------------------------- traps
+
+        private void CheckTrap(int i, float dt)
+        {
+            _trapCooldown[i] -= dt;
+            if (_trapCooldown[i] > 0f)
+            {
+                return;
+            }
+            Int2 cell = _pos[i].Tile;
+            if (!_blocks.InBounds(cell.X, cell.Y))
+            {
+                return;
+            }
+            BlockType block = _blocks.GetBlock(cell.X, cell.Y);
+            if (!block.IsTrap)
+            {
+                return;
+            }
+            _trapCooldown[i] = TrapInterval;
+            if (block.ContactWear > 0)
+            {
+                _blocks.Damage(cell.X, cell.Y, block.ContactWear);
+            }
+            Damage(i, block.ContactDamage, "sharp");
+        }
 
         // ---------------------------------------------------------------- shared
 

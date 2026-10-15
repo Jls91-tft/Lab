@@ -14,7 +14,7 @@ from .bestiary import DAMAGE_TYPES, BestiaryError, parse_markdown
 CATEGORIES = ("material", "weapon", "tool", "food", "medical", "ammo", "sample", "misc")
 STATIONS = ("hand", "workbench")
 # Blocks a recipe may build. Must exist in BlockRegistry.CreateDefault() (checked by a C# test).
-BUILDABLE_BLOCKS = ("wood_wall", "metal_wall", "concrete_wall", "door", "fence", "workbench", "chest")
+BUILDABLE_BLOCKS = ("wood_wall", "metal_wall", "concrete_wall", "door", "fence", "workbench", "chest", "spike_trap")
 # Building kinds produced by tools/osm2tiles (rules.BUILDING_KINDS).
 BUILDING_KINDS = ("generic", "residential", "commercial", "food", "hardware", "medical",
                   "police", "school", "religious", "office", "industrial", "garage")

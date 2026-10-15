@@ -19,6 +19,7 @@ namespace CepaCero.Items
                 { "door_open", new KeyValuePair<string, int>("wood", 3) },
                 { "workbench", new KeyValuePair<string, int>("wood", 5) },
                 { "chest", new KeyValuePair<string, int>("wood", 4) },
+                { "spike_trap", new KeyValuePair<string, int>("nails", 3) },
                 { "metal_wall", new KeyValuePair<string, int>("metal_scrap", 2) },
                 { "building_wall", new KeyValuePair<string, int>("metal_scrap", 1) },
             };

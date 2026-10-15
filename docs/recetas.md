@@ -43,6 +43,11 @@ result_block: fence
 ingredients: { wood: 2 }
 ```
 ```yaml
+id: build_spike_trap
+result_block: spike_trap
+ingredients: { wood: 4, nails: 6 }
+```
+```yaml
 id: build_workbench
 result_block: workbench
 ingredients: { wood: 10, nails: 10 }

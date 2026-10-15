@@ -52,7 +52,7 @@ namespace CepaCero.Net
             _zombies = zombies;
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _nextActionTime = new float[maxPlayers];
-            foreach (string key in new[] { "wood_wall", "metal_wall", "concrete_wall", "door", "fence", "workbench", "chest" })
+            foreach (string key in new[] { "wood_wall", "metal_wall", "concrete_wall", "door", "fence", "workbench", "chest", "spike_trap" })
             {
                 if (blocks.Registry.TryGet(key, out BlockType type))
                 {
