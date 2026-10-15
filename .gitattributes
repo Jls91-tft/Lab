@@ -99,3 +99,8 @@
 *.7z       filter=lfs diff=lfs merge=lfs -text
 *.pdf      filter=lfs diff=lfs merge=lfs -text
 *.osm.pbf  filter=lfs diff=lfs merge=lfs -text
+
+# ---------- Excepción: hojas de arte de terceros (D-019) ----------
+# Pequeñas (~60 kB) y fuera de LFS a propósito: tools/artgen las lee para
+# regenerar el atlas, también en la CI, que hace checkout sin LFS (D-011).
+art/vendor/**/*.png  -filter -diff -merge -text

@@ -28,7 +28,7 @@ namespace CepaCero.Unity.Prototype
             grid.transform.SetParent(parent, false);
             grid.AddComponent<Grid>();
             _groundMap = CreateLayer(grid.transform, "Ground", 0);
-            _blockMap = CreateLayer(grid.transform, "Blocks", 1);
+            _blockMap = CreateLayer(grid.transform, "Blocks", PrototypeDecorView.FlatOrder + 1); // flat decals go in between
 
             int w = blocks.Width;
             int h = blocks.Height;
@@ -55,6 +55,11 @@ namespace CepaCero.Unity.Prototype
             foreach (BlockChange c in _changes)
             {
                 _blockMap.SetTile(new Vector3Int(c.X, c.Y, 0), BlockTile(c.X, c.Y));
+                // The wall above may switch between its top and its brick front.
+                if (c.Y + 1 < _blocks.Height)
+                {
+                    _blockMap.SetTile(new Vector3Int(c.X, c.Y + 1, 0), BlockTile(c.X, c.Y + 1));
+                }
             }
         }
 
@@ -67,7 +72,29 @@ namespace CepaCero.Unity.Prototype
             _blockMap.color = tint;
         }
 
-        private TileBase BlockTile(int x, int y) => TileFor(_art.Block(_blocks.GetBlock(x, y).Key));
+        /// <summary>
+        /// Seen from above at an angle (D-019): a wall shows its brick front when nothing
+        /// wall-like stands just south of it, and its top when it continues southwards.
+        /// </summary>
+        private TileBase BlockTile(int x, int y)
+        {
+            string key = _blocks.GetBlock(x, y).Key;
+            if (key == "building_wall" && !IsWallLike(x, y - 1))
+            {
+                return TileFor(_art.Get("block_building_wall_face"));
+            }
+            return TileFor(_art.Block(key));
+        }
+
+        private bool IsWallLike(int x, int y)
+        {
+            if (!_blocks.InBounds(x, y))
+            {
+                return false;
+            }
+            string key = _blocks.GetBlock(x, y).Key;
+            return key == "building_wall" || key == "door" || key == "door_open";
+        }
 
         private Tile TileFor(Sprite sprite)
         {

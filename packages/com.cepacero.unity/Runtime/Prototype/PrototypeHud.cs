@@ -52,7 +52,7 @@ namespace CepaCero.Unity.Prototype
 
         public void Draw(in HudModel m)
         {
-            _s = Mathf.Max(1, Mathf.RoundToInt(Screen.height / 360f));
+            _s = PrototypeArt.Zoom(Screen.height);
             if (_styleScale != _s)
             {
                 BuildStyles();

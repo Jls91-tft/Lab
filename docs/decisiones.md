@@ -25,6 +25,19 @@ antigua como **Sustituida por D-XXX**.
 
 ---
 
+## D-019 · 16/10/2026 · Mundo con piezas CC0 de Kenney, transformadas por código
+- **Estado:** Aceptada (OK de Javier el 16/10/2026: "Vamos con B", "Kenney como base, transformado a nuestra paleta y ambiente", "intégralo, añade la decoración procedural y los personajes en estilo Kenney"). Modifica D-018 en el origen del arte del mundo.
+- **Decisión:**
+  - Base del mundo: **Kenney Roguelike Modern City** e **Indoors** (CC0), y **Roguelike Characters** como referencia de estilo. Las hojas originales y sus licencias están en `art/vendor/kenney/`, **fuera de LFS** (unos 60 kB) para que la CI, que no baja LFS (D-011), pueda regenerar el atlas.
+  - `tools/artgen` las transforma: selecciona piezas, dibuja en su estilo lo que falta (asfalto liso, agua, vías, muros de metal y hormigón, coches quemados, manchas, sangre, basura, cristales) y aplica a todo un **filtro** (−30 % de saturación, algo más oscuro, tinte verdoso).
+  - **Muros en vista 3/4:** un muro muestra la fachada de ladrillo si al sur no hay otro muro o puerta; si no, su remate.
+  - **Personajes y zombis por código** imitando el estilo de Kenney (cabeza cuadrada, cuerpo ancho, bordes oscurecidos), con las 4 direcciones y el paso de D-018, que Kenney no tiene.
+  - **Decoración procedural** (`DecorPlanner`): coches aparcados y quemados en la calzada, farolas, papeleras, bancos, bocas de riego y buzones en la acera, árboles y arbustos en los parques, muebles dentro de los edificios según su tipo, alfombras y desgaste disperso. Es determinista por mapa (todos los jugadores ven la misma calle sin enviar nada) y **solo visual**: no bloquea el paso y deja libres las puertas.
+  - Los iconos de objetos y la interfaz siguen con la paleta propia de 32 colores (D-018).
+- **Motivo:** el arte 100 % por código se veía pobre ("cutre y feo"). El código hace bien lo sistemático (paleta, variantes, desgaste, colocación) y mal el dibujo de objetos; Kenney aporta el dibujo con licencia libre y el código lo hace nuestro.
+- **Créditos:** CC0 no obliga, pero se acredita a Kenney en `art/vendor/README.md`.
+- **Pendiente:** que la decoración bloquee el paso (requiere llevarla al núcleo), fuente pixel (falta el zip de Public Pixel) y arte final propio.
+
 ## D-018 · 15/10/2026 · Arte de la primera versión: 16 px, 640×360, 4 direcciones, generado por código
 - **Estado:** Aceptada (OK de Javier el 15/10/2026: tile 16 px, 4 direcciones, arte generado por código, mundo e interfaz a la vez).
 - **Decisión:**

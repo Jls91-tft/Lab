@@ -3,8 +3,8 @@ import json
 
 from PIL import Image
 
-from artgen import characters, tiles
-from artgen.__main__ import build_all, build_sprites, game_ids
+from artgen import characters, decor, kenney, tiles
+from artgen.__main__ import build_all, build_sprites, game_ids, render_map
 from artgen.palette import CLEAR, PALETTE, SOFT_SHADOW
 
 ALLOWED = {(r, g, b, 255) for r, g, b in PALETTE.values()} | {CLEAR, SOFT_SHADOW}
@@ -15,9 +15,11 @@ def test_palette_has_32_distinct_colours():
     assert len(set(PALETTE.values())) == 32
 
 
-def test_every_pixel_is_from_the_palette():
+def test_icons_and_interface_use_our_palette():
+    # World, people and decoration use Kenney's colours through the grade (D-019);
+    # what we draw from scratch for the interface stays in the 32-colour palette.
     for name, c in build_sprites().items():
-        if name == "ui_white":  # tinted by the game, so it has to be pure white
+        if not name.startswith(("item_", "icon_", "ui_", "pile")) or name == "ui_white":
             continue
         colours = {p for _, p in c.image.getcolors(maxcolors=4096)}
         stray = colours - ALLOWED
@@ -39,6 +41,49 @@ def test_covers_every_item_zombie_ground_and_block():
     for block in ("building_wall", "tree", "door", "door_open", "fence", "wood_wall", "metal_wall",
                   "concrete_wall", "workbench", "chest", "spike_trap"):
         assert f"block_{block}" in names
+
+
+def test_kenney_world_replaces_every_generated_tile_and_adds_the_wall_front():
+    names = build_sprites().keys()
+    generated = tiles.build().keys()
+    assert generated <= names
+    assert "block_building_wall_face" in names
+
+
+def test_decoration_is_complete_and_trimmed():
+    sprites = decor.build()
+    for name in list(decor.CITY_DECOR) + list(decor.INDOOR_DECOR) + ["decor_car_burnt_h", "decor_car_burnt_v"]:
+        c = sprites[name]
+        assert c.image.getbbox() == (0, 0, c.width, c.height), f"{name} is not trimmed or is empty"
+    for kind, count in (("blood", 3), ("stain", 3), ("rubbish", 3), ("glass", 2)):
+        for i in range(count):
+            assert sprites[f"decal_{kind}_{i}"].image.getbbox() is not None
+
+
+def test_grade_mutes_colour_and_keeps_transparency():
+    im = Image.new("RGBA", (2, 1), (0, 0, 0, 0))
+    im.putpixel((0, 0), (200, 40, 40, 255))
+    out = kenney.grade(im)
+    r, g, b, a = out.getpixel((0, 0))
+    assert a == 255 and r < 200 and (r - g) < 160  # less saturated, darker
+    assert out.getpixel((1, 0)) == (0, 0, 0, 0)
+
+
+def test_map_preview_draws_wall_fronts(tmp_path):
+    doc = {
+        "width": 3, "height": 3,
+        "legend": {"ground": ["dirt", "floor"], "blocks": ["none", "building_wall"]},
+        "layers": {"ground": [0] * 9, "blocks": [0, 0, 0, 1, 1, 1, 1, 1, 1]},  # rows 1-2 are walls
+    }
+    path = tmp_path / "tiny.map.json"
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    image = render_map(path, graded=True)
+    world = build_sprites()
+    face = world["block_building_wall_face"].image.tobytes()
+    top = world["block_building_wall"].image.tobytes()
+    # image row 0 is map row 2 (wall above wall: top); image row 1 is map row 1 (dirt below: front)
+    assert image.crop((0, 0, 16, 16)).tobytes() == top
+    assert image.crop((0, 16, 16, 32)).tobytes() == face
 
 
 def test_tiles_and_characters_are_16px_except_the_brute():

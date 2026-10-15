@@ -30,8 +30,12 @@ namespace CepaCero.Unity.Prototype
         private const int SortBase = 20000;
         private const int ContainerBias = 0;
         private const int PileBias = 1;
+        public const int DecorBias = 1;
         private const int ZombieBias = 2;
         private const int PlayerBias = 3;
+
+        /// <summary>Lower on screen draws in front; shared with the decoration so a car can hide a zombie.</summary>
+        public static int SortingOrder(float y, int bias) => SortBase - Mathf.RoundToInt(y * 4f) * 4 + bias;
 
         private readonly Transform _root;
         private readonly int _ppu;
@@ -245,7 +249,7 @@ namespace CepaCero.Unity.Prototype
             sr.sprite = sprite;
             sr.flipX = flip;
             sr.color = color;
-            sr.sortingOrder = SortBase - Mathf.RoundToInt(position.Y * 4f) * 4 + bias;
+            sr.sortingOrder = SortingOrder(position.Y, bias);
         }
 
         private float Snap(float v) => Mathf.Round(v * _ppu) / _ppu;

@@ -14,6 +14,24 @@ namespace CepaCero.Unity.Prototype
         public const string ResourcePath = "Cepa/Art/atlas";
         public const int GroundVariants = 3;
 
+        /// <summary>Base resolution height (D-018): the view is scaled by whole numbers from 640×360.</summary>
+        public const int BaseHeight = 360;
+
+        /// <summary>
+        /// Screen pixels per art pixel for a screen height: a whole number, rounded up
+        /// unless the screen is only a little taller than a multiple of 360 (500 px → 2,
+        /// 720 → 2, 900 → 3, 1080 → 3, 1440 → 4). Rounding to nearest made small editor
+        /// windows show everything at ×1, tiny.
+        /// </summary>
+        public static int Zoom(int screenHeight)
+        {
+            if (screenHeight <= 0)
+            {
+                return 1; // batch mode
+            }
+            return Math.Max(1, (int)Math.Ceiling(screenHeight / (double)BaseHeight - 0.25));
+        }
+
         private readonly Dictionary<string, Sprite> _sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
         private readonly Dictionary<string, Rect> _uv = new Dictionary<string, Rect>(StringComparer.Ordinal);
         private readonly Dictionary<string, Vector2> _size = new Dictionary<string, Vector2>(StringComparer.Ordinal);

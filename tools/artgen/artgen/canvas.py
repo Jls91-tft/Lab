@@ -21,6 +21,12 @@ class Canvas:
         self.image = Image.new("RGBA", (width, height or width), CLEAR)
         self._draw = ImageDraw.Draw(self.image)
 
+    @classmethod
+    def from_image(cls, image: Image.Image) -> "Canvas":
+        c = cls(image.width, image.height)
+        c.image.paste(image, (0, 0))
+        return c
+
     @property
     def width(self) -> int:
         return self.image.width

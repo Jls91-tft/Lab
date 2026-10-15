@@ -31,9 +31,6 @@ namespace CepaCero.Unity.Prototype
     {
         private const string SaveFile = "prototype.sav";
 
-        /// <summary>Base resolution height (D-018): the view is scaled by whole numbers from 640×360.</summary>
-        private const int BaseHeight = 360;
-
         private static readonly string[] BuildKeys = { "wood_wall", "metal_wall", "door", "spike_trap", "fence", "chest", "workbench", "concrete_wall" };
 
         [Tooltip("Map relative to the repository root: an osm2tiles output or the test fixture.")]
@@ -66,6 +63,7 @@ namespace CepaCero.Unity.Prototype
         private ClientMatchState _client;
         private PrototypeWorldView _world;
         private PrototypeEntityView _entities;
+        private PrototypeDecorView _decor;
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
@@ -156,6 +154,10 @@ namespace CepaCero.Unity.Prototype
                 _me = 0;
             }
             _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
+            // Same map + same seed = the same street for every player, with nothing sent.
+            List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
+            _decor = new PrototypeDecorView(decor, _art, _viewRoot);
+            Debug.Log($"Cepa Cero prototype: {_decor.Count} pieces of decoration.");
             _entities = new PrototypeEntityView(_viewRoot, _data.Zombies, _art);
             SetupCamera();
             Say(loadSave ? "Partida cargada" : $"Mapa: {_map.Name} ({_map.Blocks.Width}×{_map.Blocks.Height}). {_map.Attribution}");
@@ -226,6 +228,7 @@ namespace CepaCero.Unity.Prototype
             float ambient = Remote ? _client.Clock.AmbientLight : _session.Clock.AmbientLight;
             _world.Refresh();
             _world.SetAmbient(ambient);
+            _decor.SetAmbient(ambient);
             // Clients render one snapshot interval in the past to interpolate smoothly.
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
@@ -251,8 +254,8 @@ namespace CepaCero.Unity.Prototype
         /// </summary>
         private void PlaceCamera(Float2 target)
         {
-            int screenHeight = Screen.height > 0 ? Screen.height : BaseHeight; // 0 in batch mode
-            int zoom = _pixelZoom > 0 ? _pixelZoom : Mathf.Max(1, Mathf.RoundToInt(screenHeight / (float)BaseHeight));
+            int screenHeight = Screen.height > 0 ? Screen.height : PrototypeArt.BaseHeight; // 0 in batch mode
+            int zoom = _pixelZoom > 0 ? _pixelZoom : PrototypeArt.Zoom(screenHeight);
             float screenPixelsPerUnit = _art.PixelsPerUnit * zoom;
             _camera.orthographicSize = screenHeight / (2f * screenPixelsPerUnit);
             float x = Mathf.Round(target.X * screenPixelsPerUnit) / screenPixelsPerUnit;

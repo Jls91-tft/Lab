@@ -10,7 +10,7 @@ namespace UnityEngine
     public class MonoBehaviour : Behaviour { }
     public class GameObject : Object { public GameObject(string n) {} public Transform transform => null; public string tag; public T AddComponent<T>() where T : Component => null; public bool activeSelf => true; public void SetActive(bool v) {} }
     public class Transform : Component { public void SetParent(Transform p, bool w) {} public Vector3 position; public Vector3 localPosition; public Vector3 localScale; }
-    public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } public static Vector2 zero => default; }
+    public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } public static Vector2 zero => default; public static Vector2 operator /(Vector2 a, float d) => a; }
     public struct Vector3 { public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; } }
     public struct Vector3Int { public int x, y, z; public Vector3Int(int x, int y, int z) { this.x = x; this.y = y; this.z = z; } }
     public struct BoundsInt { public BoundsInt(int x, int y, int z, int sx, int sy, int sz) {} }
@@ -36,7 +36,7 @@ namespace UnityEngine
     public class SpriteRenderer : Renderer { public Sprite sprite; public Color color; public bool flipX; }
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
-    public static class Mathf { public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; }
+    public static class Mathf { public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; }
     public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; }
     public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} }
     public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; }
