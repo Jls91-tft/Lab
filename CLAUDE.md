@@ -91,4 +91,5 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 | `docs/plan.md` | Hitos semanales del prototipo |
 | `docs/setup-unity.md` | Instalación de Unity y del MCP |
 | `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
+| `docs/propuesta-hambre-sed.md` | Propuesta de hambre y sed (pendiente de OK) |
 | `docs/objetos.md`, `docs/recetas.md`, `docs/botin.md` | Datos de objetos, recetas y tablas de botín (YAML → `data/generated/`) |

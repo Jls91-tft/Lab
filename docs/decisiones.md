@@ -20,7 +20,7 @@ antigua como **Sustituida por D-XXX**.
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
-| Hambre y sed | Sin decidir: de momento la comida solo cura un poco |
+| Hambre y sed | Sin decidir: de momento la comida solo cura un poco. Propuesta en `docs/propuesta-hambre-sed.md` |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
