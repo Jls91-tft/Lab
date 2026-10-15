@@ -49,7 +49,7 @@ CepaCero/                               Proyecto Unity (lo creas esta noche)
     Prefabs/ Scenes/ Sprites/ Tiles/ Audio/ Settings/
   Packages/manifest.json                → "com.cepacero.core" y "com.cepacero.unity" con file:../../packages/…
 
-packages/com.cepacero.unity/            Código de Unity (propuesta D-014): vistas, entrada, red con FishNet
+packages/com.cepacero.unity/            Código de Unity (D-014): vistas, entrada, red con FishNet
   Runtime/Prototype/                    Prototipo de depuración: PrototypeGame juega el núcleo con cuadrados
 
 packages/com.cepacero.core/             Simulación sin motor (paquete UPM local)

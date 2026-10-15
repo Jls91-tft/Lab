@@ -19,7 +19,6 @@ antigua como **Sustituida por D-XXX**.
 | Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
-| Carpetas de `Assets/` y asmdefs de Unity | Propuesta D-014 (código en `packages/com.cepacero.unity`, `Assets/` para contenido) |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
 | Hambre y sed | Sin decidir: de momento la comida solo cura un poco |
 | Nombre definitivo | Comprobar marca, Steam y redes |
@@ -27,7 +26,7 @@ antigua como **Sustituida por D-XXX**.
 ---
 
 ## D-014 · 15/10/2026 · Código de Unity en un paquete local (`com.cepacero.unity`)
-- **Estado:** Propuesta (pendiente de OK de Javier).
+- **Estado:** Aceptada (OK de Javier el 15/10/2026).
 - **Decisión:** el código que usa Unity (vistas, entrada, después FishNet) vive en `packages/com.cepacero.unity`, junto al núcleo; `CepaCero/Assets/_Project/` queda para contenido (escenas, prefabs, sprites, audio, ScriptableObjects). Incluye ya un **prototipo de depuración** (`PrototypeGame`) que juega la simulación con cuadrados.
 - **Motivo:** Unity Hub no crea proyectos en carpetas con archivos, así que el código no podía esperar dentro de `CepaCero/`; además separa código revisable de assets binarios y permite un asmdef claro (`CepaCero.Unity` → `CepaCero.Core`, `Unity.InputSystem`).
 - **Alternativa:** mover los scripts a `Assets/_Project/Scripts/` con sus asmdefs (es solo mover archivos).
