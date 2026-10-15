@@ -197,8 +197,12 @@ namespace CepaCero.World
             }
         }
 
-        /// <summary>Replaces a whole chunk from <see cref="WriteChunk"/> data. Does not record changes.</summary>
-        public void ReadChunk(ByteReader reader)
+        /// <summary>
+        /// Replaces a whole chunk from <see cref="WriteChunk"/> data. Does not record changes.
+        /// <paramref name="remap"/> translates stored block ids to this registry's ids (saves made
+        /// with an older registry); null means "same ids".
+        /// </summary>
+        public void ReadChunk(ByteReader reader, ushort[] remap = null)
         {
             int chunkX = reader.ReadUShort();
             int chunkY = reader.ReadUShort();
@@ -213,6 +217,10 @@ namespace CepaCero.World
                 int run = reader.ReadUShort();
                 ushort type = reader.ReadUShort();
                 ushort health = reader.ReadUShort();
+                if (remap != null)
+                {
+                    type = type < remap.Length ? remap[type] : ushort.MaxValue;
+                }
                 if (run == 0 || i + run > Chunk.CellCount || !Registry.IsValid(type))
                 {
                     throw new FormatException($"Corrupt chunk data at cell {i}.");

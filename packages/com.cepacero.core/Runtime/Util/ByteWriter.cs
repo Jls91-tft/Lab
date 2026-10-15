@@ -53,6 +53,28 @@ namespace CepaCero.Util
 
         public void WriteUInt(uint value) => WriteInt(unchecked((int)value));
 
+        public void WriteLong(long value)
+        {
+            WriteInt(unchecked((int)value));
+            WriteInt(unchecked((int)(value >> 32)));
+        }
+
+        public void WriteFloat(float value) => WriteInt(BitConverter.SingleToInt32Bits(value));
+
+        /// <summary>UTF-8 with a ushort length prefix (max 65535 bytes).</summary>
+        public void WriteString(string value)
+        {
+            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(value ?? "");
+            if (bytes.Length > ushort.MaxValue)
+            {
+                throw new ArgumentException("String too long for WriteString.", nameof(value));
+            }
+            WriteUShort((ushort)bytes.Length);
+            Ensure(bytes.Length);
+            Buffer.BlockCopy(bytes, 0, _buffer, Length, bytes.Length);
+            Length += bytes.Length;
+        }
+
         private void Ensure(int extra)
         {
             if (Length + extra <= _buffer.Length)

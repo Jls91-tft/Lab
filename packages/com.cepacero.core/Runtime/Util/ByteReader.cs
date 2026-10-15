@@ -50,6 +50,24 @@ namespace CepaCero.Util
 
         public uint ReadUInt() => unchecked((uint)ReadInt());
 
+        public long ReadLong()
+        {
+            uint low = ReadUInt();
+            long high = ReadInt();
+            return (high << 32) | low;
+        }
+
+        public float ReadFloat() => BitConverter.Int32BitsToSingle(ReadInt());
+
+        public string ReadString()
+        {
+            int length = ReadUShort();
+            Require(length);
+            string value = System.Text.Encoding.UTF8.GetString(_buffer, Position, length);
+            Position += length;
+            return value;
+        }
+
         private void Require(int count)
         {
             if (Position + count > _end)

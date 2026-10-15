@@ -114,6 +114,36 @@ namespace CepaCero.Core
             _events.Clear();
         }
 
+        /// <summary>
+        /// Puts a fresh session (same map, same settings) in a saved state. Zombies are
+        /// not saved: loading during a night restarts that night's horde.
+        /// </summary>
+        internal void Restore(long tick, int nightsSurvived, int zombiesKilled, IReadOnlyList<PlayerState> players)
+        {
+            if (players.Count > MaxPlayers)
+            {
+                throw new ArgumentException($"A match has at most {MaxPlayers} players.", nameof(players));
+            }
+            _players.Clear();
+            _inputs.Clear();
+            foreach (PlayerState p in players)
+            {
+                _players.Add(p);
+                _inputs.Add(default);
+            }
+            Clock.SetTick(tick);
+            NightsSurvived = nightsSurvived;
+            ZombiesKilled = zombiesKilled;
+            IsGameOver = false;
+            Zombies.SightMultiplier = Clock.Phase == DayPhase.Day ? 1f : NightSight;
+            if (Clock.Phase == DayPhase.Night)
+            {
+                CurrentPlan = Director.PlanNight(Clock.Day);
+                Director.BeginNight(CurrentPlan);
+                SpawnedTonight = 0;
+            }
+        }
+
         /// <summary>Advances the match by one fixed tick (1 / TickRate seconds).</summary>
         public void Step()
         {
