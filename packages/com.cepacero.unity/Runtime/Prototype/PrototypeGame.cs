@@ -456,6 +456,10 @@ namespace CepaCero.Unity.Prototype
                 case IntentResult.NoRoom: return "No cabe";
                 case IntentResult.NothingToUse: return "Nada que usar";
                 case IntentResult.Missed: return "Fallas";
+                case IntentResult.InvalidTarget: return "Objetivo no válido (apunta con el ratón a un bloque)";
+                case IntentResult.NotAllowed: return "No permitido";
+                case IntentResult.TooSoon: return "Aún no";
+                case IntentResult.PlayerDowned: return "Estás caído";
                 default: return r.ToString();
             }
         }
