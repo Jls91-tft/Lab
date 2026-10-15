@@ -116,3 +116,22 @@ def test_doors_face_the_street(synthetic_osm):
         door_y = b.doors[1]
         facade = b.bbox[1] if b.bbox[1] > street_row else b.bbox[3]   # side closest to the street
         assert door_y == facade, b
+
+
+# ---- Contract with the C# reader (packages/com.cepacero.core) ---------------
+CONTRACT_FIXTURE = Path(__file__).resolve().parents[3] / "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json"
+
+
+def test_csharp_contract_fixture_is_up_to_date(synthetic_osm, tmp_path):
+    """The C# MapImporter tests load CONTRACT_FIXTURE. If the format changes,
+    regenerate it with UPDATE_FIXTURES=1 python -m pytest and fix both sides."""
+    import os
+
+    bbox = ",".join(str(v) for v in BBOX.as_list())
+    assert main(["--bbox", bbox, "--input", str(synthetic_osm), "--name", "synthetic", "--out", str(tmp_path)]) == 0
+    fresh = (tmp_path / "synthetic.map.json").read_text(encoding="utf-8")
+    if os.environ.get("UPDATE_FIXTURES") == "1":
+        CONTRACT_FIXTURE.parent.mkdir(parents=True, exist_ok=True)
+        CONTRACT_FIXTURE.write_text(fresh, encoding="utf-8")
+    assert CONTRACT_FIXTURE.exists(), "run once with UPDATE_FIXTURES=1"
+    assert json.loads(CONTRACT_FIXTURE.read_text(encoding="utf-8")) == json.loads(fresh)
