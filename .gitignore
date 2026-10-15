@@ -87,6 +87,9 @@ venv/
 tools/osm2tiles/out/
 tools/osm2tiles/cache/
 
+# Vista previa del atlas de artgen (el atlas en sí sí se versiona)
+tools/artgen/out/
+
 # ---------- Sistema operativo ----------
 .DS_Store
 Thumbs.db

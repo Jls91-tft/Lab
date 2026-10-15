@@ -1,50 +1,50 @@
 using System.Collections.Generic;
 using CepaCero.World;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace CepaCero.Unity.Prototype
 {
     /// <summary>
-    /// The whole map as one texture, one pixel per tile, on a sprite where one
-    /// world unit = one tile and tile (0,0) sits at the origin. Only changed
-    /// cells are repainted. Debug view: the real game will use Tilemaps.
+    /// The map as two Tilemaps (ground below, blocks above) with the generated
+    /// 16 px art (D-018). One world unit = one tile and tile (0,0) sits at the
+    /// origin. Only changed cells are repainted.
     /// </summary>
     public sealed class PrototypeWorldView
     {
         private readonly BlockWorld _blocks;
-        private readonly GroundLayer _ground;
-        private readonly Texture2D _texture;
-        private readonly SpriteRenderer _renderer;
+        private readonly PrototypeArt _art;
+        private readonly Tilemap _groundMap;
+        private readonly Tilemap _blockMap;
+        private readonly Dictionary<Sprite, Tile> _tiles = new Dictionary<Sprite, Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
-        private bool _dirty;
 
-        public PrototypeWorldView(BlockWorld blocks, GroundLayer ground, Transform parent)
+        public PrototypeWorldView(BlockWorld blocks, GroundLayer ground, PrototypeArt art, Transform parent)
         {
             _blocks = blocks;
-            _ground = ground;
-            _texture = new Texture2D(blocks.Width, blocks.Height, TextureFormat.RGBA32, false)
+            _art = art;
+
+            var grid = new GameObject("World (prototype)");
+            grid.transform.SetParent(parent, false);
+            grid.AddComponent<Grid>();
+            _groundMap = CreateLayer(grid.transform, "Ground", 0);
+            _blockMap = CreateLayer(grid.transform, "Blocks", 1);
+
+            int w = blocks.Width;
+            int h = blocks.Height;
+            var groundTiles = new TileBase[w * h];
+            var blockTiles = new TileBase[w * h];
+            for (int y = 0; y < h; y++)
             {
-                filterMode = FilterMode.Point,
-                wrapMode = TextureWrapMode.Clamp,
-                name = "PrototypeWorld",
-            };
-            var pixels = new Color32[blocks.Width * blocks.Height];
-            for (int y = 0; y < blocks.Height; y++)
-            {
-                for (int x = 0; x < blocks.Width; x++)
+                for (int x = 0; x < w; x++)
                 {
-                    pixels[y * blocks.Width + x] = ColorAt(x, y);
+                    groundTiles[y * w + x] = TileFor(art.Ground(ground.Get(x, y), x, y));
+                    blockTiles[y * w + x] = BlockTile(x, y);
                 }
             }
-            _texture.SetPixels32(pixels);
-            _texture.Apply(false);
-
-            var go = new GameObject("World (prototype)");
-            go.transform.SetParent(parent, false);
-            _renderer = go.AddComponent<SpriteRenderer>();
-            _renderer.sprite = Sprite.Create(_texture, new Rect(0, 0, blocks.Width, blocks.Height), Vector2.zero, 1f);
-            PrototypeMaterials.Apply(_renderer);
-            _renderer.sortingOrder = 0;
+            var area = new BoundsInt(0, 0, 0, w, h, 1);
+            _groundMap.SetTilesBlock(area, groundTiles);
+            _blockMap.SetTilesBlock(area, blockTiles);
         }
 
         /// <summary>Repaints the blocks that changed since the last call (drains the world's change queue).</summary>
@@ -54,13 +54,7 @@ namespace CepaCero.Unity.Prototype
             _blocks.DrainChanges(_changes);
             foreach (BlockChange c in _changes)
             {
-                _texture.SetPixel(c.X, c.Y, ColorAt(c.X, c.Y));
-                _dirty = true;
-            }
-            if (_dirty)
-            {
-                _texture.Apply(false);
-                _dirty = false;
+                _blockMap.SetTile(new Vector3Int(c.X, c.Y, 0), BlockTile(c.X, c.Y));
             }
         }
 
@@ -68,17 +62,41 @@ namespace CepaCero.Unity.Prototype
         public void SetAmbient(float light)
         {
             float v = Mathf.Lerp(0.3f, 1f, light);
-            _renderer.color = new Color(v, v, v * 1.05f, 1f);
+            var tint = new Color(v, v, Mathf.Min(1f, v * 1.1f), 1f);
+            _groundMap.color = tint;
+            _blockMap.color = tint;
         }
 
-        private Color32 ColorAt(int x, int y)
+        private TileBase BlockTile(int x, int y) => TileFor(_art.Block(_blocks.GetBlock(x, y).Key));
+
+        private Tile TileFor(Sprite sprite)
         {
-            Color32 block = PrototypePalette.Block(_blocks.GetBlock(x, y).Key);
-            if (block.a > 0)
+            if (sprite == null)
             {
-                return block;
+                return null;
             }
-            return PrototypePalette.Ground(_ground.Get(x, y));
+            if (!_tiles.TryGetValue(sprite, out Tile tile))
+            {
+                tile = ScriptableObject.CreateInstance<Tile>();
+                tile.sprite = sprite;
+                _tiles.Add(sprite, tile);
+            }
+            return tile;
+        }
+
+        private static Tilemap CreateLayer(Transform parent, string name, int order)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            Tilemap map = go.AddComponent<Tilemap>();
+            TilemapRenderer renderer = go.AddComponent<TilemapRenderer>();
+            renderer.sortingOrder = order;
+            Material unlit = PrototypeMaterials.Unlit;
+            if (unlit != null)
+            {
+                renderer.sharedMaterial = unlit;
+            }
+            return map;
         }
     }
 }

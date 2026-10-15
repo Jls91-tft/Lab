@@ -119,6 +119,85 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &1328939781
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1328939783}
+  - component: {fileID: 1328939782}
+  m_Layer: 0
+  m_Name: Prototype
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1328939782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1328939781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca5a2ae57d13927428c353223551582e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CepaCero.Unity::CepaCero.Unity.Prototype.PrototypeGame
+  _mapPath: packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json
+  _settings:
+    TickRate: 20
+    DaySeconds: 90
+    DuskSeconds: 15
+    NightSeconds: 90
+    DawnSeconds: 10
+    HordeBase: 12
+    HordeGrowth: 1.35
+    HordeMax: 400
+    MaxAliveZombies: 150
+    SpecialsFromNight: 2
+    SpecialShare: 0.08
+    BossEveryNights: 5
+    SpawnWindow: 0.6
+    Seed: 1
+    MapZombiesPer1000Tiles: 1
+    MapZombiesMax: 120
+    MapZombiesSafeRadius: 25
+    FriendlyFire: 0
+    LootRespawn: 0
+    BleedOutSeconds: 30
+    ReviveSeconds: 3
+    PermaDeath: 0
+    Survival: 2
+    FoodLastsDays: 3
+    WaterLastsDays: 2
+    StarvingSecondsPerHealth: 10
+    ThirstSecondsPerHealth: 5
+    HungryMaxHealthFactor: 0.75
+    ThirstyStaminaRegenFactor: 0.5
+  _populateMap: 1
+  _starterKit: 1
+  _cameraSize: 14
+  _playAsRemoteClient: 0
+--- !u!4 &1328939783
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1328939781}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1650529063
 GameObject:
   m_ObjectHideFlags: 0
@@ -216,3 +295,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1650529066}
+  - {fileID: 1328939783}

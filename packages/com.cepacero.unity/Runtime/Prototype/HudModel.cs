@@ -21,6 +21,10 @@ namespace CepaCero.Unity.Prototype
 
         public PlayerState Me;
 
+        /// <summary>Bar maxima (PlayerSettings of the match).</summary>
+        public int MaxHealth;
+        public float MaxStamina;
+
         /// <summary>Food and water bars in whole percents; −1 when hunger and thirst are off.</summary>
         public int Food;
         public int Water;
@@ -33,5 +37,8 @@ namespace CepaCero.Unity.Prototype
 
         /// <summary>Network line for the loopback mode ("" otherwise).</summary>
         public string Network;
+
+        /// <summary>Show the controls panel (toggled with H).</summary>
+        public bool ShowHelp;
     }
 }

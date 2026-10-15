@@ -34,6 +34,9 @@ namespace CepaCero.Unity.Prototype
         public bool Load;
         public int Hotbar = -1;
 
+        /// <summary>Controls panel on screen; H toggles it (not a simulation action).</summary>
+        public bool ShowHelp;
+
         public void Poll(Camera camera)
         {
             Keyboard kb = Keyboard.current;
@@ -58,6 +61,10 @@ namespace CepaCero.Unity.Prototype
             CraftBandage |= kb.cKey.wasPressedThisFrame;
             Save |= kb.f5Key.wasPressedThisFrame;
             Load |= kb.f9Key.wasPressedThisFrame;
+            if (kb.hKey.wasPressedThisFrame)
+            {
+                ShowHelp = !ShowHelp;
+            }
             if (kb.digit1Key.wasPressedThisFrame) { Hotbar = 0; }
             if (kb.digit2Key.wasPressedThisFrame) { Hotbar = 1; }
             if (kb.digit3Key.wasPressedThisFrame) { Hotbar = 2; }

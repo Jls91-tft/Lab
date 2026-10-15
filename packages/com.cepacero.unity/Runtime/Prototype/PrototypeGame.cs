@@ -16,7 +16,8 @@ using UnityEngine;
 namespace CepaCero.Unity.Prototype
 {
     /// <summary>
-    /// Debug prototype: plays the whole core simulation with coloured squares.
+    /// Debug prototype: plays the whole core simulation with the generated placeholder
+    /// art (tools/artgen, D-018) and a pixel-perfect camera (16 px tiles, 640×360 base).
     /// Add it to an empty GameObject in an empty scene and press Play.
     ///
     /// Two modes:
@@ -24,11 +25,14 @@ namespace CepaCero.Unity.Prototype
     /// - Loopback client (<see cref="_playAsRemoteClient"/>): you are player 1 of a
     ///   host running in the same process. Your input travels as protocol bytes and
     ///   the view draws only the client replica, exactly what FishNet will carry.
-    /// Not the real game: no art, no real network, debug HUD.
+    /// Not the real game: placeholder art, no real network, prototype HUD.
     /// </summary>
     public sealed class PrototypeGame : MonoBehaviour
     {
         private const string SaveFile = "prototype.sav";
+
+        /// <summary>Base resolution height (D-018): the view is scaled by whole numbers from 640×360.</summary>
+        private const int BaseHeight = 360;
 
         private static readonly string[] BuildKeys = { "wood_wall", "metal_wall", "door", "spike_trap", "fence", "chest", "workbench", "concrete_wall" };
 
@@ -40,13 +44,17 @@ namespace CepaCero.Unity.Prototype
 
         [SerializeField] private bool _populateMap = true;
         [SerializeField] private bool _starterKit = true;
-        [SerializeField] private float _cameraSize = 14f;
+
+        [Tooltip("Screen pixels per art pixel. 0 = automatic: the largest whole number that keeps about 360 art pixels of height.")]
+        [SerializeField] private int _pixelZoom;
 
         [Tooltip("Play as a remote client of an in-process host: everything goes through the network protocol.")]
         [SerializeField] private bool _playAsRemoteClient;
 
         private readonly PrototypeInput _input = new PrototypeInput();
-        private readonly PrototypeHud _hud = new PrototypeHud();
+        private readonly PlayerSettings _playerSettings = new PlayerSettings();
+        private PrototypeArt _art;
+        private PrototypeHud _hud;
         private readonly List<SessionEvent> _events = new List<SessionEvent>();
         private readonly ByteWriter _up = new ByteWriter(256);
         private readonly ByteWriter _down = new ByteWriter(16 * 1024);
@@ -77,6 +85,8 @@ namespace CepaCero.Unity.Prototype
         {
             try
             {
+                _art = PrototypeArt.Load();
+                _hud = new PrototypeHud(_art);
                 _data = RepoData.LoadGameData();
                 StartMatch(loadSave: false);
             }
@@ -94,7 +104,7 @@ namespace CepaCero.Unity.Prototype
                 Destroy(_viewRoot.gameObject);
             }
             _map = RepoData.LoadMap(_mapPath);
-            _session = new GameSession(_settings, new PlayerSettings(), _map.Blocks, _map.Ground, _data, _map.Buildings);
+            _session = new GameSession(_settings, _playerSettings, _map.Blocks, _map.Ground, _data, _map.Buildings);
             _broadcaster = null;
             _client = null;
             Time.fixedDeltaTime = 1f / _settings.TickRate;
@@ -145,8 +155,8 @@ namespace CepaCero.Unity.Prototype
             {
                 _me = 0;
             }
-            _world = new PrototypeWorldView(viewBlocks, viewGround, _viewRoot);
-            _entities = new PrototypeEntityView(_viewRoot, _data.Zombies);
+            _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
+            _entities = new PrototypeEntityView(_viewRoot, _data.Zombies, _art);
             SetupCamera();
             Say(loadSave ? "Partida cargada" : $"Mapa: {_map.Name} ({_map.Blocks.Width}×{_map.Blocks.Height}). {_map.Attribution}");
         }
@@ -220,8 +230,34 @@ namespace CepaCero.Unity.Prototype
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
-            Float2 me = MyState.Position;
-            _camera.transform.position = new Vector3(me.X, me.Y, -10f);
+            UpdateCursor();
+            PlaceCamera(MyState.Position);
+        }
+
+        /// <summary>Same reach rule as the host (tile centre within PlayerSettings.Reach).</summary>
+        private void UpdateCursor()
+        {
+            PlayerState me = MyState;
+            Float2 mouse = _input.MouseWorld;
+            var tile = new Int2((int)Math.Floor(mouse.X), (int)Math.Floor(mouse.Y));
+            bool visible = !me.IsDowned && _map.Blocks.InBounds(tile.X, tile.Y);
+            Float2 toTile = new Float2(tile.X + 0.5f, tile.Y + 0.5f) - me.Position;
+            _entities.SetCursor(visible, tile, toTile.LengthSquared <= _playerSettings.Reach * _playerSettings.Reach);
+        }
+
+        /// <summary>
+        /// Pixel-perfect camera by hand (no URP component needed): each art pixel covers a
+        /// whole number of screen pixels, and the camera only moves in whole screen pixels.
+        /// </summary>
+        private void PlaceCamera(Float2 target)
+        {
+            int screenHeight = Screen.height > 0 ? Screen.height : BaseHeight; // 0 in batch mode
+            int zoom = _pixelZoom > 0 ? _pixelZoom : Mathf.Max(1, Mathf.RoundToInt(screenHeight / (float)BaseHeight));
+            float screenPixelsPerUnit = _art.PixelsPerUnit * zoom;
+            _camera.orthographicSize = screenHeight / (2f * screenPixelsPerUnit);
+            float x = Mathf.Round(target.X * screenPixelsPerUnit) / screenPixelsPerUnit;
+            float y = Mathf.Round(target.Y * screenPixelsPerUnit) / screenPixelsPerUnit;
+            _camera.transform.position = new Vector3(x, y, -10f);
         }
 
         private void OnGUI()
@@ -241,6 +277,9 @@ namespace CepaCero.Unity.Prototype
                 ZombiesShown = _zombiesShown,
                 ZombiesKilled = Remote ? -1 : _session.ZombiesKilled,
                 Me = MyState,
+                MaxHealth = _playerSettings.MaxHealth,
+                MaxStamina = _playerSettings.MaxStamina,
+                ShowHelp = _input.ShowHelp,
                 Food = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyFood : Messages.QuantizeBar(MyState.Food),
                 Water = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyWater : Messages.QuantizeBar(MyState.Water),
                 Inventory = MyInventory,
@@ -484,7 +523,6 @@ namespace CepaCero.Unity.Prototype
                 _camera = go.AddComponent<Camera>();
             }
             _camera.orthographic = true;
-            _camera.orthographicSize = _cameraSize;
             _camera.clearFlags = CameraClearFlags.SolidColor;
             _camera.backgroundColor = Color.black;
         }

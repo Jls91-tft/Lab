@@ -19,6 +19,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 **Tomadas** (motivos en `docs/decisiones.md`):
 - Unity 6000.3.26f1 (LTS) + C#, plantilla 2D URP (D-016). Proyecto Unity en la subcarpeta `CepaCero/`.
 - Paquetes de Unity alineados con el editor: collab-proxy 2.13.6 e Input System 1.20.0 (D-017).
+- Arte: tile 16 px, base 640×360, 4 direcciones; sprites generados por código con `tools/artgen/` (paleta de 32 colores) hacia `CepaCero/Assets/Resources/Cepa/Art/`. No editar esos PNG a mano (D-018).
 - Cooperativo anfitrión + Steam P2P, sin servidores propios. **Autoridad del anfitrión.**
 - Git + Git LFS para binarios. Textos fuera del código (ES + EN).
 - Red: **FishNet** (gratis, no Pro) + **FishySteamworks** / **Steamworks.NET**; Tugboat para pruebas locales.

@@ -33,6 +33,10 @@ step "datagen: tests + generated data up to date"
 venv tools/datagen requirements.txt
 (cd tools/datagen && "$(vpy .)" -m pytest -q && "$(vpy .)" -m datagen --check)
 
+step "artgen: tests + atlas up to date"
+venv tools/artgen requirements.txt
+(cd tools/artgen && "$(vpy .)" -m pytest -q && "$(vpy .)" -m artgen --check)
+
 step "core: dotnet test (C# 9 / netstandard2.1, like Unity 6)"
 dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj -c Release --nologo -v quiet
 

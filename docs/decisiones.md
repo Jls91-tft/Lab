@@ -15,14 +15,24 @@ antigua como **Sustituida por D-XXX**.
 ## Pendientes de decidir
 | Tema | Notas |
 | --- | --- |
-| Tamaño de tile en píxeles | 16 o 32 px; se cierra en la semana 1. Los metros por tile ya están decididos (D-008) |
-| Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
-| Direcciones de animación | 4 u 8 |
-| Paleta | ~32 colores cerrada |
+| ~~Tamaño de tile en píxeles~~ | Cerrado: 16 px (D-018). Los metros por tile, en D-008 |
+| ~~Resolución base~~ | Cerrado: 640×360 con escalado entero (D-018) |
+| ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
+| ~~Paleta~~ | Cerrado: paleta propia de 32 colores, generada por código (D-018) |
+| Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-018 · 15/10/2026 · Arte de la primera versión: 16 px, 640×360, 4 direcciones, generado por código
+- **Estado:** Aceptada (OK de Javier el 15/10/2026: tile 16 px, 4 direcciones, arte generado por código, mundo e interfaz a la vez).
+- **Decisión:**
+  - Tile de **16 px**; resolución base **640×360** con escalado entero (cámara de píxel perfecto hecha a mano, sin depender del componente de URP).
+  - **4 direcciones** de animación (abajo, arriba, izquierda; derecha es la izquierda espejada). Caminar de 4 fotogramas.
+  - El arte de esta versión sale de `tools/artgen/` (Python + Pillow, ya usado en osm2tiles) con **paleta propia de 32 colores**, y se escribe en `CepaCero/Assets/Resources/Cepa/Art/` (un atlas PNG y su `atlas.json`). Se regenera, no se edita a mano. Mundo y personajes, e interfaz con iconos y barras, se hacen a la vez.
+- **Motivo:** con 640×360 y 16 px caben ~22 casillas de alto: se ve una horda de 100 zombis. 4 direcciones cuestan la mitad de fotogramas que 8. Generar el arte por código es coste cero, reproducible y sin dudas de licencia.
+- **Coste / límites:** es arte provisional de formas sencillas, no arte final; se sustituirá por dibujo a mano o encargo cuando se decida. Texto de la interfaz con la fuente por defecto hasta tener una fuente pixel (pendiente).
 
 ## D-017 · 15/10/2026 · Paquetes de Unity alineados con el editor 6000.3.26f1
 - **Estado:** Aceptada (OK de Javier el 15/10/2026: "sube collab-proxy e Input System a versiones compatibles").
