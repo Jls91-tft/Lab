@@ -1,0 +1,399 @@
+{
+  "format": "cepacero.loot",
+  "version": 1,
+  "source": "docs/botin.md",
+  "tiles_per_container": 80,
+  "max_containers": 6,
+  "tables": [
+    {
+      "kind": "generic",
+      "rolls": 2,
+      "loot": [
+        {
+          "item": "wood",
+          "min": 1,
+          "max": 3,
+          "chance": 0.4
+        },
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 2,
+          "chance": 0.3
+        },
+        {
+          "item": "nails",
+          "min": 2,
+          "max": 6,
+          "chance": 0.2
+        },
+        {
+          "item": "food_can",
+          "min": 1,
+          "max": 1,
+          "chance": 0.15
+        }
+      ]
+    },
+    {
+      "kind": "residential",
+      "rolls": 3,
+      "loot": [
+        {
+          "item": "food_can",
+          "min": 1,
+          "max": 2,
+          "chance": 0.35
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 2,
+          "chance": 0.3
+        },
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 3,
+          "chance": 0.4
+        },
+        {
+          "item": "knife",
+          "min": 1,
+          "max": 1,
+          "chance": 0.06
+        },
+        {
+          "item": "bandage",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "wood",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        },
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
+        }
+      ]
+    },
+    {
+      "kind": "commercial",
+      "rolls": 3,
+      "loot": [
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 3,
+          "chance": 0.35
+        },
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 2,
+          "chance": 0.15
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        },
+        {
+          "item": "metal_scrap",
+          "min": 1,
+          "max": 3,
+          "chance": 0.2
+        },
+        {
+          "item": "bat",
+          "min": 1,
+          "max": 1,
+          "chance": 0.04
+        }
+      ]
+    },
+    {
+      "kind": "food",
+      "rolls": 4,
+      "loot": [
+        {
+          "item": "food_can",
+          "min": 1,
+          "max": 3,
+          "chance": 0.6
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 3,
+          "chance": 0.5
+        },
+        {
+          "item": "knife",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
+        }
+      ]
+    },
+    {
+      "kind": "hardware",
+      "rolls": 4,
+      "loot": [
+        {
+          "item": "nails",
+          "min": 5,
+          "max": 20,
+          "chance": 0.6
+        },
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 3,
+          "chance": 0.4
+        },
+        {
+          "item": "metal_scrap",
+          "min": 2,
+          "max": 6,
+          "chance": 0.4
+        },
+        {
+          "item": "axe",
+          "min": 1,
+          "max": 1,
+          "chance": 0.12
+        },
+        {
+          "item": "wood",
+          "min": 2,
+          "max": 6,
+          "chance": 0.4
+        },
+        {
+          "item": "concrete_mix",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        }
+      ]
+    },
+    {
+      "kind": "medical",
+      "rolls": 4,
+      "loot": [
+        {
+          "item": "bandage",
+          "min": 1,
+          "max": 3,
+          "chance": 0.5
+        },
+        {
+          "item": "bandage_dirty",
+          "min": 1,
+          "max": 3,
+          "chance": 0.3
+        },
+        {
+          "item": "medkit",
+          "min": 1,
+          "max": 1,
+          "chance": 0.12
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        }
+      ]
+    },
+    {
+      "kind": "police",
+      "rolls": 3,
+      "loot": [
+        {
+          "item": "pistol",
+          "min": 1,
+          "max": 1,
+          "chance": 0.15
+        },
+        {
+          "item": "pistol_ammo",
+          "min": 3,
+          "max": 8,
+          "chance": 0.35
+        },
+        {
+          "item": "bat",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "bandage",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        }
+      ]
+    },
+    {
+      "kind": "school",
+      "rolls": 2,
+      "loot": [
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 3,
+          "chance": 0.35
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 2,
+          "chance": 0.3
+        },
+        {
+          "item": "bat",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
+        },
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        }
+      ]
+    },
+    {
+      "kind": "religious",
+      "rolls": 2,
+      "loot": [
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 3,
+          "chance": 0.4
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 1,
+          "chance": 0.2
+        },
+        {
+          "item": "wood",
+          "min": 1,
+          "max": 3,
+          "chance": 0.3
+        }
+      ]
+    },
+    {
+      "kind": "office",
+      "rolls": 2,
+      "loot": [
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        },
+        {
+          "item": "scrap_cloth",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        },
+        {
+          "item": "water_bottle",
+          "min": 1,
+          "max": 1,
+          "chance": 0.25
+        },
+        {
+          "item": "metal_scrap",
+          "min": 1,
+          "max": 2,
+          "chance": 0.15
+        }
+      ]
+    },
+    {
+      "kind": "industrial",
+      "rolls": 4,
+      "loot": [
+        {
+          "item": "metal_scrap",
+          "min": 2,
+          "max": 8,
+          "chance": 0.6
+        },
+        {
+          "item": "nails",
+          "min": 3,
+          "max": 12,
+          "chance": 0.4
+        },
+        {
+          "item": "wood",
+          "min": 2,
+          "max": 6,
+          "chance": 0.4
+        },
+        {
+          "item": "concrete_mix",
+          "min": 1,
+          "max": 2,
+          "chance": 0.15
+        },
+        {
+          "item": "axe",
+          "min": 1,
+          "max": 1,
+          "chance": 0.05
+        }
+      ]
+    },
+    {
+      "kind": "garage",
+      "rolls": 3,
+      "loot": [
+        {
+          "item": "metal_scrap",
+          "min": 1,
+          "max": 5,
+          "chance": 0.5
+        },
+        {
+          "item": "tape",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        },
+        {
+          "item": "nails",
+          "min": 2,
+          "max": 8,
+          "chance": 0.3
+        },
+        {
+          "item": "bat",
+          "min": 1,
+          "max": 1,
+          "chance": 0.05
+        }
+      ]
+    }
+  ]
+}

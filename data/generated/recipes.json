@@ -1,0 +1,221 @@
+{
+  "format": "cepacero.recipes",
+  "version": 1,
+  "source": "docs/recetas.md",
+  "recipes": [
+    {
+      "id": "build_wood_wall",
+      "result": "",
+      "result_block": "wood_wall",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 4
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "build_metal_wall",
+      "result": "",
+      "result_block": "metal_wall",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "metal_scrap",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "build_concrete_wall",
+      "result": "",
+      "result_block": "concrete_wall",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": "sample_brute"
+    },
+    {
+      "id": "build_door",
+      "result": "",
+      "result_block": "door",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 6
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "build_fence",
+      "result": "",
+      "result_block": "fence",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 2
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "build_workbench",
+      "result": "",
+      "result_block": "workbench",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 10
+        },
+        {
+          "item": "nails",
+          "count": 10
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "build_chest",
+      "result": "",
+      "result_block": "chest",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 8
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_bandage",
+      "result": "bandage",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "scrap_cloth",
+          "count": 2
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_clean_bandage",
+      "result": "bandage",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "bandage_dirty",
+          "count": 1
+        },
+        {
+          "item": "water_bottle",
+          "count": 1
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_bat",
+      "result": "bat",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 3
+        },
+        {
+          "item": "tape",
+          "count": 1
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_medkit",
+      "result": "medkit",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "bandage",
+          "count": 3
+        },
+        {
+          "item": "tape",
+          "count": 1
+        },
+        {
+          "item": "scrap_cloth",
+          "count": 2
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_metal_plate",
+      "result": "metal_plate",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "metal_scrap",
+          "count": 6
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_concrete_mix",
+      "result": "concrete_mix",
+      "result_block": "",
+      "count": 2,
+      "ingredients": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "bone_claw",
+          "count": 2
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": "sample_brute"
+    }
+  ]
+}
