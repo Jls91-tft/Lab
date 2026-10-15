@@ -22,7 +22,6 @@ antigua como **Sustituida por D-XXX**.
 | Carpetas de `Assets/` y asmdefs de Unity | Propuesta en `docs/arquitectura.md`; se cierra con el proyecto creado |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
 | Hambre y sed | Sin decidir: de momento la comida solo cura un poco |
-| Grupo entero caído a la vez | Aplicado: reaparecen al amanecer; `PermaDeath` como opción. Confirmar |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
@@ -36,7 +35,7 @@ antigua como **Sustituida por D-XXX**.
 - **Estado:** Aceptada (las 5 recomendaciones de `docs/propuesta-inventario.md`)
 - **Decisión:** inventario por **huecos** (20 + 5 de acceso rápido; lo grande ocupa más); el botín **no reaparece** por defecto (opción de partida); **fuego amigo desactivado** por defecto (opción); al caer, un compañero puede **levantarte** (30 s para morir desangrado); al morir, la mochila se queda en el suelo y se reaparece al amanecer en el fuerte; **pistola** con poca munición en el MVP. Objetos, recetas y tablas de botín son datos en `docs/` (como el bestiario).
 - **Motivo:** accesible pero con decisiones (pilar 4); la escasez y el ruido del arma de fuego dan tensión; levantar al compañero refuerza el cooperativo (pilar 1).
-- **Añadido por Claude, pendiente de confirmar:** (1) si cae todo el grupo a la vez, todos reaparecen al amanecer sin mochila; la opción `PermaDeath` hace que la partida termine. (2) **Recolección:** romper bloques da materiales (árbol → 4 de madera, muro de madera → 2, muro de metal → 2 de chatarra…, `Items/BlockDrops.cs`); lo que rompen los zombis no da nada. (3) Analizar una muestra (usarla) la consume y desbloquea sus recetas para el grupo. (4) Levantar a alguien: mantener la acción 3 s a menos de 1,5 tiles; vuelve con 30 de vida.
+- **Añadido por Claude, confirmado por Javier el 15/10/2026:** (1) si cae todo el grupo a la vez, todos reaparecen al amanecer sin mochila; la opción `PermaDeath` hace que la partida termine. (2) **Recolección:** romper bloques da materiales (árbol → 4 de madera, muro de madera → 2, muro de metal → 2 de chatarra…, `Items/BlockDrops.cs`); lo que rompen los zombis no da nada. (3) Analizar una muestra (usarla) la consume y desbloquea sus recetas para el grupo. (4) Levantar a alguien: mantener la acción 3 s a menos de 1,5 tiles; vuelve con 30 de vida.
 
 ## D-011 · 15/10/2026 · CI con GitHub Actions
 - **Estado:** Aceptada
