@@ -6,6 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using CepaCero.AI;
+using CepaCero.Core;
+using CepaCero.Items;
+using CepaCero.Lore;
+using CepaCero.Net.Protocol;
+using CepaCero.Player;
+using CepaCero.Rules;
 using CepaCero.Map;
 using CepaCero.Util;
 using CepaCero.World;
@@ -20,8 +26,6 @@ namespace CepaCero.SimBench
     public static class Program
     {
         private const int TickRate = 20;
-        private const int SnapshotEveryTicks = 2; // 10 Hz
-        private const float InterestRadius = 40f;
 
         public static int Main(string[] args)
         {
@@ -48,8 +52,8 @@ namespace CepaCero.SimBench
             string mapName;
             if (o.MapPath != null)
             {
-                var data = JsonSerializer.Deserialize<CepaMapData>(File.ReadAllText(o.MapPath), new JsonSerializerOptions { IncludeFields = true });
-                MapImportResult map = MapImporter.Import(data, registry);
+                var mapData = JsonSerializer.Deserialize<CepaMapData>(File.ReadAllText(o.MapPath), new JsonSerializerOptions { IncludeFields = true });
+                MapImportResult map = MapImporter.Import(mapData, registry);
                 blocks = map.Blocks;
                 ground = map.Ground;
                 mapName = $"{map.Name} ({o.MapPath})";
@@ -60,81 +64,80 @@ namespace CepaCero.SimBench
                 mapName = $"synthetic city {o.Width}x{o.Height}";
             }
 
-            var bestiary = JsonSerializer.Deserialize<BestiaryData>(
-                File.ReadAllText(Path.Combine(repo, "data/generated/bestiary.json")), new JsonSerializerOptions { IncludeFields = true });
-            var catalog = new ZombieCatalog(bestiary);
+            var json = new JsonSerializerOptions { IncludeFields = true };
+            T Load<T>(string file) => JsonSerializer.Deserialize<T>(File.ReadAllText(Path.Combine(repo, "data/generated", file)), json);
+            var items = new ItemCatalog(Load<ItemsData>("items.json"));
+            var data = new GameData(new ZombieCatalog(Load<BestiaryData>("bestiary.json")), items, Load<RecipesData>("recipes.json"),
+                Load<LootData>("loot.json"), Load<DiaryData>("diary.json"));
+            ZombieCatalog catalog = data.Zombies;
 
             Float2 center = FindOpenCenter(blocks, ground);
-            var players = new List<Float2>();
+            int fortBlocks = BuildFort(blocks, ground, registry, center.Tile, radius: 3);
+            int blocksDestroyed = 0;
+            blocks.TypeChanged += (x, y, before, after) => blocksDestroyed += after == BlockRegistry.AirId ? 1 : 0;
+
+            // A whole match on the host, as in the game: no horde planning (one endless day),
+            // the zombies are placed by hand so every run besieges the same fort.
+            var settings = new GameSettings { DaySeconds = 1_000_000, HordeBase = 0, Seed = o.Seed };
+            var session = new GameSession(settings, new PlayerSettings { MaxHealth = 60000 }, blocks, ground, data,
+                zombieCapacity: Math.Max(512, o.Zombies * 2));
             for (int p = 0; p < o.Players; p++)
             {
-                players.Add(new Float2(center.X + p * 1.0f, center.Y));
+                session.AddPlayer(new Float2(center.X + p * 1.0f, center.Y));
             }
-            int fortBlocks = BuildFort(blocks, ground, registry, center.Tile, radius: 3);
             blocks.DrainChanges(new List<BlockChange>());
-
-            var sim = new ZombieSimulation(blocks, ground, catalog, capacity: Math.Max(512, o.Zombies * 2));
-            sim.Tick(1f / TickRate, players); // builds the first flow field
+            session.Step(); // builds the first flow field
+            var players = session.Players.Select(pl => pl.Position).ToList();
             var rng = new DeterministicRandom(o.Seed);
             byte[] types = { catalog.IndexOf("walker"), catalog.IndexOf("walker"), catalog.IndexOf("walker"), catalog.IndexOf("runner") };
             int spawned = 0;
             for (int attempt = 0; spawned < o.Zombies && attempt < o.Zombies * 20; attempt++)
             {
-                if (SpawnFinder.TryFind(ground, blocks, sim.Field, players, rng, 18f, 45f, out Float2 pos)
-                    && sim.Spawn(types[rng.Range(0, types.Length)], pos, o.Players) >= 0)
+                if (SpawnFinder.TryFind(ground, blocks, session.Zombies.Field, players, rng, 18f, 45f, out Float2 pos)
+                    && session.Zombies.Spawn(types[rng.Range(0, types.Length)], pos, o.Players) >= 0)
                 {
                     spawned++;
                 }
             }
 
+            var broadcaster = new HostBroadcaster(session, mapName);
+            var writer = new ByteWriter(16384);
+            long joinBytes = 0;
+            for (int p = 1; p < o.Players; p++) // player 0 is the host: nothing to send
+            {
+                writer.Clear();
+                broadcaster.WriteJoin(p, writer);
+                joinBytes = Math.Max(joinBytes, writer.Length);
+            }
+            broadcaster.CollectTick();
+
             Console.WriteLine($"Map: {mapName}, {blocks.Width}x{blocks.Height} tiles");
             Console.WriteLine($"Players: {o.Players} inside a {fortBlocks}-block wooden fort. Zombies: {spawned}/{o.Zombies}. " +
-                              $"Simulating {o.Seconds}s at {TickRate} Hz…");
+                              $"Simulating {o.Seconds}s at {TickRate} Hz (full GameSession + real protocol)…");
 
             int ticks = o.Seconds * TickRate;
             var tickMs = new double[ticks];
-            var writer = new ByteWriter(4096);
-            var scratch = new List<int>();
-            var changes = new List<BlockChange>();
-            var hits = new List<PlayerHit>();
-            long snapshotBytes = 0;
-            long blockDeltaBytes = 0;
+            long bytesToClients = 0;
             int playerHits = 0;
-            int blocksDestroyed = 0;
             int wallsBefore = CountKey(blocks, "wood_wall");
-            int maxSentToOne = 0;
+            long maxTickBytes = 0;
             var sw = new Stopwatch();
 
             for (int t = 0; t < ticks; t++)
             {
                 sw.Restart();
-                sim.Tick(1f / TickRate, players);
-
-                // What the host would send this tick.
-                blocks.DrainChanges(changes);
-                if (changes.Count > 0)
+                session.Step();
+                broadcaster.CollectTick();
+                for (int p = 1; p < o.Players; p++)
                 {
                     writer.Clear();
-                    BlockChange.WriteBatch(changes, writer);
-                    blockDeltaBytes += writer.Length * (long)Math.Max(0, o.Players - 1);
-                    blocksDestroyed += changes.Count(c => c.Type == BlockRegistry.AirId);
-                    changes.Clear();
+                    broadcaster.WriteFor(p, writer);
+                    bytesToClients += writer.Length;
+                    maxTickBytes = Math.Max(maxTickBytes, writer.Length);
                 }
-                if (t % SnapshotEveryTicks == 0)
-                {
-                    for (int p = 1; p < o.Players; p++) // player 0 is the host: nothing to send
-                    {
-                        writer.Clear();
-                        int sent = ZombieSnapshotCodec.Write(sim, (uint)t, players[p], InterestRadius, writer, scratch);
-                        maxSentToOne = Math.Max(maxSentToOne, sent);
-                        snapshotBytes += writer.Length;
-                    }
-                }
-                sim.DrainPlayerHits(hits);
-                playerHits += hits.Count;
-                hits.Clear();
                 sw.Stop();
                 tickMs[t] = sw.Elapsed.TotalMilliseconds;
+                playerHits += broadcaster.LastEvents.Count(e => e.Type == SessionEventType.PlayerHurt);
             }
 
             int slowTicks = 0;
@@ -155,15 +158,14 @@ namespace CepaCero.SimBench
             double p99 = tickMs[(int)(ticks * 0.99)];
             double max = tickMs[ticks - 1];
             int clients = Math.Max(1, o.Players - 1);
-            double kbPerClient = (snapshotBytes + blockDeltaBytes) / (double)clients / o.Seconds / 1024.0;
+            double kbPerClient = bytesToClients / (double)clients / o.Seconds / 1024.0;
             double budgetMs = 1000.0 / TickRate;
 
             Console.WriteLine();
-            Console.WriteLine($"Host tick (simulation + encoding), budget {budgetMs:0} ms:");
+            Console.WriteLine($"Host tick (whole match + protocol encoding), budget {budgetMs:0} ms:");
             Console.WriteLine($"  avg {avg:0.000} ms | p95 {p95:0.000} ms | p99 {p99:0.000} ms | max {max:0.000} ms");
-            Console.WriteLine($"  flow field rebuilds: {sim.FlowRebuilds}; ticks over 2 ms: {slowTicks} (first #{firstSlow}, last #{lastSlow})");
-            Console.WriteLine($"Network per client: {kbPerClient:0.0} KB/s (zombie snapshots at 10 Hz + block deltas); " +
-                              $"max zombies in one snapshot: {maxSentToOne}");
+            Console.WriteLine($"  flow field rebuilds: {session.Zombies.FlowRebuilds}; ticks over 2 ms: {slowTicks} (first #{firstSlow}, last #{lastSlow})");
+            Console.WriteLine($"Network per client: {kbPerClient:0.0} KB/s (all messages); biggest tick {maxTickBytes} B; join {joinBytes / 1024.0:0.0} KB");
             Console.WriteLine($"Siege: {blocksDestroyed} blocks destroyed ({wallsBefore - CountKey(blocks, "wood_wall")} fort walls), {playerHits} hits on players");
 
             bool ok = p95 < budgetMs * 0.25 && kbPerClient < 64;
@@ -178,7 +180,8 @@ namespace CepaCero.SimBench
                     ["map"] = mapName, ["width"] = blocks.Width, ["height"] = blocks.Height,
                     ["players"] = o.Players, ["zombies"] = spawned, ["seconds"] = o.Seconds,
                     ["tick_ms_avg"] = avg, ["tick_ms_p95"] = p95, ["tick_ms_p99"] = p99, ["tick_ms_max"] = max,
-                    ["flow_rebuilds"] = sim.FlowRebuilds, ["kb_per_s_per_client"] = kbPerClient,
+                    ["flow_rebuilds"] = session.Zombies.FlowRebuilds, ["kb_per_s_per_client"] = kbPerClient,
+                    ["join_kb"] = joinBytes / 1024.0, ["max_tick_bytes"] = maxTickBytes,
                     ["blocks_destroyed"] = blocksDestroyed, ["player_hits"] = playerHits, ["ok"] = ok,
                 };
                 File.WriteAllText(o.JsonOut, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));

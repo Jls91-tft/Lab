@@ -105,6 +105,9 @@ sin Unity (`Tests/Net/ProtocolTests.cs`: un cliente reconstruye la partida solo 
 - **Cliente:** `ClientMatchState`. Carga el mismo mapa y los mismos datos y aplica los mensajes;
   es lo que leerá la vista de Unity. El cliente no simula zombis ni decide nada.
 - Medido (2 jugadores, una noche, ~10 zombis cerca): ~1,2 KB/s de bajada y 0,2 KB/s de subida por cliente.
+  Con 100 zombis asediando (simbench): 8,7 KB/s. **Unirse a mitad de partida** en un mapa tipo Delicias
+  son ~150 KB: cada chunk va en su propio mensaje, así que la capa de FishNet debe repartir `WriteJoin`
+  en varios paquetes fiables (por ejemplo, 16 KB cada uno) en lugar de mandarlo de golpe.
 
 ## Rendimiento: estrategia y presupuestos
 **Lenguaje.** C# viene con Unity (D-002). En la build final se compila a nativo con **IL2CPP**.
