@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Compile check of packages/com.cepacero.unity against hand-written stubs of
+    the Unity API it uses. Catches C# errors and breaking changes in the core
+    without the editor; it cannot prove the Unity API is used correctly.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Stub members are never assigned: not our code's problem. -->
+    <NoWarn>CS0649;CS0169;CS0414</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="UnityApiStubs.cs" />
+    <Compile Include="../../packages/com.cepacero.unity/Runtime/**/*.cs" />
+    <ProjectReference Include="../CepaCero.Core/CepaCero.Core.csproj" />
+  </ItemGroup>
+
+</Project>

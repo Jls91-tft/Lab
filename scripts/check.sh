@@ -36,6 +36,9 @@ venv tools/datagen requirements.txt
 step "core: dotnet test (C# 9 / netstandard2.1, like Unity 6)"
 dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj -c Release --nologo -v quiet
 
+step "unity package: compile check against API stubs"
+dotnet build tests/CepaCero.Unity.CompileCheck/CepaCero.Unity.CompileCheck.csproj -c Release --nologo -v quiet
+
 if [[ $FAST -eq 0 ]]; then
     step "simbench: 100 zombies + 2 players"
     dotnet run -c Release --project tools/simbench -- --zombies 100 --seconds 30

@@ -74,7 +74,7 @@ de depuración); `Assets/` solo contenido. Ese código aún no se ha compilado c
 
 ## Herramientas y comprobaciones
 - **`scripts/check.sh`** (`--fast` sin estrés): todo lo que no necesita Unity. Pasarlo antes de cada commit.
-- `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity.
+- `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity; `tests/CepaCero.Unity.CompileCheck` compila el paquete de Unity contra firmas imitadas de su API (si usas una API de Unity nueva, añade su firma a `UnityApiStubs.cs`).
 - `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
 - `tools/datagen/`: `python -m datagen` regenera `data/generated/` (bestiario, objetos, recetas, botín, diario y `loc/strings.csv`) desde `docs/`. Traducciones en `docs/traducciones/<idioma>.csv`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
