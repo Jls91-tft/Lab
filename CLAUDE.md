@@ -74,7 +74,7 @@ carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta 
 - **`scripts/check.sh`** (`--fast` sin estrés): todo lo que no necesita Unity. Pasarlo antes de cada commit.
 - `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity.
 - `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
-- `tools/datagen/`: `python -m datagen` regenera `data/generated/bestiary.json` desde `docs/bestiario.md`.
+- `tools/datagen/`: `python -m datagen` regenera `data/generated/*.json` (bestiario, objetos, recetas, botín) desde `docs/`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
 
 ## docs/

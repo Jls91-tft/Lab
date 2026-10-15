@@ -87,7 +87,7 @@ Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
   Si `testables` ya existía, añade el nombre a la lista.
 - [ ] Abre el proyecto. En *Window > Package Manager → In Project* debe aparecer **Cepa Cero Core 0.1.0**.
 - [ ] Consola sin errores rojos. Si hay alguno, cópiamelo **tal cual**: será una diferencia del compilador de Unity con .NET.
-- [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **94 tests en verde** (o más, si seguimos añadiendo).
+- [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **126 tests en verde** (o más, si seguimos añadiendo).
   El de rendimiento (`DeliciasSizedFieldBuildsFastEnough`) escribe el tiempo en el log: pásamelo.
 - [ ] Unity habrá creado archivos `.meta` dentro de `packages/com.cepacero.core/`. **Se versionan**:
   ```bash

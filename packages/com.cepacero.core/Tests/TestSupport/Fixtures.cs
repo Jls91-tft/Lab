@@ -42,11 +42,20 @@ namespace CepaCero.Tests.TestSupport
         public static ItemCatalog Items() =>
             new ItemCatalog(FromJson<ItemsData>(File.ReadAllText(RepoFile("data/generated/items.json"))));
 
-        public static RecipeBook Recipes(ItemCatalog items) =>
-            new RecipeBook(FromJson<RecipesData>(File.ReadAllText(RepoFile("data/generated/recipes.json"))), items);
+        public static RecipesData RecipesData() => FromJson<RecipesData>(File.ReadAllText(RepoFile("data/generated/recipes.json")));
 
-        public static LootRoller Loot(ItemCatalog items) =>
-            new LootRoller(FromJson<LootData>(File.ReadAllText(RepoFile("data/generated/loot.json"))), items);
+        public static LootData LootData() => FromJson<LootData>(File.ReadAllText(RepoFile("data/generated/loot.json")));
+
+        public static RecipeBook Recipes(ItemCatalog items) => new RecipeBook(RecipesData(), items);
+
+        public static LootRoller Loot(ItemCatalog items) => new LootRoller(LootData(), items);
+
+        /// <summary>Everything a full match needs (zombies, items, recipes, loot).</summary>
+        public static CepaCero.Core.GameData GameData()
+        {
+            ItemCatalog items = Items();
+            return new CepaCero.Core.GameData(Catalog(), items, RecipesData(), LootData());
+        }
 
         /// <summary>Parses JSON with the same rules Unity's JsonUtility uses (public fields, exact names).</summary>
         public static T FromJson<T>(string json)

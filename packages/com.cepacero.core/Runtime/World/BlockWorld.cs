@@ -56,6 +56,12 @@ namespace CepaCero.World
         /// </summary>
         public int StructureRevision { get; private set; }
 
+        /// <summary>
+        /// Raised when a block changes type (x, y, old type, new type), e.g. a chest
+        /// destroyed by zombies spilling its contents. Not raised by <see cref="ReadChunk"/>.
+        /// </summary>
+        public event Action<int, int, ushort, ushort> TypeChanged;
+
         public bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
         public Chunk GetChunk(int chunkX, int chunkY) => _chunks[chunkY * ChunksX + chunkX];
@@ -244,15 +250,17 @@ namespace CepaCero.World
             {
                 return;
             }
-            if (chunk.Types[i] != typeId)
-            {
-                StructureRevision++;
-            }
+            ushort previous = chunk.Types[i];
             chunk.Types[i] = typeId;
             chunk.Health[i] = health;
             chunk.Version++;
             Revision++;
             _pending.Add(new BlockChange((ushort)x, (ushort)y, typeId, health));
+            if (previous != typeId)
+            {
+                StructureRevision++;
+                TypeChanged?.Invoke(x, y, previous, typeId);
+            }
         }
 
         private void Locate(int x, int y, out Chunk chunk, out int index)

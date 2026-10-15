@@ -44,11 +44,12 @@ con tests (`scripts/check.sh`). Lo que queda en cada hito es sobre todo la parte
 | 5 | `GameSession` (bucle completo), `DayNightCycle`, `HordeDirector`; test de aceptación "3 noches" | Luz 2D global y linterna, UI del reloj |
 | 6 | `MapImporter` (contrato probado con osm2tiles) | Importador de editor y créditos ODbL |
 | 7 | `tools/simbench`: 100 zombis + 2 jugadores, p95 0,4 ms y 7,7 KB/s por cliente | Medirlo con Steam real y en una build IL2CPP |
-| — | `SaveGame` v1: guardar y cargar con checksum y compatibilidad de bloques | Menú de guardado, ruta de archivos |
+| — | Objetos (D-012): inventario por huecos, armas y herramientas con durabilidad, pistola con munición, recetas y banco de trabajo, botín de edificios, arcones, recolección, caer/levantar/morir/reaparecer, fuego amigo opcional | UI de inventario y de crafteo, iconos |
+| — | `SaveGame` v2: mundo, jugadores, inventarios, contenedores, objetos en el suelo y recetas, con checksum y compatibilidad | Menú de guardado, ruta de archivos |
 
-**Pendiente de la lógica** (sin Unity, para cuando toque): inventario, botín y crafteo (necesita
-diseño: propuesta pendiente), muestras y diario en la partida, zombis que deambulan de día,
-Acorazado y Paciente Cero (post-MVP).
+**Pendiente de la lógica** (sin Unity, para cuando toque): trampas, diario en la partida
+(entradas de `docs/lore.md` al recoger notas y muestras), zombis que deambulan de día, hambre y sed
+(sin decidir), Acorazado y Paciente Cero (post-MVP).
 
 ## Semana 0 · Setup (esta noche)
 - Seguir `docs/setup-unity.md`: instalar Unity, crear `CepaCero/`, primer commit del proyecto vacío.

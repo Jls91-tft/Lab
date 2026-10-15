@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using CepaCero.Core;
+using CepaCero.Items;
 using CepaCero.Player;
 using CepaCero.Rules;
 using CepaCero.Tests.TestSupport;
@@ -145,6 +146,45 @@ namespace CepaCero.Tests.Core
                 loaded.Step();
             }
             Assert.That(loaded.Zombies.Count, Is.GreaterThan(0));
+        }
+    
+        [Test]
+        public void ItemsSurviveASave()
+        {
+            GameData data = Fixtures.GameData();
+            ItemCatalog items = data.Items;
+            GameSession NewFull() => new GameSession(Settings(), new PlayerSettings(), new BlockWorld(Size, Size, BlockRegistry.CreateDefault()),
+                new GroundLayer(Size, Size), data);
+
+            GameSession original = NewFull();
+            int a = original.AddPlayer(new Float2(10.5f, 10.5f));
+            original.AddPlayer(new Float2(12.5f, 10.5f));
+            original.RespawnPoint = new Float2(33.5f, 33.5f);
+            original.Inventories[a].Add(items.IndexOf("wood"), 37);
+            original.Inventories[a].Add(items.IndexOf("axe"), 1);
+            original.Inventories[a].MoveToHotbar(1, 3);
+            original.Inventories[a].SelectHotbar(3);
+            original.Inventories[a].WearEquipped();
+            original.Recipes.Unlock("sample_brute");
+            original.Containers.AddChest(new Int2(20, 20));
+            original.Containers.Open(new Int2(20, 20), data.Loot, new DeterministicRandom(1)).Add(items.IndexOf("nails"), 12);
+            original.GroundItems.Drop(new Float2(40.5f, 40.5f), new[] { new ItemStack(items.IndexOf("bandage"), 2) });
+            original.Step();
+
+            var writer = new ByteWriter();
+            SaveGame.Write(original, "test-map", writer);
+            GameSession loaded = NewFull();
+            SaveGame.Load(writer.ToArray(), loaded, "test-map");
+
+            Inventory inv = loaded.Inventories[a];
+            Assert.That(inv.Count(items.IndexOf("wood")), Is.EqualTo(37));
+            Assert.That(inv.EquippedDefinition.id, Is.EqualTo("axe"));
+            Assert.That(inv.Equipped.Durability, Is.EqualTo(149));
+            Assert.That(loaded.Recipes.UnlockedSamples, Does.Contain("sample_brute"));
+            Assert.That(loaded.Containers.Open(new Int2(20, 20), data.Loot, new DeterministicRandom(1)).Count(items.IndexOf("nails")), Is.EqualTo(12));
+            Assert.That(loaded.GroundItems.Piles.Count, Is.EqualTo(1));
+            Assert.That(loaded.RespawnPoint, Is.EqualTo(new Float2(33.5f, 33.5f)));
+            Assert.That(loaded.Players.Count, Is.EqualTo(2));
         }
     }
 }

@@ -58,7 +58,8 @@ packages/com.cepacero.core/             Simulación sin motor (paquete UPM local
     Rules/   Ciclo día/noche, director de hordas, opciones de partida
     Player/  Movimiento determinista (predicción), entradas cuantizadas
     Net/     Intenciones del cliente y su validación en el anfitrión (sin FishNet)
-    Core/    GameSession (bucle de partida del anfitrión) y SaveGame
+    Items/   Objetos, inventario, recetas, botín, contenedores y montones en el suelo
+    Core/    GameSession (bucle de partida del anfitrión), GameData y SaveGame
   Tests/    CepaCero.Core.Tests.asmdef  NUnit (corren en Unity Test Runner y en dotnet)
 
 tests/CepaCero.Core.Tests/              Proyecto dotnet que compila Runtime + Tests (CI sin Unity)
@@ -87,6 +88,8 @@ data/generated/                         Datos generados desde docs/ (no editar a
 | Reloj, noche, horda | A → C | Estado pequeño | 1 Hz y en cada cambio de fase |
 | Eventos de zombis (grito, escupitajo, carga, aturdido) | A → C | `ZombieEvent` fiable, para sonido y efectos | Al ocurrir |
 | Resultado de una intención | A → C (solo al que la pidió) | `IntentResult` | Al resolverse |
+| Inventario propio | A → C (solo al dueño) | `Inventory.Write` completo (decenas de bytes) | Cuando cambia su versión |
+| Contenedor abierto, montones en el suelo | A → C | Contenido completo | Al abrir / al cambiar |
 
 ## Rendimiento: estrategia y presupuestos
 **Lenguaje.** C# viene con Unity (D-002). En la build final se compila a nativo con **IL2CPP**.

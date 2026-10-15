@@ -11,5 +11,11 @@ namespace CepaCero.Net
         NotAllowed = 5,
         PlayerDowned = 6,
         Missed = 7,
+        NoAmmo = 8,
+        NoRoom = 9,
+        MissingIngredients = 10,
+        NeedsWorkbench = 11,
+        Locked = 12,
+        NothingToUse = 13,
     }
 }

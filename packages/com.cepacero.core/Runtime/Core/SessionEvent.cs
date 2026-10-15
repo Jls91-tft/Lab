@@ -11,6 +11,17 @@ namespace CepaCero.Core
         GameOver = 4,
         IntentResolved = 5,
         PlayerHurt = 6,
+
+        /// <summary>The player's inventory changed: send it to its owner.</summary>
+        InventoryChanged = 7,
+        RecipeUnlocked = 8,
+        PlayerHealed = 9,
+        PlayerRevived = 10,
+        PlayerDied = 11,
+        PlayerRespawned = 12,
+
+        /// <summary>A pile appeared or changed on the ground (Value = pile id).</summary>
+        GroundItemsChanged = 13,
     }
 
     /// <summary>Match-level happenings the host broadcasts (UI, music, results of intents).</summary>

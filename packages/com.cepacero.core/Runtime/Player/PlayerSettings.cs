@@ -25,11 +25,18 @@ namespace CepaCero.Player
         /// <summary>Distance (tiles, from the player's centre to the tile's centre) for building and hitting blocks.</summary>
         public float Reach = 2.5f;
 
+        // Bare hands (docs/bestiario.md: "Puño: 8"). Weapons and tools override these.
         public float MeleeRange = 1.3f;
         public float MeleeArcDegrees = 100f;
-        public int MeleeDamage = 20;
+        public int MeleeDamage = 8;
         public string MeleeDamageType = "blunt";
-        public int BlockHitDamage = 25;
+        public int BlockHitDamage = 8;
+
+        public float PickUpReach = 1.5f;
+        public float ReviveReach = 1.5f;
+
+        /// <summary>Health a revived player gets back.</summary>
+        public int ReviveHealth = 30;
 
         /// <summary>Minimum seconds between two actions of the same player (host-side rate limit).</summary>
         public float ActionCooldown = 0.35f;

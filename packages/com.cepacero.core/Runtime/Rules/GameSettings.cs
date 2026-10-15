@@ -44,6 +44,22 @@ namespace CepaCero.Rules
 
         public ulong Seed = 1;
 
+        // ---- Options decided in D-012 -------------------------------------
+        /// <summary>Players can hurt each other.</summary>
+        public bool FriendlyFire = false;
+
+        /// <summary>Empty map containers refill at dawn.</summary>
+        public bool LootRespawn = false;
+
+        /// <summary>Seconds a downed player can wait for help before dying.</summary>
+        public float BleedOutSeconds = 30f;
+
+        /// <summary>Seconds a teammate must keep helping to get someone up.</summary>
+        public float ReviveSeconds = 3f;
+
+        /// <summary>If everyone is down or dead at once, the match ends (otherwise all respawn at dawn).</summary>
+        public bool PermaDeath = false;
+
         public void Validate()
         {
             if (TickRate < 1 || TickRate > 120)
@@ -61,6 +77,10 @@ namespace CepaCero.Rules
             if (SpecialShare < 0f || SpecialShare > 1f || SpawnWindow <= 0f || SpawnWindow > 1f)
             {
                 throw new ArgumentOutOfRangeException(nameof(SpecialShare));
+            }
+            if (BleedOutSeconds <= 0f || ReviveSeconds <= 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(BleedOutSeconds));
             }
         }
     }

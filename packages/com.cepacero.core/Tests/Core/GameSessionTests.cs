@@ -124,10 +124,12 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
-        public void TheMatchEndsWhenEveryoneIsDowned()
+        public void WithPermaDeathTheMatchEndsWhenEveryoneIsDown()
         {
             AsciiMap map = OpenMap(60);
-            var session = NewSession(map, FastDays(), new PlayerSettings { MaxHealth = 30 });
+            GameSettings settings = FastDays();
+            settings.PermaDeath = true;
+            var session = NewSession(map, settings, new PlayerSettings { MaxHealth = 30 });
             session.AddPlayer(new Float2(30.5f, 30.5f));
             List<SessionEvent> events = RunUntil(session, () => session.IsGameOver);
             Assert.That(session.IsGameOver, Is.True);

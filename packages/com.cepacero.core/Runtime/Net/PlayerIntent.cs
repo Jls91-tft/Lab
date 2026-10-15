@@ -4,10 +4,26 @@ namespace CepaCero.Net
 {
     public enum IntentType : byte
     {
+        // World actions (HostIntentRules): rate limited.
         PlaceBlock = 1,
         HitBlock = 2,
         ToggleDoor = 3,
         MeleeAttack = 4,
+        RangedAttack = 5,
+
+        // Inventory actions (HostItemRules). X/Y/Arg meaning in each factory below.
+        SelectHotbar = 10,
+        MoveToHotbar = 11,
+        MoveToBag = 12,
+        Craft = 13,
+        UseItem = 14,
+        PickUp = 15,
+        DropStack = 16,
+        TakeFromContainer = 17,
+        PutInContainer = 18,
+
+        // Helping a downed teammate: sent every tick while the key is held.
+        Revive = 20,
     }
 
     /// <summary>
@@ -32,6 +48,39 @@ namespace CepaCero.Net
         public static PlayerIntent Hit(int x, int y) => new PlayerIntent { Type = IntentType.HitBlock, X = (ushort)x, Y = (ushort)y };
 
         public static PlayerIntent Door(int x, int y) => new PlayerIntent { Type = IntentType.ToggleDoor, X = (ushort)x, Y = (ushort)y };
+
+        public static PlayerIntent Ranged(Float2 aim)
+        {
+            PlayerIntent i = Melee(aim);
+            i.Type = IntentType.RangedAttack;
+            return i;
+        }
+
+        public static PlayerIntent Select(int hotbarSlot) => new PlayerIntent { Type = IntentType.SelectHotbar, Arg = (ushort)hotbarSlot };
+
+        public static PlayerIntent ToHotbar(int bagIndex, int hotbarSlot) =>
+            new PlayerIntent { Type = IntentType.MoveToHotbar, X = (ushort)bagIndex, Arg = (ushort)hotbarSlot };
+
+        public static PlayerIntent ToBag(int hotbarSlot) => new PlayerIntent { Type = IntentType.MoveToBag, Arg = (ushort)hotbarSlot };
+
+        public static PlayerIntent CraftRecipe(int recipeIndex) => new PlayerIntent { Type = IntentType.Craft, Arg = (ushort)recipeIndex };
+
+        /// <summary>Uses the selected quick-access item (heal, analyse a sample).</summary>
+        public static PlayerIntent Use() => new PlayerIntent { Type = IntentType.UseItem };
+
+        public static PlayerIntent PickUpNearest() => new PlayerIntent { Type = IntentType.PickUp };
+
+        public static PlayerIntent Drop(int bagIndex) => new PlayerIntent { Type = IntentType.DropStack, X = (ushort)bagIndex };
+
+        public static PlayerIntent Take(int x, int y, int containerBagIndex) =>
+            new PlayerIntent { Type = IntentType.TakeFromContainer, X = (ushort)x, Y = (ushort)y, Arg = (ushort)containerBagIndex };
+
+        public static PlayerIntent Put(int x, int y, int playerBagIndex) =>
+            new PlayerIntent { Type = IntentType.PutInContainer, X = (ushort)x, Y = (ushort)y, Arg = (ushort)playerBagIndex };
+
+        public static PlayerIntent ReviveTeammate(int player) => new PlayerIntent { Type = IntentType.Revive, X = (ushort)player };
+
+        public bool IsInventoryAction => Type >= IntentType.SelectHotbar && Type <= IntentType.PutInContainer;
 
         public static PlayerIntent Melee(Float2 aim)
         {

@@ -76,7 +76,7 @@ namespace CepaCero.Tests.Net
         public void InventoryHookCanRefuse()
         {
             _rules.CanAffordBlock = (player, type) => false;
-            Assert.That(_rules.Apply(0, PlayerIntent.Place(4, 1, _wood), _players, 0f), Is.EqualTo(IntentResult.NotAllowed));
+            Assert.That(_rules.Apply(0, PlayerIntent.Place(4, 1, _wood), _players, 0f), Is.EqualTo(IntentResult.MissingIngredients));
             Assert.That(_map.Blocks.GetBlock(4, 1).IsAir, Is.True);
         }
 
