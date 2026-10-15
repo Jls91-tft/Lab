@@ -59,6 +59,10 @@ estructura de carpetas y asmdefs de Unity · versión exacta de Unity (propuesta
 - Sin dependencias, assets ni servicios de pago o externos sin preguntar.
 - Cada decisión importante: actualizar este fichero y `docs/decisiones.md`.
 
+## Herramientas
+- `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test` · tests: `python -m pytest`
+  (desde esa carpeta, en un venv con `requirements-dev.txt`). Formato y licencia ODbL en su `README.md`.
+
 ## docs/
 | Fichero | Para qué |
 | --- | --- |
