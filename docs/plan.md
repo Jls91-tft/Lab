@@ -37,16 +37,18 @@ con tests (`scripts/check.sh`). Lo que queda en cada hito es sobre todo la parte
 
 | Sem. | Ya hecho en el núcleo | Falta (Unity) |
 | --- | --- | --- |
-| 1 | `Float2`/`Int2`, ticks fijos | Todo: Input System, motor del jugador, cámara |
-| 2 | Codificación a bytes (`ByteWriter`/`ByteReader`) | FishNet + Tugboat, *spawn* de jugadores, predicción |
+| 1 | `PlayerMotor` determinista (andar, sprint, stamina, colisión), `PlayerInput` cuantizado | Input System, vista del jugador, cámara Pixel Perfect |
+| 2 | Bytes de red, `PlayerIntent` + `HostIntentRules` (alcance, ritmo, ocupación, daño en el anfitrión) | FishNet + Tugboat, *spawn* de jugadores, predicción con `PlayerMotor` |
 | 3 | `BlockWorld` por chunks: colocar, dañar, puertas, deltas y *snapshots* de chunk | Tilemap ↔ `BlockWorld`, RPCs de intención, envío de deltas |
-| 4 | `FlowField` con coste de rotura, `ZombieSimulation`, codec de 8 B/zombi, réplica con interpolación | Vista de zombis (pool de sprites), mensajes FishNet |
-| 5 | `DayNightCycle`, `HordeDirector`, `SpawnFinder`, `GameSettings` | Luz 2D global y linterna, UI del reloj |
+| 4 | `FlowField`, `ZombieSimulation` con percepción (vista/oído) y especiales (Gritón, Escupidor, La Mole), codec de 8 B/zombi, réplica | Vista de zombis (pool de sprites), eventos de sonido/efectos |
+| 5 | `GameSession` (bucle completo), `DayNightCycle`, `HordeDirector`; test de aceptación "3 noches" | Luz 2D global y linterna, UI del reloj |
 | 6 | `MapImporter` (contrato probado con osm2tiles) | Importador de editor y créditos ODbL |
-| 7 | `tools/simbench`: 100 zombis + 2 jugadores, p95 0,3 ms y 7,8 KB/s por cliente | Medirlo con Steam real y en una build IL2CPP |
+| 7 | `tools/simbench`: 100 zombis + 2 jugadores, p95 0,4 ms y 7,7 KB/s por cliente | Medirlo con Steam real y en una build IL2CPP |
+| — | `SaveGame` v1: guardar y cargar con checksum y compatibilidad de bloques | Menú de guardado, ruta de archivos |
 
-**Pendiente de la lógica** (sin Unity, para cuando toque): habilidades de los especiales
-(grito, escupitajo, carga de La Mole), ruido como objetivo del flow field, inventario y crafteo.
+**Pendiente de la lógica** (sin Unity, para cuando toque): inventario, botín y crafteo (necesita
+diseño: propuesta pendiente), muestras y diario en la partida, zombis que deambulan de día,
+Acorazado y Paciente Cero (post-MVP).
 
 ## Semana 0 · Setup (esta noche)
 - Seguir `docs/setup-unity.md`: instalar Unity, crear `CepaCero/`, primer commit del proyecto vacío.

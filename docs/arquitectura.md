@@ -56,6 +56,9 @@ packages/com.cepacero.core/             Simulación sin motor (paquete UPM local
     Map/     Lector de cepacero.map v1 → BlockWorld
     AI/      Flow fields, simulación de zombis, codec de red
     Rules/   Ciclo día/noche, director de hordas, opciones de partida
+    Player/  Movimiento determinista (predicción), entradas cuantizadas
+    Net/     Intenciones del cliente y su validación en el anfitrión (sin FishNet)
+    Core/    GameSession (bucle de partida del anfitrión) y SaveGame
   Tests/    CepaCero.Core.Tests.asmdef  NUnit (corren en Unity Test Runner y en dotnet)
 
 tests/CepaCero.Core.Tests/              Proyecto dotnet que compila Runtime + Tests (CI sin Unity)
@@ -82,6 +85,8 @@ data/generated/                         Datos generados desde docs/ (no editar a
 | Snapshot de chunk | A → C | Bytes del chunk completo | Al unirse y al entrar en zona |
 | Zombis | A → C | Lote cuantizado (8 B/zombi) solo de los cercanos | 10 Hz + interpolación |
 | Reloj, noche, horda | A → C | Estado pequeño | 1 Hz y en cada cambio de fase |
+| Eventos de zombis (grito, escupitajo, carga, aturdido) | A → C | `ZombieEvent` fiable, para sonido y efectos | Al ocurrir |
+| Resultado de una intención | A → C (solo al que la pidió) | `IntentResult` | Al resolverse |
 
 ## Rendimiento: estrategia y presupuestos
 **Lenguaje.** C# viene con Unity (D-002). En la build final se compila a nativo con **IL2CPP**.
