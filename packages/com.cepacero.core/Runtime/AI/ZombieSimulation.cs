@@ -89,6 +89,9 @@ namespace CepaCero.AI
         private readonly float[] _sprintTime;
         private readonly float[] _restTime;
         private readonly float[] _trapCooldown;
+        private readonly float[] _wanderTime;
+        private readonly Float2[] _wanderDir;
+        private readonly DeterministicRandom _rng;
         private readonly byte[] _facing;
         private readonly int[] _nextInCell;
         private readonly Stack<int> _free = new Stack<int>();
@@ -120,7 +123,7 @@ namespace CepaCero.AI
         private float _lastRebuild = float.NegativeInfinity;
 
         public ZombieSimulation(BlockWorld blocks, GroundLayer ground, ZombieCatalog catalog, int capacity = 512,
-            PathPolicy policy = null)
+            PathPolicy policy = null, ulong seed = 1)
         {
             _blocks = blocks ?? throw new ArgumentNullException(nameof(blocks));
             _ground = ground ?? throw new ArgumentNullException(nameof(ground));
@@ -151,6 +154,9 @@ namespace CepaCero.AI
             _sprintTime = new float[capacity];
             _restTime = new float[capacity];
             _trapCooldown = new float[capacity];
+            _wanderTime = new float[capacity];
+            _wanderDir = new Float2[capacity];
+            _rng = new DeterministicRandom(seed);
             _facing = new byte[capacity];
             _nextInCell = new int[capacity];
             for (int i = capacity - 1; i >= 0; i--)
@@ -207,6 +213,9 @@ namespace CepaCero.AI
         /// Zombies farther away idle until they get closer; the horde spawns well inside it.
         /// </summary>
         public int FlowMaxDistance { get; set; } = 10 * 80;
+
+        /// <summary>Speed of an unaware zombie shuffling around, as a share of its normal speed.</summary>
+        public float WanderSpeedFactor { get; set; } = 0.3f;
 
         /// <summary>Seconds between two hits of the same trap on the same zombie.</summary>
         public float TrapInterval { get; set; } = 0.5f;
@@ -272,6 +281,8 @@ namespace CepaCero.AI
             _sprintTime[slot] = 0f;
             _restTime[slot] = 0f;
             _trapCooldown[slot] = 0f;
+            _wanderTime[slot] = 0f;
+            _wanderDir[slot] = Float2.Zero;
             _facing[slot] = 0;
             return slot;
         }
@@ -401,6 +412,39 @@ namespace CepaCero.AI
             _events.Add(new ZombieEvent(ZombieEventType.Noticed, _netId[i], _pos[i]));
         }
 
+        /// <summary>Unaware: stand a while, shuffle a while, in a random direction (deterministic per match seed).</summary>
+        private void Wander(int i, ZombieDefinition def, float dt)
+        {
+            _wanderTime[i] -= dt;
+            if (_wanderTime[i] <= 0f)
+            {
+                if (_rng.Chance(0.5f))
+                {
+                    _wanderDir[i] = Float2.Zero;
+                    _wanderTime[i] = 1.5f + _rng.NextFloat() * 2.5f;
+                }
+                else
+                {
+                    float angle = _rng.NextFloat() * 2f * MathF.PI;
+                    _wanderDir[i] = new Float2(MathF.Cos(angle), MathF.Sin(angle));
+                    _wanderTime[i] = 1f + _rng.NextFloat() * 2f;
+                }
+            }
+            if (_wanderDir[i].LengthSquared < 1e-6f)
+            {
+                _state[i] = ZombieState.Unaware;
+                return;
+            }
+            _state[i] = ZombieState.Wandering;
+            Float2 before = _pos[i];
+            Move(i, _wanderDir[i] * (def.speed * WanderSpeedFactor), dt);
+            Face(i, _wanderDir[i]);
+            if ((_pos[i] - before).LengthSquared < 1e-8f)
+            {
+                _wanderTime[i] = 0f; // bumped into a wall: pick something else next tick
+            }
+        }
+
         private bool Sees(int i, Float2 target, float distance, float range) =>
             distance <= range && TileCollision.HasClearLine(_pos[i], target, _blocks);
 
@@ -433,7 +477,7 @@ namespace CepaCero.AI
                 }
                 else
                 {
-                    _state[i] = ZombieState.Unaware;
+                    Wander(i, def, dt);
                     return;
                 }
             }

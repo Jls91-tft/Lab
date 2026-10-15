@@ -76,7 +76,7 @@ namespace CepaCero.Core
             Data = data ?? throw new ArgumentNullException(nameof(data));
             Clock = new DayNightCycle(settings);
             Director = new HordeDirector(settings);
-            Zombies = new ZombieSimulation(blocks, ground, data.Zombies, zombieCapacity);
+            Zombies = new ZombieSimulation(blocks, ground, data.Zombies, zombieCapacity, seed: settings.Seed ^ 0x5A5AUL);
             Rules = new HostIntentRules(blocks, ground, Zombies, playerSettings, MaxPlayers) { FriendlyFire = settings.FriendlyFire };
             _rng = new DeterministicRandom(settings.Seed);
             _dt = 1f / settings.TickRate;
@@ -190,6 +190,56 @@ namespace CepaCero.Core
             }
             return _players.Count - 1;
         }
+
+        /// <summary>
+        /// Places the day population (D-013): walkers with some runners, unaware, spread
+        /// over walkable tiles (streets and inside buildings), away from the players. Call
+        /// once after adding the players, when a match starts or is loaded. Returns how many.
+        /// </summary>
+        public int PopulateMap()
+        {
+            int walkable = 0;
+            for (int y = 0; y < Ground.Height; y++)
+            {
+                for (int x = 0; x < Ground.Width; x++)
+                {
+                    walkable += IsSpawnable(x, y) ? 1 : 0;
+                }
+            }
+            int wanted = Math.Min(Settings.MapZombiesMax, (int)(walkable / 1000f * Settings.MapZombiesPer1000Tiles));
+            bool hasRunner = Catalog.TryGetIndex(HordeDirector.Runner, out byte runner);
+            byte walker = Catalog.IndexOf(HordeDirector.Walker);
+            float safe2 = Settings.MapZombiesSafeRadius * Settings.MapZombiesSafeRadius;
+            int placed = 0;
+            for (int attempt = 0; placed < wanted && attempt < wanted * 30; attempt++)
+            {
+                int x = _rng.Range(0, Ground.Width);
+                int y = _rng.Range(0, Ground.Height);
+                if (!IsSpawnable(x, y))
+                {
+                    continue;
+                }
+                var position = new Float2(x + 0.5f, y + 0.5f);
+                bool tooClose = false;
+                foreach (PlayerState p in _players)
+                {
+                    tooClose |= (p.Position - position).LengthSquared < safe2;
+                }
+                if (tooClose)
+                {
+                    continue;
+                }
+                byte type = hasRunner && _rng.Chance(0.1f) ? runner : walker;
+                if (Zombies.Spawn(type, position, Math.Max(1, _players.Count), aware: false) >= 0)
+                {
+                    placed++;
+                }
+            }
+            return placed;
+        }
+
+        private bool IsSpawnable(int x, int y) =>
+            !Blocks.IsSolid(x, y) && GroundLayer.WalkCost(Ground.Get(x, y)) > 0 && !Blocks.GetBlock(x, y).IsTrap;
 
         /// <summary>Latest movement input of a player (from the network or the local device).</summary>
         public void SetInput(int player, PlayerInput input) => _inputs[player] = input;

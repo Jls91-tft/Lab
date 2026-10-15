@@ -18,7 +18,10 @@ namespace CepaCero.AI
         /// <summary>La Mole after hitting metal: takes extra damage.</summary>
         Stunned = 7,
 
-        /// <summary>Has not noticed anyone yet.</summary>
+        /// <summary>Has not noticed anyone yet, standing.</summary>
         Unaware = 8,
+
+        /// <summary>Has not noticed anyone yet, shuffling around.</summary>
+        Wandering = 9,
     }
 }

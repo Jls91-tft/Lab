@@ -59,13 +59,46 @@ namespace CepaCero.Tests.AI
             var player = new List<Float2> { new Float2(20.5f, 1.5f) }; // 19 tiles: beyond sight (8)
             Run(sim, player, 2f);
             Assert.That(sim.IsAware(slot), Is.False);
-            Assert.That(sim.GetPosition(slot).X, Is.EqualTo(1.5f), "it does not know where you are");
-            Assert.That(sim.GetState(slot), Is.EqualTo(ZombieState.Unaware));
+            Assert.That(sim.GetPosition(slot).X, Is.LessThan(3f), "it shuffles around but does not come for you");
+            Assert.That(sim.GetState(slot), Is.AnyOf(ZombieState.Unaware, ZombieState.Wandering));
 
             player[0] = new Float2(8.5f, 1.5f); // 7 tiles: seen in daylight
             sim.Tick(Dt, player);
             Assert.That(sim.IsAware(slot), Is.True);
             Assert.That(Events(sim).Any(e => e.Type == ZombieEventType.Noticed));
+        }
+
+        [Test]
+        public void UnawareZombiesShuffleAroundSlowly()
+        {
+            AsciiMap map = Open(40, 40);
+            var sim = new ZombieSimulation(map.Blocks, map.Ground, _catalog);
+            var starts = new List<Float2>();
+            for (int k = 0; k < 20; k++)
+            {
+                var p = new Float2(5.5f + (k % 5) * 6, 5.5f + (k / 5) * 6);
+                sim.Spawn(_catalog.IndexOf("walker"), p, aware: false);
+                starts.Add(p);
+            }
+            var states = new HashSet<ZombieState>();
+            for (int t = 0; t < 20 * 20; t++)
+            {
+                sim.Tick(Dt, new List<Float2>());
+                for (int i = 0; i < 20; i++)
+                {
+                    states.Add(sim.GetState(i));
+                }
+            }
+            Assert.That(states, Is.EquivalentTo(new[] { ZombieState.Unaware, ZombieState.Wandering }));
+            int moved = 0;
+            for (int i = 0; i < 20; i++)
+            {
+                float d = (sim.GetPosition(i) - starts[i]).Length;
+                Assert.That(d, Is.LessThan(1.2f * 0.3f * 20f + 0.01f), "never faster than 30 % of its speed");
+                moved += d > 0.5f ? 1 : 0;
+                Assert.That(sim.IsAware(i), Is.False);
+            }
+            Assert.That(moved, Is.GreaterThan(10), "most of them wandered somewhere in 20 s");
         }
 
         [Test]

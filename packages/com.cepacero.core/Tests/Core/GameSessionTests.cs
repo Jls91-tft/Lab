@@ -79,6 +79,32 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void TheMapStartsWithUnawareZombiesAwayFromThePlayers()
+        {
+            AsciiMap map = OpenMap(100);
+            GameSettings settings = FastDays();
+            settings.MapZombiesPer1000Tiles = 5f;
+            var session = NewSession(map, settings, new PlayerSettings());
+            session.AddPlayer(new Float2(50.5f, 50.5f));
+            int placed = session.PopulateMap();
+            Assert.That(placed, Is.EqualTo(50), "10 000 tiles × 5 per 1000");
+            for (int i = 0; i < session.Zombies.Capacity; i++)
+            {
+                if (!session.Zombies.IsAlive(i))
+                {
+                    continue;
+                }
+                Assert.That(session.Zombies.IsAware(i), Is.False);
+                Assert.That((session.Zombies.GetPosition(i) - session.Players[0].Position).Length, Is.GreaterThanOrEqualTo(25f));
+            }
+
+            settings.MapZombiesMax = 7;
+            var capped = NewSession(OpenMap(100), settings, new PlayerSettings());
+            capped.AddPlayer(new Float2(50.5f, 50.5f));
+            Assert.That(capped.PopulateMap(), Is.EqualTo(7));
+        }
+
+        [Test]
         public void NightHalvesZombieSight()
         {
             AsciiMap map = OpenMap(40);

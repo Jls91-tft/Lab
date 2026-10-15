@@ -44,6 +44,15 @@ namespace CepaCero.Rules
 
         public ulong Seed = 1;
 
+        /// <summary>Zombies placed in the map when a match starts, per 1000 walkable tiles (D-013).</summary>
+        public float MapZombiesPer1000Tiles = 1.0f;
+
+        /// <summary>Upper bound for the zombies placed in the map at start.</summary>
+        public int MapZombiesMax = 120;
+
+        /// <summary>No map zombie starts closer than this (tiles) to a player.</summary>
+        public float MapZombiesSafeRadius = 25f;
+
         // ---- Options decided in D-012 -------------------------------------
         /// <summary>Players can hurt each other.</summary>
         public bool FriendlyFire = false;
