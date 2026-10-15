@@ -83,5 +83,27 @@ data/generated/                         Datos generados desde docs/ (no editar a
 | Zombis | A → C | Lote cuantizado (8 B/zombi) solo de los cercanos | 10 Hz + interpolación |
 | Reloj, noche, horda | A → C | Estado pequeño | 1 Hz y en cada cambio de fase |
 
+## Rendimiento: estrategia y presupuestos
+**Lenguaje.** C# viene con Unity (D-002). En la build final se compila a nativo con **IL2CPP**.
+Lo caro en este juego (pathfinding de hordas, red, muchas entidades) se resuelve con algoritmos y
+organización de datos, no con el lenguaje: flow field compartido, arrays contiguos y snapshots de 8 B/zombi.
+
+**Riesgo propio de C#:** pausas del recolector de basura. Regla: cero asignaciones por tick en el núcleo
+y *pooling* en la vista. Activar el *Incremental GC* de Unity (viene por defecto).
+
+**Presupuestos** (comprobados por `tools/simbench` en CI):
+| Qué | Objetivo | Medido (.NET 8, 15/10/2026) |
+| --- | --- | --- |
+| Tick del anfitrión, 100 zombis + 2 jugadores | p95 < 12,5 ms (25 % de 50 ms) | 0,3 ms |
+| Red por cliente | < 64 KB/s | 7,8 KB/s |
+| Frame (render + lógica) en PC | ≥ 60 FPS | Pendiente: hito 7 con build IL2CPP |
+
+**Palancas reservadas** (solo si una medición lo pide): Burst + Jobs para la simulación de zombis
+(ya está en arrays, que es lo que necesita), flow field en otro hilo o repartido entre ticks, y cola
+por cubetas en lugar del montículo.
+
+**Sin demostrar todavía:** el rendimiento dentro de Unity (Mono en el editor, IL2CPP en la build) y
+el coste del render con luces 2D nocturnas y cientos de sprites.
+
 ## Lo que **no** se decide aquí
 Tamaño de tile en píxeles, resolución, paleta y direcciones de animación (semana 1); el diseño del inventario y del crafteo (más adelante).
