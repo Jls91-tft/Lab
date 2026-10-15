@@ -105,6 +105,19 @@ namespace CepaCero.Tests.Net
             Assert.That(link.Client.Players.Count, Is.EqualTo(2));
             Assert.That(link.Client.Clock.Tick, Is.EqualTo(link.Host.Clock.Tick));
             AssertSameBlocks(link.Host.Blocks, link.Client.Blocks);
+            Assert.That(link.Client.ContainerCells, Is.EquivalentTo(link.Host.Containers.Positions), "clients know where containers are");
+        }
+
+        [Test]
+        public void BuiltChestsShowUpInTheClientsContainerList()
+        {
+            Link link = Connect();
+            link.Host.Inventories[1].Add(_data.Items.IndexOf("wood"), 8);
+            Float2 me = link.Host.Players[1].Position;
+            var cell = new Int2((int)me.X + 1, (int)me.Y + 1);
+            link.Tick(default, PlayerIntent.Place(cell.X, cell.Y, link.Host.Blocks.Registry.Get("chest").Id));
+            Assert.That(link.Host.Containers.Has(cell), Is.True);
+            Assert.That(link.Client.ContainerCells, Does.Contain(cell));
         }
 
         [Test]

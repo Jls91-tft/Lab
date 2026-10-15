@@ -23,6 +23,9 @@ namespace CepaCero.Net.Protocol
         /// <summary>What the group has unlocked: analysed samples (recipes) and diary entries.</summary>
         TeamProgress = 12,
 
+        /// <summary>Cells of every container (map cupboards and player chests), so clients can show and open them.</summary>
+        ContainerList = 13,
+
         // Client → host
         Input = 20,
         Intent = 21,

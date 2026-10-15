@@ -29,6 +29,7 @@ namespace CepaCero.Net.Protocol
         private readonly List<BlockChange> _changes = new List<BlockChange>();
         private readonly float _maxStamina;
         private readonly HashSet<string> _unlockedSamples = new HashSet<string>(StringComparer.Ordinal);
+        private readonly HashSet<Int2> _containerCells = new HashSet<Int2>();
 
         public ClientMatchState(string mapName, BlockWorld blocks, GroundLayer ground, GameData data, float maxStamina = 100f)
         {
@@ -74,6 +75,9 @@ namespace CepaCero.Net.Protocol
         public Inventory OpenContainerContents { get; private set; }
 
         public IReadOnlyList<ItemPile> Piles => _piles;
+
+        /// <summary>Cells holding a container (map cupboards and player chests).</summary>
+        public IReadOnlyCollection<Int2> ContainerCells => _containerCells;
 
         /// <summary>Clock replica (created on Welcome with the host's settings).</summary>
         public DayNightCycle Clock { get; private set; }
@@ -155,6 +159,14 @@ namespace CepaCero.Net.Protocol
                         break;
                     case MessageType.TeamProgress:
                         ReadProgress(payload);
+                        break;
+                    case MessageType.ContainerList:
+                        _containerCells.Clear();
+                        int count = payload.ReadUShort();
+                        for (int i = 0; i < count; i++)
+                        {
+                            _containerCells.Add(new Int2(payload.ReadUShort(), payload.ReadUShort()));
+                        }
                         break;
                     default:
                         break; // newer host, older client: skip what we do not understand

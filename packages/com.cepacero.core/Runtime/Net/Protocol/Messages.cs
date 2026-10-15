@@ -255,6 +255,29 @@ namespace CepaCero.Net.Protocol
             }
         }
 
+        public static void WriteContainerList(ByteWriter w, ContainerStore containers)
+        {
+            using (Begin(w, MessageType.ContainerList))
+            {
+                int count = containers?.Count ?? 0;
+                w.WriteUShort((ushort)Math.Min(count, ushort.MaxValue));
+                if (containers == null)
+                {
+                    return;
+                }
+                int written = 0;
+                foreach (Int2 cell in containers.Positions)
+                {
+                    if (written++ >= ushort.MaxValue)
+                    {
+                        break;
+                    }
+                    w.WriteUShort((ushort)cell.X);
+                    w.WriteUShort((ushort)cell.Y);
+                }
+            }
+        }
+
         public static void WriteTeamProgress(ByteWriter w, GameSession session)
         {
             using (Begin(w, MessageType.TeamProgress))

@@ -31,6 +31,8 @@ namespace CepaCero.Net.Protocol
         private readonly bool[] _joined = new bool[GameSession.MaxPlayers];
         private bool _pilesChanged;
         private bool _progressChanged;
+        private int _sentContainerCount = -1;
+        private bool _containersChanged;
         private bool _phaseChanged;
 
         public HostBroadcaster(GameSession session, string mapName)
@@ -77,6 +79,10 @@ namespace CepaCero.Net.Protocol
                 _phaseChanged |= e.Type == SessionEventType.PhaseChanged;
                 _progressChanged |= e.Type == SessionEventType.RecipeUnlocked || e.Type == SessionEventType.DiaryUnlocked;
             }
+            // Chests are built and destroyed: resend the list when the count moves (cheap and good enough).
+            int containers = _session.Containers?.Count ?? 0;
+            _containersChanged = containers != _sentContainerCount;
+            _sentContainerCount = containers;
         }
 
         /// <summary>Everything a newly connected player needs: welcome, the whole world, piles, its inventory.</summary>
@@ -96,6 +102,7 @@ namespace CepaCero.Net.Protocol
             Messages.WriteTeamProgress(w, _session);
             if (_session.Data.HasItems)
             {
+                Messages.WriteContainerList(w, _session.Containers);
                 Messages.WriteGroundPiles(w, _session.GroundItems.Piles);
                 Messages.WriteInventory(w, _session.Inventories[player]);
                 _sentInventory[player] = _session.Inventories[player].Version;
@@ -227,6 +234,10 @@ namespace CepaCero.Net.Protocol
             if (_pilesChanged)
             {
                 Messages.WriteGroundPiles(w, _session.GroundItems.Piles);
+            }
+            if (_containersChanged)
+            {
+                Messages.WriteContainerList(w, _session.Containers);
             }
         }
 
