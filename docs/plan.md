@@ -2,8 +2,9 @@
 
 *Versión 0.1 · 15/10/2026.* Formas básicas (cuadrados, círculos, colores planos), sin arte final.
 
-**Supuesto de calendario:** ~8–10 h/semana. **Pendiente:** confirmar las horas reales; con menos
-tiempo, cada hito pasa a durar dos semanas, pero el orden se mantiene.
+**Calendario:** dedicación sin límite fijo (D-009). Si un hito acaba antes, empieza el siguiente;
+lo que **no** se hace es añadir alcance. Revisamos el ritmo real al terminar la semana 2.
+**Red:** FishNet + FishySteamworks (D-007).
 
 ## Por qué este orden
 La lista original ponía el cooperativo en 5.º lugar. Lo **adelanto a la semana 2** porque la

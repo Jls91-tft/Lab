@@ -15,18 +15,33 @@ antigua como **Sustituida por D-XXX**.
 ## Pendientes de decidir
 | Tema | Notas |
 | --- | --- |
-| Paquete de red | Propuesta en curso: FishNet + Steamworks.NET (ver conversación del 15/10/2026) |
-| Formato de salida de osm2tiles | Propuesta en curso |
-| Tamaño de tile y metros por tile | 16 o 32 px; propuesta de 1 tile = 1 bloque = 1 m de juego |
+| Tamaño de tile en píxeles | 16 o 32 px; se cierra en la semana 1. Los metros por tile ya están decididos (D-008) |
 | Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
 | Estructura de carpetas y asmdefs de Unity | Se propondrá con el proyecto creado |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
-| Horas por semana | Necesario para calibrar `docs/plan.md` |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-009 · 15/10/2026 · Dedicación: sin límite fijo de horas
+- **Estado:** Aceptada
+- **Decisión:** Javier dedica "las horas que hagan falta". El plan mantiene hitos semanales; si un hito acaba antes, se adelanta el siguiente, nunca se amplía el alcance del MVP.
+- **Motivo:** el riesgo pasa de "falta de tiempo" a "crecimiento del alcance" y agotamiento, compatibilizando con el trabajo. Se revisa el ritmo real al terminar la semana 2.
+
+## D-008 · 15/10/2026 · Formato de salida de osm2tiles (`cepacero.map` v1)
+- **Estado:** Aceptada
+- **Decisión:** JSON con cabecera (bbox, fecha de los datos OSM, atribución, `meters_per_tile`, tamaño), leyenda, dos capas planas fila a fila con la fila 0 al sur (`ground` = suelo, `blocks` = bloques del mundo) y una lista `buildings` con la categoría de cada edificio (sin nombres ni marcas). PNG de previsualización aparte. Por defecto, **2 m por tile**, configurable. Especificación en `tools/osm2tiles/README.md`.
+- **Motivo:** las dos capas encajan con el modelo del juego (Tilemap visual + rejilla de bloques rompibles). JSON se lee en Unity sin dependencias. La fila 0 al sur coincide con el eje Y de Unity. Las categorías alimentan el botín.
+- **Licencia:** el JSON es una base de datos derivada de OSM: se distribuye bajo **ODbL 1.0** con atribución "© OpenStreetMap contributors".
+
+## D-007 · 15/10/2026 · Red: FishNet + FishySteamworks sobre Steamworks.NET
+- **Estado:** Aceptada
+- **Decisión:** librería de red **FishNet** (versión gratuita, no Pro). Transporte Steam **FishySteamworks** con **Steamworks.NET** (MIT). Para desarrollo local, el transporte **Tugboat** de FishNet (dos instancias en el mismo PC). AppID de pruebas 480 hasta tener AppID propio.
+- **Motivo:** predicción en el cliente integrada (movimiento inmediato con latencia), pool de objetos, visibilidad por zonas y serialización compacta: encajan con 100+ zombis y un mundo por chunks. Licencia gratuita y sin royalties para juegos (revisada el 15/10/2026). Steamworks.NET sigue la API oficial de Valve.
+- **Alternativas descartadas:** Netcode for GameObjects (mejor documentación, pero sin predicción integrada y más pesado por entidad); Mirror (maduro, pero con la predicción experimental). Facepunch.Steamworks (API cómoda pero menos mantenido).
+- **Riesgos:** documentación más escasa (soporte por Discord) y dependencia de un autor principal. Mitigación: la arquitectura (autoridad del anfitrión, zombis por lotes, chunks con deltas) no depende de la librería, y el código de red se aísla en `CepaCero.Net`.
 
 ## D-006 · 15/10/2026 · Proyecto Unity en la subcarpeta `CepaCero/`
 - **Estado:** Aceptada (convención de repo; reversible)

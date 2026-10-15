@@ -20,12 +20,12 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - Unity 6 + C#, plantilla 2D URP. Proyecto Unity en la subcarpeta `CepaCero/`.
 - Cooperativo anfitrión + Steam P2P, sin servidores propios. **Autoridad del anfitrión.**
 - Git + Git LFS para binarios. Textos fuera del código (ES + EN).
-- Mapas: OSM → `tools/osm2tiles/` (Python) → datos que lee Unity.
+- Red: **FishNet** (gratis, no Pro) + **FishySteamworks** / **Steamworks.NET**; Tugboat para pruebas locales.
+- Mapas: OSM → `tools/osm2tiles/` (Python) → `cepacero.map` v1 (JSON, 2 m/tile por defecto) que lee Unity.
 
-**Pendientes**: paquete de red · formato de salida de osm2tiles · tamaño de tile
-(16/32 px) y metros por tile · resolución base · 4 u 8 direcciones · paleta ·
+**Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta ·
 estructura de carpetas y asmdefs de Unity · versión exacta de Unity (propuesta en
-`docs/setup-unity.md`) · horas/semana disponibles · nombre definitivo.
+`docs/setup-unity.md`) · nombre definitivo.
 
 ## Reglas de arquitectura (red desde el día 1)
 - El **anfitrión es la única fuente de verdad**: los clientes envían *intenciones*

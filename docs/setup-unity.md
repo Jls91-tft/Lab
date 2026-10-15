@@ -66,7 +66,7 @@ git push
 ```
 
 ## 4. Lo que NO hay que instalar todavía
-- Paquete de red ni Steamworks: esperan a la decisión de red y a la semana 2 de `docs/plan.md`.
+- FishNet ni Steamworks.NET (decididos en D-007): se instalan en la semana 2 de `docs/plan.md`.
 - Assets de la Asset Store, ni gratis ni de pago: primero lo hablamos.
 
 ## 5. MCP oficial de Unity para Claude Code
