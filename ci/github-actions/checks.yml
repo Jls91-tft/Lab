@@ -1,0 +1,50 @@
+# NOT ACTIVE. GitHub only runs workflows under .github/workflows/.
+# To enable it (after Javier's OK, since it uses GitHub Actions minutes):
+#   mkdir -p .github/workflows && git mv ci/github-actions/checks.yml .github/workflows/checks.yml
+#
+# Same steps as scripts/check.sh. No Unity license needed: it tests the
+# engine-independent parts (tools and the simulation core).
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false   # binaries are not needed for these checks (saves LFS bandwidth)
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: All checks
+        run: scripts/check.sh
+
+      - name: Stress report
+        if: always()
+        run: dotnet run -c Release --project tools/simbench -- --zombies 100 --seconds 30 --json simbench.json || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: simbench
+          path: simbench.json
+          if-no-files-found: ignore
