@@ -23,9 +23,12 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - Red: **FishNet** (gratis, no Pro) + **FishySteamworks** / **Steamworks.NET**; Tugboat para pruebas locales.
 - Mapas: OSM → `tools/osm2tiles/` (Python) → `cepacero.map` v1 (JSON, 2 m/tile por defecto) que lee Unity.
 
+**Propuesta pendiente de OK (D-010)**: simulación sin motor en `packages/com.cepacero.core`
+(paquete UPM local); Unity solo vista, entrada y red. Detalle en `docs/arquitectura.md`.
+
 **Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta ·
-estructura de carpetas y asmdefs de Unity · versión exacta de Unity (propuesta en
-`docs/setup-unity.md`) · nombre definitivo.
+carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta en
+`docs/setup-unity.md`) · activar CI en GitHub Actions · nombre definitivo.
 
 ## Reglas de arquitectura (red desde el día 1)
 - El **anfitrión es la única fuente de verdad**: los clientes envían *intenciones*
@@ -37,6 +40,14 @@ estructura de carpetas y asmdefs de Unity · versión exacta de Unity (propuesta
 - Mundo de bloques en **chunks**; cambios como deltas; *snapshot* de chunk al unirse alguien.
 - Datos de diseño (zombis, bloques, objetos) en `ScriptableObject`, generados desde `docs/` cuando proceda.
 - Entrada abstraída (Input System) para teclado, mando y, en el futuro, táctil.
+
+## Núcleo `packages/com.cepacero.core`
+- Sin `UnityEngine` (`noEngineReferences`). **C# 9 / .NET Standard 2.1**: nada de `record`, `init`, `namespace X;` ni `global using`.
+- Rutas calientes sin asignaciones por tick. Tiempo en ticks fijos. Aleatoriedad con `DeterministicRandom`.
+- Toda mutación del mundo queda registrada (`DrainChanges`): es lo que viaja por la red.
+- Redondeo de juego con `MidpointRounding.AwayFromZero` (`Math.Round` por defecto es bancario).
+- Clases de datos JSON (`CepaMapData`, `ZombieDefinition`): campos `snake_case` para `JsonUtility`. Única excepción a PascalCase.
+- No editar `data/generated/` a mano: se genera desde `docs/` con `tools/datagen`.
 
 ## Convenciones C#
 - Identificadores y comentarios de código en **inglés**; documentación en **español**.
@@ -59,15 +70,19 @@ estructura de carpetas y asmdefs de Unity · versión exacta de Unity (propuesta
 - Sin dependencias, assets ni servicios de pago o externos sin preguntar.
 - Cada decisión importante: actualizar este fichero y `docs/decisiones.md`.
 
-## Herramientas
-- `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test` · tests: `python -m pytest`
-  (desde esa carpeta, en un venv con `requirements-dev.txt`). Formato y licencia ODbL en su `README.md`.
+## Herramientas y comprobaciones
+- **`scripts/check.sh`** (`--fast` sin estrés): todo lo que no necesita Unity. Pasarlo antes de cada commit.
+- `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity.
+- `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
+- `tools/datagen/`: `python -m datagen` regenera `data/generated/bestiary.json` desde `docs/bestiario.md`.
+- `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
 
 ## docs/
 | Fichero | Para qué |
 | --- | --- |
 | `docs/cepa-cero-contexto-proyecto.md` | Traspaso original: mercado, posicionamiento, arte, Steam |
 | `docs/GDD.md` | Diseño del juego en una página |
+| `docs/arquitectura.md` | Capas, estructura del repo y modelo de red |
 | `docs/decisiones.md` | Registro de decisiones (fecha, decisión, motivo) |
 | `docs/bestiario.md` | Zombis con estadísticas (se convertirá en datos) |
 | `docs/lore.md` | La cepa, cómo se descubre y el diario |

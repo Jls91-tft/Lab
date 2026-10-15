@@ -69,6 +69,43 @@ git push
 - FishNet ni Steamworks.NET (decididos en D-007): se instalan en la semana 2 de `docs/plan.md`.
 - Assets de la Asset Store, ni gratis ni de pago: primero lo hablamos.
 
+## 4b. Enlazar el núcleo de simulación y pasar sus tests en Unity
+El núcleo (`packages/com.cepacero.core`, ver `docs/arquitectura.md`) ya está escrito y probado con .NET.
+Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
+
+- [ ] Con Unity cerrado, edita `CepaCero/Packages/manifest.json`:
+  ```jsonc
+  {
+    "dependencies": {
+      "com.cepacero.core": "file:../../packages/com.cepacero.core",
+      // … lo que ya hubiera, sin tocar …
+    },
+    "testables": ["com.cepacero.core"]
+  }
+  ```
+  (`file:` es relativo a la carpeta `Packages/`: sube a `CepaCero/` y luego a la raíz del repo.)
+  Si `testables` ya existía, añade el nombre a la lista.
+- [ ] Abre el proyecto. En *Window > Package Manager → In Project* debe aparecer **Cepa Cero Core 0.1.0**.
+- [ ] Consola sin errores rojos. Si hay alguno, cópiamelo **tal cual**: será una diferencia del compilador de Unity con .NET.
+- [ ] *Window > General > Test Runner → EditMode → Run All*. Esperado: **57 tests en verde**.
+  El de rendimiento (`DeliciasSizedFieldBuildsFastEnough`) escribe el tiempo en el log: pásamelo.
+- [ ] Unity habrá creado archivos `.meta` dentro de `packages/com.cepacero.core/`. **Se versionan**:
+  ```bash
+  git add CepaCero packages && git commit -m "Unity: enlazar com.cepacero.core y metas" && git push
+  ```
+
+## 4c. Pruebas fuera de Unity (opcional, 10 minutos)
+Necesitan Python 3.11+ y el **.NET 8 SDK** (gratis, de Microsoft: `winget install Microsoft.DotNet.SDK.8` en Windows).
+```bash
+scripts/check.sh --fast                                   # todo menos la prueba de estrés (Git Bash en Windows)
+
+cd tools/osm2tiles && python -m venv .venv && source .venv/Scripts/activate   # Linux/macOS: source .venv/bin/activate
+pip install -r requirements-dev.txt
+python -m osm2tiles --zone delicias-test                  # Delicias real: abre out/delicias-test.preview.png
+cd ../..
+dotnet run -c Release --project tools/simbench -- --map tools/osm2tiles/out/delicias-test.map.json
+```
+
 ## 5. MCP oficial de Unity para Claude Code
 Paquete **`com.unity.ai.assistant`** (Unity AI Assistant, en beta). Pasos según las guías que encontré:
 
@@ -94,3 +131,5 @@ Paquete **`com.unity.ai.assistant`** (Unity AI Assistant, en beta). Pasos según
 2. La salida de `git status --short -uall | head -30`.
 3. Si el MCP pide pago o no, y si conectó.
 4. Cualquier error de la consola de Unity (copiar y pegar).
+5. Resultado del Test Runner (cuántos en verde y el tiempo del test de rendimiento).
+6. Si hiciste el §4c: la imagen `delicias-test.preview.png` y la salida de simbench con Delicias.

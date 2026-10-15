@@ -149,7 +149,14 @@ namespace CepaCero.Tests.AI
             Assert.That(field.GetDistance(0, 0), Is.LessThan(before));
         }
 
+#if UNITY_5_3_OR_NEWER
+        private const double UnboundedBudgetMs = 1500; // Mono in the editor is several times slower than .NET 8
+#else
+        private const double UnboundedBudgetMs = 250;
+#endif
+
         [Test]
+        [Category("Performance")]
         public void DeliciasSizedFieldBuildsFastEnough()
         {
             const int w = 375;
@@ -182,7 +189,7 @@ namespace CepaCero.Tests.AI
             }
             double ms = sw.Elapsed.TotalMilliseconds / runs;
             TestContext.WriteLine($"FlowField {w}x{h} unbounded: {ms:0.0} ms per build, {field.LastBuildVisited} cells");
-            Assert.That(ms, Is.LessThan(250), "budget: rebuilt at most a few times per second on the host");
+            Assert.That(ms, Is.LessThan(UnboundedBudgetMs), "budget: rebuilt at most a few times per second on the host");
 
             sw.Restart();
             for (int i = 0; i < runs; i++)

@@ -19,7 +19,9 @@ antigua como **Sustituida por D-XXX**.
 | Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
-| Estructura de carpetas y asmdefs de Unity | Se propondrá con el proyecto creado |
+| Arquitectura: simulación sin motor (D-010) | **Propuesta**, pendiente de OK. Ver `docs/arquitectura.md` |
+| Carpetas de `Assets/` y asmdefs de Unity | Propuesta en `docs/arquitectura.md`; se cierra con el proyecto creado |
+| Activar CI en GitHub Actions | Preparado en `ci/github-actions/checks.yml`; usa minutos de Actions (gratis con límite) |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 

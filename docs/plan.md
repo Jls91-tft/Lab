@@ -30,6 +30,24 @@ Cada hito termina con una **prueba de aceptación** que haces tú en el editor o
 
 ---
 
+## Estado (15/10/2026)
+Adelantado sin Unity: la **lógica** de varios hitos ya está en `packages/com.cepacero.core`
+con tests (`scripts/check.sh`). Lo que queda en cada hito es sobre todo la parte de Unity
+(vista, entrada y red con FishNet), que encaja sobre esa lógica.
+
+| Sem. | Ya hecho en el núcleo | Falta (Unity) |
+| --- | --- | --- |
+| 1 | `Float2`/`Int2`, ticks fijos | Todo: Input System, motor del jugador, cámara |
+| 2 | Codificación a bytes (`ByteWriter`/`ByteReader`) | FishNet + Tugboat, *spawn* de jugadores, predicción |
+| 3 | `BlockWorld` por chunks: colocar, dañar, puertas, deltas y *snapshots* de chunk | Tilemap ↔ `BlockWorld`, RPCs de intención, envío de deltas |
+| 4 | `FlowField` con coste de rotura, `ZombieSimulation`, codec de 8 B/zombi, réplica con interpolación | Vista de zombis (pool de sprites), mensajes FishNet |
+| 5 | `DayNightCycle`, `HordeDirector`, `SpawnFinder`, `GameSettings` | Luz 2D global y linterna, UI del reloj |
+| 6 | `MapImporter` (contrato probado con osm2tiles) | Importador de editor y créditos ODbL |
+| 7 | `tools/simbench`: 100 zombis + 2 jugadores, p95 0,3 ms y 7,8 KB/s por cliente | Medirlo con Steam real y en una build IL2CPP |
+
+**Pendiente de la lógica** (sin Unity, para cuando toque): habilidades de los especiales
+(grito, escupitajo, carga de La Mole), ruido como objetivo del flow field, inventario y crafteo.
+
 ## Semana 0 · Setup (esta noche)
 - Seguir `docs/setup-unity.md`: instalar Unity, crear `CepaCero/`, primer commit del proyecto vacío.
 - Activar el MCP de Unity y comprobar que Claude Code lee la consola.
