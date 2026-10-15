@@ -21,6 +21,7 @@ antigua como **Sustituida por D-XXX**.
 | Paleta | ~32 colores cerrada |
 | Carpetas de `Assets/` y asmdefs de Unity | Propuesta en `docs/arquitectura.md`; se cierra con el proyecto creado |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
+| Objetos, inventario, botín y crafteo | **Propuesta** en `docs/propuesta-inventario.md` (5 preguntas) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
