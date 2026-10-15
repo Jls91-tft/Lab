@@ -19,10 +19,22 @@ antigua como **Sustituida por D-XXX**.
 | Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
-| Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
+| ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-017 · 15/10/2026 · Paquetes de Unity alineados con el editor 6000.3.26f1
+- **Estado:** Aceptada (OK de Javier el 15/10/2026: "sube collab-proxy e Input System a versiones compatibles").
+- **Decisión:** `com.unity.collab-proxy` pasa de 2.6.0 a **2.13.6** y `com.unity.inputsystem` de 1.12.0 a **1.20.0**, las versiones que el propio editor trae embebidas (`Editor\Data\Resources\PackageManager\Editor\`). Son las que la plantilla Universal 2D debía usar, pero con las anteriores el compilador de Unity daba errores (`ObjectInfo` ambiguo, `BuildTarget.ReservedCFE`).
+- **Motivo:** el editor compila sin errores con las versiones que ya conoce; no depender de descargas externas ni de versiones que no se han probado con 6000.3.26f1.
+- **Cómo revisar:** al subir de versión de editor (D-016) o de LTS, comparar de nuevo con los `.tgz` embebidos.
+
+## D-016 · 15/10/2026 · Versión de Unity: 6000.3.26f1 (LTS)
+- **Estado:** Aceptada (OK de Javier el 15/10/2026: "instala la última 6000.3.x LTS").
+- **Decisión:** motor **Unity 6000.3.26f1** (última 6000.3.x LTS que ofrece el Hub), con IL2CPP y Documentation. Proyecto `CepaCero/` creado a partir de la plantilla Universal 2D del propio editor.
+- **Motivo:** LTS con soporte hasta diciembre de 2027 (ver §1 de `docs/setup-unity.md`). 6.6 es más nueva pero no LTS. 6.0 LTS terminaba su soporte en octubre de 2026.
+- **Coste:** Unity Hub intentó descargar por su cuenta 6000.6.6f1, que no es la versión del proyecto. No afecta al repo; hay que confirmar que la descarga quedó cancelada en el Hub (pestaña Downloads).
 
 ## D-015 · 15/10/2026 · Hambre y sed duras, configurables
 - **Estado:** Aceptada (OK de Javier el 15/10/2026: opción C y ajuste de partida).

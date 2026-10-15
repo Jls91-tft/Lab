@@ -10,7 +10,7 @@
   - Por qué LTS: soporte hasta diciembre de 2027 y lo que antes soportan FishNet, Mirror y el MCP.
   - 6.6 es más nueva (*Supported*), pero el 6.7 LTS sale a finales de 2026; cuando salga, valoramos migrar (pasar de un LTS a otro es lo habitual).
   - **No** usar 6.0 LTS: su soporte termina en octubre de 2026.
-- [ ] Anota la versión exacta instalada; la registro en `docs/decisiones.md`.
+- [x] **Confirmado (15/10/2026): Unity 6000.3.26f1** (última 6000.3.x LTS que ofrecía el Hub), instalada con Unity Hub 3.22.3 (`winget install Unity.UnityHub`) en `C:\Program Files\Unity\Hub\Editor\6000.3.26f1`. Registrada en D-016.
 
 ## 2. Módulos del instalador
 | Módulo | ¿Instalar? | Por qué |
@@ -35,6 +35,7 @@ Ruta del repo: la carpeta donde está este `docs/` (abajo, `<repo>`).
 - [ ] **Desmarcar "Use Unity Version Control"** (usamos Git).
 - [ ] *Connect to Unity Cloud*: márcalo **solo** si el MCP lo exige (ver §5); es gratis con una cuenta Unity Personal, pero no lo necesitamos para nada más.
 - [ ] Crear y esperar a que abra. Luego **cerrar Unity** antes del primer commit.
+- [x] **Confirmado (15/10/2026), sin el asistente de Hub:** el proyecto se creó copiando la plantilla *Universal 2D* que trae el propio editor (`Editor\Data\Resources\PackageManager\ProjectTemplates\com.unity.template.2d-cross-platform-2d-6.1.6.tgz`, `displayName` "Universal 2D", URP con Renderer2D). Se copiaron `Assets`, `Packages` y `ProjectSettings`; `ProjectVersion.txt` marca `6000.3.26f1` y `productName` es `CepaCero`. La carpeta `Library` de la plantilla no se copia. Hub hace lo mismo al crear un proyecto.
 
 ### Comprobar que el `.gitignore` funciona
 ```bash
@@ -72,6 +73,15 @@ git push
 ## 4b. Enlazar el núcleo de simulación y pasar sus tests en Unity
 El núcleo (`packages/com.cepacero.core`, ver `docs/arquitectura.md`) ya está escrito y probado con .NET.
 Esta es **la primera prueba de verdad**: que el compilador de Unity lo acepte.
+
+**Resultado confirmado (15/10/2026, Unity 6000.3.26f1, EditMode en modo batch):** **154 de 154 en verde**, 0 fallos, 0 omitidos.
+`DeliciasSizedFieldBuildsFastEnough` pasa en **0,25 s**. Antes había cuatro errores de compilación, ya resueltos:
+- `ZombieSpecialsTests.cs`: `Is.AnyOf` no existe en el NUnit de Unity Test Framework; se cambió por una comparación explícita.
+- `com.unity.collab-proxy` 2.6.0 de la plantilla chocaba con el editor (`ObjectInfo` ambiguo): sube a **2.13.6**, la versión embebida en el editor.
+- `com.unity.inputsystem` 1.12.0 no encajaba con el editor (`BuildTarget.ReservedCFE`): sube a **1.20.0**, la versión embebida. Decisión en D-017.
+
+Commit `59bed1f`: proyecto `CepaCero/`, enlace de paquetes y `.meta` de `packages/`.
+Pendiente: la prueba visual en el editor (§4b-bis), que requiere la ventana de Unity.
 
 - [ ] Con Unity cerrado, edita `CepaCero/Packages/manifest.json`:
   ```jsonc
@@ -119,6 +129,7 @@ Toda la simulación con cuadrados de colores: no es el juego, es para ver que el
 
 ## 4c. Pruebas fuera de Unity (opcional, 10 minutos)
 Necesitan Python 3.11+ y el **.NET 8 SDK** (gratis, de Microsoft: `winget install Microsoft.DotNet.SDK.8` en Windows).
+En Windows, Python se instala con `winget install Python.Python.3.12` (confirmado: 3.12.10). Ojo: `python3` puede apuntar al alias vacío de la Microsoft Store; `scripts/check.sh` busca `python3` primero, así que comprueba `python3 --version` antes de lanzarlo.
 ```bash
 scripts/check.sh --fast                                   # todo menos la prueba de estrés (Git Bash en Windows)
 
