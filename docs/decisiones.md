@@ -20,11 +20,21 @@ antigua como **Sustituida por D-XXX**.
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
 | ~~Paleta~~ | Cerrado: paleta propia de 32 colores, generada por código (D-018) |
 | Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
-| Construcción (capas, catálogo, modo construcción, ventanas y barricadas) | Propuesta en `docs/propuesta-construccion.md`, pendiente de OK |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-020 · 16/10/2026 · Construcción: tres capas, ventanas y barricadas, modo construcción
+- **Estado:** Aceptada (OK de Javier el 16/10/2026, respondiendo a las preguntas de `docs/propuesta-construccion.md`).
+- **Decisión:**
+  - **Tres capas por casilla:** suelo, estructura y objeto (opción B). Toca núcleo (`Chunk`, `BlockRegistry`), red (protocolo v3: 1 byte de capa en los deltas) y guardado (v5 con migración).
+  - **Ventanas en los edificios del mapa** (osm2tiles, `cepacero.map` v2) y **barricadas** sobre ventanas y puertas como mecánica central.
+  - **Cama = punto de reaparición** del grupo.
+  - **Techos solo visuales** en el MVP: se ven desde fuera y se desvanecen al entrar.
+  - **Catálogo del MVP:** madera, chatarra, ladrillo y hormigón × muro, puerta, ventana, barricada baja, valla y suelo; cama, lámpara/hoguera, barril de lluvia, trampas y muebles básicos.
+  - **Orden:** 1) modo construcción (fantasma, arrastre, coste visible, rotar, desmontar), 2) capas, 3) ventanas y barricadas, 4) objetos con función y luz 2D, 5) muros que se unen, techos y grietas.
+- **Motivo:** que construir sea central y creativo (pilar 2), con la vista cenital de Core Keeper; el gancho propio es fortificar el barrio real. Detalle completo en la propuesta.
 
 ## D-019 · 16/10/2026 · Mundo con piezas CC0 de Kenney, transformadas por código
 - **Estado:** Aceptada (OK de Javier el 16/10/2026: "Vamos con B", "Kenney como base, transformado a nuestra paleta y ambiente", "intégralo, añade la decoración procedural y los personajes en estilo Kenney"). Modifica D-018 en el origen del arte del mundo.

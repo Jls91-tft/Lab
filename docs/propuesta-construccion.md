@@ -1,7 +1,8 @@
 # Propuesta: construcción
 
-**Estado: Propuesta, pendiente de OK de Javier.** Nada de esto está implementado; el código actual
-sigue como está hasta que se decida.
+**Estado: decidida en D-020 (`docs/decisiones.md`), 16/10/2026.** Javier aprobó todo lo propuesto:
+tres capas (B), ventanas y barricadas sobre los edificios reales, cama como reaparición, techos solo
+visuales, el catálogo tal cual y empezar por el modo construcción (paso 1 del §9).
 
 ## El problema
 El pilar 2 del GDD es "Tu fuerte, tu ciudad", y Javier quiere que construir sea tan importante y

@@ -20,6 +20,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - Unity 6000.3.26f1 (LTS) + C#, plantilla 2D URP (D-016). Proyecto Unity en la subcarpeta `CepaCero/`.
 - Paquetes de Unity alineados con el editor: collab-proxy 2.13.6 e Input System 1.20.0 (D-017).
 - Arte: tile 16 px, base 640×360, 4 direcciones (D-018). El mundo sale de las piezas CC0 de Kenney en `art/vendor/kenney/` (fuera de LFS), transformadas por `tools/artgen/` con un filtro propio; personajes, zombis, iconos e interfaz se dibujan por código; la decoración se coloca con `DecorPlanner` (solo visual) (D-019). Todo va al atlas `CepaCero/Assets/Resources/Cepa/Art/`: no editar esos PNG a mano.
+- Construcción (D-020, detalle en `docs/propuesta-construccion.md`): tres capas por casilla (suelo, estructura, objeto), ventanas y barricadas sobre los edificios reales, cama como reaparición, techos solo visuales. Orden: modo construcción → capas → ventanas/barricadas → objetos con función y luz → autotiling, techos y grietas.
 - Cooperativo anfitrión + Steam P2P, sin servidores propios. **Autoridad del anfitrión.**
 - Git + Git LFS para binarios. Textos fuera del código (ES + EN).
 - Red: **FishNet** (gratis, no Pro) + **FishySteamworks** / **Steamworks.NET**; Tugboat para pruebas locales.
