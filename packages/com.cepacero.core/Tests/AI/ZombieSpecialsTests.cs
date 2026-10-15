@@ -60,7 +60,8 @@ namespace CepaCero.Tests.AI
             Run(sim, player, 2f);
             Assert.That(sim.IsAware(slot), Is.False);
             Assert.That(sim.GetPosition(slot).X, Is.LessThan(3f), "it shuffles around but does not come for you");
-            Assert.That(sim.GetState(slot), Is.AnyOf(ZombieState.Unaware, ZombieState.Wandering));
+            ZombieState state = sim.GetState(slot);
+            Assert.That(state == ZombieState.Unaware || state == ZombieState.Wandering, Is.True);
 
             player[0] = new Float2(8.5f, 1.5f); // 7 tiles: seen in daylight
             sim.Tick(Dt, player);
