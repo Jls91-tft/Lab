@@ -19,16 +19,20 @@ antigua como **Sustituida por D-XXX**.
 | Resolución base | p. ej. 640×360 con escalado entero (Pixel Perfect Camera) |
 | Direcciones de animación | 4 u 8 |
 | Paleta | ~32 colores cerrada |
-| Arquitectura: simulación sin motor (D-010) | **Propuesta**, pendiente de OK. Ver `docs/arquitectura.md` |
 | Carpetas de `Assets/` y asmdefs de Unity | Propuesta en `docs/arquitectura.md`; se cierra con el proyecto creado |
-| Activar CI en GitHub Actions | Preparado en `ci/github-actions/checks.yml`; usa minutos de Actions (gratis con límite) |
 | Versión exacta de Unity | Propuesta en `docs/setup-unity.md` |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
 
+## D-011 · 15/10/2026 · CI con GitHub Actions
+- **Estado:** Aceptada
+- **Decisión:** `.github/workflows/checks.yml` ejecuta `scripts/check.sh` (tests de Python y del núcleo C#, datos generados al día) y simbench en cada push y PR, sin licencia de Unity. El informe de simbench se guarda como artefacto.
+- **Motivo:** detectar regresiones (incluidas las de rendimiento) sin abrir Unity. Coste: minutos de GitHub Actions dentro del plan gratuito; checkout sin LFS para no gastar ancho de banda.
+- **Más adelante:** builds de Unity (GameCI) y subida a Steam (SteamPipe) cuando haya proyecto; requieren licencia de Unity como secreto del repo y se decidirán aparte.
+
 ## D-010 · 15/10/2026 · Simulación sin motor en un paquete UPM local
-- **Estado:** Propuesta (pendiente de OK de Javier). El código ya escrito sobre esta base es lógica pura y se puede mover.
+- **Estado:** Aceptada (OK de Javier el 15/10/2026).
 - **Decisión:** la simulación (mundo de bloques, mapa, flow fields, zombis, reglas) vive en `packages/com.cepacero.core/` como C# sin `UnityEngine` (`noEngineReferences`), C# 9 / .NET Standard 2.1. Unity la referencia con `file:` en `Packages/manifest.json`. Se testea con `dotnet test` (`tests/`) y con el Test Runner de Unity. Unity solo hace vista, entrada y transporte de red. Detalle en `docs/arquitectura.md`.
 - **Motivo:** el estado del juego queda en datos con colas de cambios, que es justo lo que viaja por la red. Tests rápidos en local y en CI sin licencia de Unity. Rendimiento con arrays para cientos de zombis. Independiente de FishNet y de la plataforma.
 - **Coste:** una capa de adaptadores en Unity (Tilemap ↔ BlockWorld, mensajes FishNet ↔ bytes del núcleo) y tipos propios (`Int2`, `Float2`) en lugar de `Vector2`.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs every check that does not need Unity: Python tools, generated data and
-# the simulation core. Same steps as ci/github-actions/checks.yml.
+# the simulation core. Same steps as .github/workflows/checks.yml.
 #
 #   scripts/check.sh            all checks
 #   scripts/check.sh --fast     skip the stress benchmark

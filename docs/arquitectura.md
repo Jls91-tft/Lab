@@ -1,6 +1,6 @@
 # Arquitectura
 
-*Versión 0.1 · 15/10/2026 · **Propuesta (D-010), pendiente de OK de Javier.***
+*Versión 0.1 · 15/10/2026 · Aceptada (D-010).*
 
 ## Idea en una frase
 La **simulación** del juego (mundo, zombis, reglas) es C# puro y no depende de Unity. Unity

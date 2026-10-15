@@ -1,15 +1,11 @@
-# NOT ACTIVE. GitHub only runs workflows under .github/workflows/.
-# To enable it (after Javier's OK, since it uses GitHub Actions minutes):
-#   mkdir -p .github/workflows && git mv ci/github-actions/checks.yml .github/workflows/checks.yml
-#
 # Same steps as scripts/check.sh. No Unity license needed: it tests the
 # engine-independent parts (tools and the simulation core).
 name: checks
 
 on:
-  push:
-    branches: [main]
+  push:            # every branch, so work branches get feedback before a PR
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read

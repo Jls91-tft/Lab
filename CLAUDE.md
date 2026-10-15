@@ -23,12 +23,12 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - Red: **FishNet** (gratis, no Pro) + **FishySteamworks** / **Steamworks.NET**; Tugboat para pruebas locales.
 - Mapas: OSM → `tools/osm2tiles/` (Python) → `cepacero.map` v1 (JSON, 2 m/tile por defecto) que lee Unity.
 
-**Propuesta pendiente de OK (D-010)**: simulación sin motor en `packages/com.cepacero.core`
-(paquete UPM local); Unity solo vista, entrada y red. Detalle en `docs/arquitectura.md`.
+- **Simulación sin motor** en `packages/com.cepacero.core` (paquete UPM local); Unity solo vista,
+  entrada y red (D-010, `docs/arquitectura.md`). CI en GitHub Actions con `scripts/check.sh` (D-011).
 
 **Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta ·
 carpetas de `Assets/` y asmdefs de Unity · versión exacta de Unity (propuesta en
-`docs/setup-unity.md`) · activar CI en GitHub Actions · nombre definitivo.
+`docs/setup-unity.md`) · nombre definitivo.
 
 ## Reglas de arquitectura (red desde el día 1)
 - El **anfitrión es la única fuente de verdad**: los clientes envían *intenciones*
