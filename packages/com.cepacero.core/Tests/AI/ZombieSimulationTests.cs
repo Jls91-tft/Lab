@@ -112,6 +112,22 @@ namespace CepaCero.Tests.AI
         }
 
         [Test]
+        public void LongReachZombiesCannotHitThroughWalls()
+        {
+            var map = new AsciiMap(
+                ".#.",
+                "Z#P",
+                ".#.");
+            var sim = new ZombieSimulation(map.Blocks, map.Ground, _catalog);
+            int slot = sim.Spawn(_catalog.IndexOf("brute"), Center(map.Markers[0]));
+            sim.Tick(Dt, PlayersOf(map));
+            var hits = new List<PlayerHit>();
+            sim.DrainPlayerHits(hits);
+            Assert.That(hits, Is.Empty, "La Mole reaches 2.9 tiles but the wall is in between");
+            Assert.That(sim.GetState(slot), Is.EqualTo(ZombieState.AttackingBlock));
+        }
+
+        [Test]
         public void ZombiesNeverEnterSolidCells()
         {
             var map = new AsciiMap(
@@ -243,7 +259,7 @@ namespace CepaCero.Tests.AI
             map.Blocks.Damage(1, 0, 1000);
             sim.Tick(Dt, players);
             Assert.That(sim.FlowRebuilds, Is.EqualTo(before + 1));
-            Assert.That(sim.Field.BuiltFromRevision, Is.EqualTo(map.Blocks.Revision));
+            Assert.That(sim.Field.BuiltFromRevision, Is.EqualTo(map.Blocks.StructureRevision));
         }
     }
 }

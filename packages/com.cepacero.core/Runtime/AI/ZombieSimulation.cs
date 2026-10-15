@@ -107,8 +107,11 @@ namespace CepaCero.AI
         /// <summary>Minimum seconds between flow field rebuilds.</summary>
         public float FlowRebuildInterval { get; set; } = 0.5f;
 
-        /// <summary>Search bound for the flow field (10 = one tile). Zombies farther away idle.</summary>
-        public int FlowMaxDistance { get; set; } = 10 * 150;
+        /// <summary>
+        /// Search bound for the flow field (10 = one tile, breaking walls costs extra).
+        /// Zombies farther away idle until they get closer; the horde spawns well inside it.
+        /// </summary>
+        public int FlowMaxDistance { get; set; } = 10 * 80;
 
         public int FlowRebuilds { get; private set; }
 
@@ -217,7 +220,7 @@ namespace CepaCero.AI
             {
                 targetsChanged = players[p].Tile != _targets[p];
             }
-            bool stale = Field.BuiltFromRevision != _blocks.Revision || targetsChanged;
+            bool stale = Field.BuiltFromRevision != _blocks.StructureRevision || targetsChanged;
             if (!stale || _time - _lastRebuild < FlowRebuildInterval)
             {
                 return;
@@ -260,7 +263,8 @@ namespace CepaCero.AI
             _cooldown[i] -= dt;
 
             int nearest = NearestPlayer(pos, players, out float playerDistance);
-            if (nearest >= 0 && playerDistance <= def.attack_range + PlayerRadius + _radius[type])
+            if (nearest >= 0 && playerDistance <= def.attack_range + PlayerRadius + _radius[type]
+                && HasClearLine(pos, players[nearest]))
             {
                 Face(i, players[nearest] - pos);
                 _state[i] = ZombieState.AttackingPlayer;
@@ -444,6 +448,22 @@ namespace CepaCero.AI
             float angle = MathF.Atan2(direction.Y, direction.X);
             int sector = (int)MathF.Round(angle / (2f * MathF.PI) * 16f);
             _facing[i] = (byte)((sector % 16 + 16) % 16);
+        }
+
+        // No hitting through walls: sample the segment every quarter tile.
+        private bool HasClearLine(Float2 from, Float2 to)
+        {
+            Float2 delta = to - from;
+            int samples = Math.Max(1, (int)MathF.Ceiling(delta.Length * 4f));
+            for (int s = 1; s < samples; s++)
+            {
+                Int2 t = (from + delta * (s / (float)samples)).Tile;
+                if (_blocks.IsSolid(t.X, t.Y))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private static int NearestPlayer(Float2 pos, IReadOnlyList<Float2> players, out float distance)

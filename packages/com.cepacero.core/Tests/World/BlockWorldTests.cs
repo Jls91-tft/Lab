@@ -142,12 +142,19 @@ namespace CepaCero.Tests.World
         }
 
         [Test]
-        public void RevisionTracksAnyChange()
+        public void RevisionTracksAnyChangeButStructureOnlyTypeChanges()
         {
             var world = new BlockWorld(10, 10, _registry);
-            int before = world.Revision;
             world.SetBlock(2, 2, _wood);
-            Assert.That(world.Revision, Is.GreaterThan(before));
+            int revision = world.Revision;
+            int structure = world.StructureRevision;
+
+            world.Damage(2, 2, 10);
+            Assert.That(world.Revision, Is.GreaterThan(revision));
+            Assert.That(world.StructureRevision, Is.EqualTo(structure), "a dent does not change the paths");
+
+            world.Damage(2, 2, 1000);
+            Assert.That(world.StructureRevision, Is.GreaterThan(structure), "a destroyed block does");
         }
 
         private static void AssertSameWorld(BlockWorld a, BlockWorld b)

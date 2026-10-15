@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Headless stress test of the simulation core (no Unity). Compiles the
+    package sources directly, like tests/CepaCero.Core.
+    Usage: see tools/simbench/README.md
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <RootNamespace>CepaCero.SimBench</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../tests/CepaCero.Core/CepaCero.Core.csproj" />
+  </ItemGroup>
+
+</Project>

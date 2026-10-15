@@ -46,8 +46,15 @@ namespace CepaCero.World
 
         public BlockRegistry Registry { get; }
 
-        /// <summary>Increments on every change anywhere. Cheap "did anything change?" check for caches (flow fields).</summary>
+        /// <summary>Increments on every change anywhere, including block health.</summary>
         public int Revision { get; private set; }
+
+        /// <summary>
+        /// Increments only when a block's type changes (placed, destroyed, door
+        /// toggled): what pathfinding cares about. Health-only changes do not
+        /// count, so a siege does not force a flow field rebuild on every hit.
+        /// </summary>
+        public int StructureRevision { get; private set; }
 
         public bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
@@ -219,6 +226,7 @@ namespace CepaCero.World
             }
             chunk.Version++;
             Revision++;
+            StructureRevision++;
         }
 
         private void Write(int x, int y, ushort typeId, ushort health)
@@ -227,6 +235,10 @@ namespace CepaCero.World
             if (chunk.Types[i] == typeId && chunk.Health[i] == health)
             {
                 return;
+            }
+            if (chunk.Types[i] != typeId)
+            {
+                StructureRevision++;
             }
             chunk.Types[i] = typeId;
             chunk.Health[i] = health;

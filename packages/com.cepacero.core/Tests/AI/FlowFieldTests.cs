@@ -144,7 +144,7 @@ namespace CepaCero.Tests.AI
             FlowField field = Build(map);
             int before = field.GetDistance(0, 0);
             map.Blocks.Damage(1, 0, 1000);
-            Assert.That(field.BuiltFromRevision, Is.LessThan(map.Blocks.Revision), "callers can detect the stale field");
+            Assert.That(field.BuiltFromRevision, Is.LessThan(map.Blocks.StructureRevision), "callers can detect the stale field");
             field.Build(map.Ground, map.Blocks, PathPolicy.Zombie, map.Targets);
             Assert.That(field.GetDistance(0, 0), Is.LessThan(before));
         }
@@ -181,8 +181,17 @@ namespace CepaCero.Tests.AI
                 field.Build(ground, blocks, PathPolicy.Zombie, targets);
             }
             double ms = sw.Elapsed.TotalMilliseconds / runs;
-            TestContext.WriteLine($"FlowField {w}x{h}: {ms:0.0} ms per build, {field.LastBuildVisited} cells");
+            TestContext.WriteLine($"FlowField {w}x{h} unbounded: {ms:0.0} ms per build, {field.LastBuildVisited} cells");
             Assert.That(ms, Is.LessThan(250), "budget: rebuilt at most a few times per second on the host");
+
+            sw.Restart();
+            for (int i = 0; i < runs; i++)
+            {
+                field.Build(ground, blocks, PathPolicy.Zombie, targets, maxDistance: 800);
+            }
+            double boundedMs = sw.Elapsed.TotalMilliseconds / runs;
+            TestContext.WriteLine($"FlowField {w}x{h} bounded to ~80 tiles: {boundedMs:0.0} ms per build, {field.LastBuildVisited} cells");
+            Assert.That(field.LastBuildVisited, Is.LessThan(w * h / 2), "a bounded build only explores around the players");
         }
     }
 }

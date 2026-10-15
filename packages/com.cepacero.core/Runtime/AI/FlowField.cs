@@ -8,8 +8,12 @@ namespace CepaCero.AI
     /// <summary>
     /// Shared pathfinding for crowds: one Dijkstra from the targets (players,
     /// noise, the base) gives every cell its cost-to-target, and each zombie
-    /// just steps to its cheapest neighbour. Cost is O(cells) per rebuild
-    /// regardless of how many zombies use it. Host only.
+    /// just steps to its cheapest neighbour. Cost is independent of how many
+    /// zombies use it. Host only.
+    ///
+    /// Cell costs are computed lazily and both caches are invalidated with a
+    /// stamp instead of being cleared, so a build bounded by
+    /// <c>maxDistance</c> only touches the cells it explores.
     /// </summary>
     public sealed class FlowField
     {
@@ -22,9 +26,16 @@ namespace CepaCero.AI
         private static readonly int[] Dy = { 0, 0, 1, -1, 1, -1, 1, -1 };
 
         private readonly int[] _distance;
+        private readonly int[] _distanceStamp;
         private readonly int[] _cellCost;
+        private readonly int[] _costStamp;
         private readonly bool[] _open;
         private readonly MinHeap _heap;
+
+        private int _stamp;
+        private GroundLayer _ground;
+        private BlockWorld _blocks;
+        private PathPolicy _policy;
 
         public FlowField(int width, int height)
         {
@@ -34,9 +45,12 @@ namespace CepaCero.AI
             }
             Width = width;
             Height = height;
-            _distance = new int[width * height];
-            _cellCost = new int[width * height];
-            _open = new bool[width * height];
+            int cells = width * height;
+            _distance = new int[cells];
+            _distanceStamp = new int[cells];
+            _cellCost = new int[cells];
+            _costStamp = new int[cells];
+            _open = new bool[cells];
             _heap = new MinHeap(width * 4);
         }
 
@@ -44,7 +58,7 @@ namespace CepaCero.AI
 
         public int Height { get; }
 
-        /// <summary>World revision this field was built from (see <see cref="BlockWorld.Revision"/>).</summary>
+        /// <summary>World structure revision this field was built from (see <see cref="BlockWorld.StructureRevision"/>).</summary>
         public int BuiltFromRevision { get; private set; } = -1;
 
         /// <summary>Cells settled in the last build. Useful for profiling.</summary>
@@ -61,16 +75,10 @@ namespace CepaCero.AI
             {
                 throw new ArgumentException("Ground, blocks and field must have the same size.");
             }
-            for (int y = 0; y < Height; y++)
-            {
-                for (int x = 0; x < Width; x++)
-                {
-                    int i = y * Width + x;
-                    _cellCost[i] = policy.CellCost(ground, blocks, x, y);
-                    _open[i] = _cellCost[i] > 0 && !blocks.GetBlock(x, y).IsSolid;
-                    _distance[i] = Unreachable;
-                }
-            }
+            _ground = ground;
+            _blocks = blocks;
+            _policy = policy ?? throw new ArgumentNullException(nameof(policy));
+            NextStamp();
 
             _heap.Clear();
             for (int t = 0; t < targets.Count; t++)
@@ -79,7 +87,7 @@ namespace CepaCero.AI
                 if (InBounds(target.X, target.Y))
                 {
                     int i = target.Y * Width + target.X;
-                    _distance[i] = 0;
+                    SetDistance(i, 0);
                     _heap.Push(0, i);
                 }
             }
@@ -88,13 +96,20 @@ namespace CepaCero.AI
             while (_heap.Count > 0)
             {
                 int current = _heap.Pop(out int dist);
-                if (dist > _distance[current])
+                if (dist > Distance(current))
                 {
                     continue; // stale heap entry
                 }
                 visited++;
                 int cx = current % Width;
                 int cy = current / Width;
+                // The walker moves from a neighbour into current, so it pays to enter current
+                // (targets themselves are free: zombies attack whatever stands there).
+                int enter = dist == 0 ? StraightFactor : Cost(current);
+                if (enter == 0)
+                {
+                    continue;
+                }
                 for (int d = 0; d < 8; d++)
                 {
                     int nx = cx + Dx[d];
@@ -104,10 +119,7 @@ namespace CepaCero.AI
                         continue;
                     }
                     int n = ny * Width + nx;
-                    // The walker moves from n to current, so it pays to enter current
-                    // (targets themselves are free: zombies attack whatever stands there).
-                    int enter = dist == 0 ? StraightFactor : _cellCost[current];
-                    if (enter == 0 || _cellCost[n] == 0)
+                    if (Cost(n) == 0)
                     {
                         continue;
                     }
@@ -116,28 +128,27 @@ namespace CepaCero.AI
                     {
                         continue; // no corner cutting through walls
                     }
-                    int step = diagonal ? enter * DiagonalFactor / StraightFactor : enter;
-                    int candidate = dist + step;
-                    if (candidate < _distance[n] && candidate <= maxDistance)
+                    int candidate = dist + (diagonal ? enter * DiagonalFactor / StraightFactor : enter);
+                    if (candidate < Distance(n) && candidate <= maxDistance)
                     {
-                        _distance[n] = candidate;
+                        SetDistance(n, candidate);
                         _heap.Push(candidate, n);
                     }
                 }
             }
             LastBuildVisited = visited;
-            BuiltFromRevision = blocks.Revision;
+            BuiltFromRevision = blocks.StructureRevision;
         }
 
         public bool InBounds(int x, int y) => x >= 0 && y >= 0 && x < Width && y < Height;
 
         /// <summary>Cost to the nearest target, or <see cref="Unreachable"/>.</summary>
-        public int GetDistance(int x, int y) => InBounds(x, y) ? _distance[y * Width + x] : Unreachable;
+        public int GetDistance(int x, int y) => InBounds(x, y) ? Distance(y * Width + x) : Unreachable;
 
         /// <summary>
-        /// Direction (each component −1, 0 or 1) towards the cheapest neighbour.
-        /// Zero when at a target or unreachable. The neighbour may be a breakable
-        /// block: the caller attacks it instead of moving.
+        /// Direction (each component −1, 0 or 1) towards the next cell on the
+        /// cheapest path. Zero when at a target or unreachable. The next cell may
+        /// be a breakable block: the caller attacks it instead of moving.
         /// </summary>
         public Int2 GetStep(int x, int y)
         {
@@ -158,18 +169,18 @@ namespace CepaCero.AI
                 {
                     continue;
                 }
+                int n = ny * Width + nx;
+                int dist = Distance(n);
+                if (dist == Unreachable)
+                {
+                    continue;
+                }
                 bool diagonal = d >= 4;
                 if (diagonal && (!IsOpen(x, ny) || !IsOpen(nx, y)))
                 {
                     continue;
                 }
-                int n = ny * Width + nx;
-                int dist = _distance[n];
-                if (dist == Unreachable)
-                {
-                    continue;
-                }
-                int enter = dist == 0 ? StraightFactor : _cellCost[n];
+                int enter = dist == 0 ? StraightFactor : Cost(n);
                 int total = dist + (diagonal ? enter * DiagonalFactor / StraightFactor : enter);
                 if (total < best)
                 {
@@ -180,7 +191,45 @@ namespace CepaCero.AI
             return bestDir < 0 ? new Int2(0, 0) : new Int2(Dx[bestDir], Dy[bestDir]);
         }
 
+        private void NextStamp()
+        {
+            _stamp++;
+            if (_stamp == int.MaxValue)
+            {
+                // After ~2 billion builds: wipe and start over.
+                Array.Clear(_distanceStamp, 0, _distanceStamp.Length);
+                Array.Clear(_costStamp, 0, _costStamp.Length);
+                _stamp = 1;
+            }
+        }
+
+        private int Distance(int i) => _stamp != 0 && _distanceStamp[i] == _stamp ? _distance[i] : Unreachable;
+
+        private void SetDistance(int i, int value)
+        {
+            _distance[i] = value;
+            _distanceStamp[i] = _stamp;
+        }
+
+        private int Cost(int i)
+        {
+            if (_costStamp[i] != _stamp)
+            {
+                int x = i % Width;
+                int y = i / Width;
+                _cellCost[i] = _policy.CellCost(_ground, _blocks, x, y);
+                _open[i] = _cellCost[i] > 0 && !_blocks.GetBlock(x, y).IsSolid;
+                _costStamp[i] = _stamp;
+            }
+            return _cellCost[i];
+        }
+
         // Open = walkable without breaking anything.
-        private bool IsOpen(int x, int y) => _open[y * Width + x];
+        private bool IsOpen(int x, int y)
+        {
+            int i = y * Width + x;
+            Cost(i);
+            return _open[i];
+        }
     }
 }
