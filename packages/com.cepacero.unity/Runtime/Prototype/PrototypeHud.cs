@@ -19,17 +19,17 @@ namespace CepaCero.Unity.Prototype
         private const int Slot = 20;
         private const int Gap = 2;
         private const int BagColumns = 5;
-        private const int HotbarCount = 5;
+        private const int HotbarCount = 9;
 
         private static readonly string[] Controls =
         {
-            "WASD moverse · Shift correr · Clic izq. atacar o disparar",
-            "B modo construcción: 1-8 o rueda elige · clic construye · arrastra línea · Mayús+arrastra habitación · clic der./Esc cancela",
-            "F romper o talar · E puerta o contenedor · T coger del contenedor",
-            "G recoger del suelo · Q usar · 1-5 elegir · V equipar 1.º de la mochila",
-            "C hacer vendas · R (mantener) levantar a un compañero",
-            "F5 guardar · F9 cargar · H ocultar esta ayuda",
-            "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. En construcción, lo lejano espera a que te acerques.",
+            "WASD moverse · Shift correr · 1-9 o rueda: elegir de la barra",
+            "El clic izquierdo hace lo que pida lo que llevas en la mano: arma ataca, hacha o pico rompen, pala cava, vendas se usan",
+            "Con un material: clic pone · arrastra línea · Mayús contorno · Ctrl habitación · clic der. quita · clic central copia",
+            "Q/E forma · R girar · [ ] (o , .) color · Ctrl+Z deshacer · martillo: desmonta y devuelve la mitad",
+            "Clic der. abre puertas y contenedores · T coger del contenedor · G recoger del suelo · V equipar 1.º de la mochila",
+            "C hacer vendas · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · H ocultar esta ayuda",
+            "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. Lo lejano espera en cola a que te acerques.",
         };
 
         private readonly PrototypeArt _art;
@@ -62,13 +62,10 @@ namespace CepaCero.Unity.Prototype
             DrawClock(m);
             if (m.Inventory != null)
             {
+                DrawHotbar(m.Inventory);
                 if (m.Build != null && m.Build.Active)
                 {
-                    DrawBuildBar(m);
-                }
-                else
-                {
-                    DrawHotbar(m.Inventory, m.Building);
+                    DrawBuildPanel(m);
                 }
                 DrawBag(m.Inventory);
                 if (m.OpenContainer != null)
@@ -146,7 +143,7 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
-        private void DrawHotbar(Inventory inv, string building)
+        private void DrawHotbar(Inventory inv)
         {
             float total = HotbarCount * Slot + (HotbarCount - 1) * Gap;
             float x0 = (Width - total) / 2f;
@@ -168,37 +165,25 @@ namespace CepaCero.Unity.Prototype
             {
                 Text(x0, y - 12f, total, 11f, inv.Catalog[selected.Item].name, PrototypePalette.White, _smallCenter);
             }
-
-            float bx = x0 + total + 8f;
-            Sprite("ui_slot", bx, y);
-            Sprite("block_" + building, bx + 2f, y + 2f);
-            Text(bx + 2f, y, 8f, 8f, "B", PrototypePalette.Pale, _small);
-            Text(bx - 20f, y - 12f, Slot + 40f, 11f, "Construir", PrototypePalette.Pale, _smallCenter);
         }
 
-        /// <summary>Building mode bar (D-020): the 8 pieces, name and cost of the selected one, and the ghost's hint.</summary>
-        private void DrawBuildBar(in HudModel m)
+        /// <summary>Over the hotbar while the hand holds a material: the piece and its cost, paint colour, turn and the ghost's hint.</summary>
+        private void DrawBuildPanel(in HudModel m)
         {
-            string[] pieces = PrototypeBuildMode.Pieces;
-            float total = pieces.Length * Slot + (pieces.Length - 1) * Gap;
-            float x0 = (Width - total) / 2f;
-            float y = Height - Slot - 4f;
-            for (int i = 0; i < pieces.Length; i++)
-            {
-                float x = x0 + i * (Slot + Gap);
-                Sprite(i == m.Build.Selected ? "ui_slot_selected" : "ui_slot", x, y);
-                Sprite("block_" + pieces[i], x + 2f, y + 2f);
-                Text(x + 2f, y, 8f, 8f, (i + 1).ToString(), PrototypePalette.Pale, _small);
-            }
-            string key = m.Build.SelectedKey;
-            string cost = m.BuildCosts != null ? m.BuildCosts[m.Build.Selected] : "";
-            float panelW = Math.Max(total, 200f);
+            float total = HotbarCount * Slot + (HotbarCount - 1) * Gap;
+            float panelW = Math.Max(total, 260f);
             float px = (Width - panelW) / 2f;
-            Panel(px, y - 30f, panelW, 27f);
-            Text(px + 4f, y - 28f, panelW - 8f, 11f,
-                string.IsNullOrEmpty(cost) ? PrototypeBuildMode.Name(key) : $"{PrototypeBuildMode.Name(key)} · {cost}",
-                PrototypePalette.Yellow, _smallCenter);
-            Text(px + 4f, y - 17f, panelW - 8f, 11f, m.BuildHint ?? "", PrototypePalette.Pale, _smallCenter);
+            float y = Height - Slot - 4f;
+            Panel(px, y - 56f, panelW, 40f);
+            Text(px + 4f, y - 54f, panelW - 8f, 11f, m.BuildTitle ?? "", PrototypePalette.Yellow, _smallCenter);
+            int color = m.Build.Cursor.Color;
+            Color previous = GUI.color;
+            GUI.color = color == 0 ? PrototypePalette.Pale : (Color)PrototypePlaceholders.Paints[Mathf.Clamp(color, 0, PrototypePlaceholders.Paints.Length - 1)];
+            Fill(px + 6f, y - 41f, 8f, 8f, GUI.color);
+            GUI.color = previous;
+            Text(px + 18f, y - 42f, panelW - 24f, 11f,
+                $"Color {(color == 0 ? "natural" : color.ToString())} · Giro {m.Build.Cursor.Rotation * 90}°", PrototypePalette.Pale, _small);
+            Text(px + 4f, y - 29f, panelW - 8f, 11f, m.BuildHint ?? "", PrototypePalette.Pale, _smallCenter);
         }
 
         private void DrawBag(Inventory inv)

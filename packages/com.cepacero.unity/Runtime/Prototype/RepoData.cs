@@ -1,5 +1,6 @@
 using System.IO;
 using CepaCero.AI;
+using CepaCero.Building;
 using CepaCero.Core;
 using CepaCero.Items;
 using CepaCero.Lore;
@@ -30,20 +31,24 @@ namespace CepaCero.Unity.Prototype
             return JsonUtility.FromJson<T>(File.ReadAllText(path));
         }
 
+        private static ConstructionData _construction;
+
         public static GameData LoadGameData()
         {
+            _construction = LoadJson<ConstructionData>("data/generated/construction.json");
             var items = new ItemCatalog(LoadJson<ItemsData>("data/generated/items.json"));
             return new GameData(
                 new ZombieCatalog(LoadJson<BestiaryData>("data/generated/bestiary.json")),
                 items,
                 LoadJson<RecipesData>("data/generated/recipes.json"),
                 LoadJson<LootData>("data/generated/loot.json"),
-                LoadJson<DiaryData>("data/generated/diary.json"));
+                LoadJson<DiaryData>("data/generated/diary.json"),
+                _construction);
         }
 
         public static MapImportResult LoadMap(string relative)
         {
-            MapImportResult map = MapImporter.Import(LoadJson<CepaMapData>(relative), BlockRegistry.CreateDefault());
+            MapImportResult map = MapImporter.Import(LoadJson<CepaMapData>(relative), BlockRegistry.CreateDefault(_construction));
             foreach (string warning in map.Warnings)
             {
                 Debug.LogWarning($"Cepa Cero map: {warning}");

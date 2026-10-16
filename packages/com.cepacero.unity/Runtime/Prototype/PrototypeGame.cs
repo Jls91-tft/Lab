@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using CepaCero.Building;
 using CepaCero.Core;
 using CepaCero.Items;
 using CepaCero.Lore;
@@ -66,7 +67,8 @@ namespace CepaCero.Unity.Prototype
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
-        private readonly PrototypeBuildMode _buildMode = new PrototypeBuildMode();
+        private PrototypeBuilder _builder;
+        private float _nextHoldAction;
         private PrototypeBuildView _buildView;
         private RecipeBook _recipes;
         private BlockWorld _viewBlocks;
@@ -89,6 +91,7 @@ namespace CepaCero.Unity.Prototype
                 _art = PrototypeArt.Load();
                 _hud = new PrototypeHud(_art);
                 _data = RepoData.LoadGameData();
+                _builder = new PrototypeBuilder(new BuildPalette(_data.Construction));
                 StartMatch(loadSave: false);
             }
             catch (Exception e)
@@ -161,7 +164,7 @@ namespace CepaCero.Unity.Prototype
             // The host pays from the session's book (it knows the unlocked recipes); a client builds its own.
             _recipes = Remote ? new RecipeBook(_data.RecipesData, _data.Items) : _session.Recipes;
             _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
-            _buildView = new PrototypeBuildView(_viewRoot, _art);
+            _buildView = new PrototypeBuildView(_viewRoot, _world, viewBlocks.Registry);
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
             _decor = new PrototypeDecorView(decor, _art, _viewRoot);
@@ -241,8 +244,9 @@ namespace CepaCero.Unity.Prototype
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
-            _buildMode.UpdatePreview(_input.MouseWorld.Tile, _input.Sprint, BuildContext());
-            _buildView.Draw(_buildMode);
+            _builder.SetHand(MyInventory.EquippedDefinition);
+            _builder.UpdatePreview(_input.MouseWorld.Tile, BuildContext());
+            _buildView.Draw(_builder);
             UpdateCursor();
             PlaceCamera(MyState.Position);
         }
@@ -253,7 +257,7 @@ namespace CepaCero.Unity.Prototype
             PlayerState me = MyState;
             Float2 mouse = _input.MouseWorld;
             var tile = new Int2((int)Math.Floor(mouse.X), (int)Math.Floor(mouse.Y));
-            bool visible = !me.IsDowned && !_buildMode.Active && _map.Blocks.InBounds(tile.X, tile.Y); // the ghost replaces it
+            bool visible = !me.IsDowned && !_builder.Active && _map.Blocks.InBounds(tile.X, tile.Y); // the ghost replaces it
             Float2 toTile = new Float2(tile.X + 0.5f, tile.Y + 0.5f) - me.Position;
             _entities.SetCursor(visible, tile, toTile.LengthSquared <= _playerSettings.Reach * _playerSettings.Reach);
         }
@@ -297,9 +301,8 @@ namespace CepaCero.Unity.Prototype
                 Water = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyWater : Messages.QuantizeBar(MyState.Water),
                 Inventory = MyInventory,
                 OpenContainer = Remote ? _client.OpenContainerContents : _session.OpenContainerContents(_me),
-                Building = _buildMode.SelectedKey,
-                Build = _buildMode,
-                BuildCosts = BuildCosts(),
+                Build = _builder,
+                BuildTitle = BuildTitle(),
                 BuildHint = BuildHint(),
                 Message = Time.time < _messageUntil ? _message : "",
                 Diary = Time.time < _diaryUntil ? _diaryText : "",
@@ -335,85 +338,86 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
-        // ------------------------------------------------------- building mode
+        // ------------------------------------------------------- building with the hand (D-022)
 
-        private PrototypeBuildMode.Context BuildContext() => new PrototypeBuildMode.Context(
+        private PrototypeBuilder.Context BuildContext() => new PrototypeBuilder.Context(
             _viewBlocks, _viewGround, _playerSettings, MyState.Position,
-            Remote ? _client.Players : _session.Players, MyInventory, _recipes);
+            Remote ? _client.Players : _session.Players, MyInventory, _settings.BuildCost);
 
-        /// <summary>Left click builds, dragging makes a line (Shift: a room outline), right click or Escape cancels.</summary>
-        private void QueueBuilding(Int2 tile)
+        /// <summary>"Muro de ladrillo · 3 Ladrillo", or "" when the hand builds nothing.</summary>
+        private string BuildTitle()
         {
-            if (_input.Hotbar >= 0)
+            if (!_builder.Active || !_builder.Piece.HasValue)
             {
-                _buildMode.Select(_input.Hotbar);
+                return "";
             }
-            if (_input.Scroll != 0)
-            {
-                _buildMode.Scroll(_input.Scroll);
-            }
-            if (_input.Place || _input.Cancel)
-            {
-                _buildMode.Cancel();
-            }
-            else
-            {
-                if (_input.Attack)
-                {
-                    _buildMode.BeginDrag(tile);
-                }
-                if (_input.AttackReleased && _buildMode.DragStart.HasValue)
-                {
-                    _buildMode.UpdatePreview(tile, _input.Sprint, BuildContext());
-                    if (_buildMode.EndDrag() == 0)
-                    {
-                        Say(FirstProblem());
-                    }
-                }
-            }
-            if (_buildMode.TryNext(Time.time, BuildContext(), out PlayerIntent place))
-            {
-                Send(place);
-            }
-        }
-
-        private string[] BuildCosts()
-        {
-            var costs = new string[PrototypeBuildMode.Pieces.Length];
-            for (int i = 0; i < costs.Length; i++)
-            {
-                costs[i] = PrototypeBuildMode.CostText(PrototypeBuildMode.Pieces[i], _recipes, _data.Items);
-            }
-            return costs;
+            BuildPiece piece = _builder.Piece.Value;
+            string cost = PrototypeBuilder.CostText(_viewBlocks.Registry.Get(piece.Key), _data.Items, _settings.BuildCost);
+            return string.IsNullOrEmpty(cost) ? piece.Name : $"{piece.Name} · {cost}";
         }
 
         private string BuildHint()
         {
-            if (!_buildMode.Active)
+            if (!_builder.Active)
             {
                 return "";
             }
-            string problem = FirstProblem();
-            if (!string.IsNullOrEmpty(problem))
+            foreach (PrototypeBuilder.Placement p in _builder.Preview)
             {
-                return problem;
-            }
-            string queued = _buildMode.Queue.Count > 0 ? $" · En cola: {_buildMode.Queue.Count}" : "";
-            return _buildMode.DragStart.HasValue
-                ? $"{_buildMode.Preview.Count} piezas: suelta para construir{queued}"
-                : $"Clic: construir · Arrastra: línea · Mayús + arrastra: habitación · Clic der./Esc: cancelar{queued}";
-        }
-
-        private string FirstProblem()
-        {
-            foreach (PrototypeBuildMode.Verdict v in _buildMode.Verdicts)
-            {
-                if (v != PrototypeBuildMode.Verdict.Ok)
+                if (p.Verdict != PrototypeBuilder.Verdict.Ok && p.Verdict != PrototypeBuilder.Verdict.Replace)
                 {
-                    return PrototypeBuildMode.Explain(v);
+                    return PrototypeBuilder.Explain(p.Verdict);
                 }
             }
-            return "";
+            string queued = _builder.Queue.Count > 0 ? $" · En cola: {_builder.Queue.Count}" : "";
+            return _builder.DragStart.HasValue
+                ? $"{_builder.Preview.Count} piezas: suelta para construir{queued}"
+                : $"Clic: poner · Arrastra: línea · Mayús: contorno · Ctrl: habitación · Q/E forma · R girar · [ ] color{queued}";
+        }
+
+        /// <summary>What the cell under the cursor offers the click (see <see cref="HandResolver"/>).</summary>
+        private ClickTarget TargetAt(Int2 tile)
+        {
+            BlockWorld blocks = _viewBlocks;
+            if (!blocks.InBounds(tile.X, tile.Y))
+            {
+                return default;
+            }
+            BlockType structure = blocks.GetBlock(tile.X, tile.Y);
+            bool isContainer = Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile);
+            bool hasBlock = !structure.IsAir || !blocks.GetBlock(tile.X, tile.Y, 0, BuildLayer.Object).IsAir;
+            bool mine = false;
+            for (int l = 0; l < 4; l++)
+            {
+                mine |= blocks.GetBlock(tile.X, tile.Y, 0, (BuildLayer)l).Build != null;
+            }
+            return new ClickTarget(hasBlock, isContainer || structure.ToggleTo != 0, mine);
+        }
+
+        /// <summary>Middle click: copy shape, colour and rotation of the piece under the cursor and put its material in your hand.</summary>
+        private void PickPiece(Int2 tile, Inventory inv)
+        {
+            foreach (BuildLayer layer in new[] { BuildLayer.Structure, BuildLayer.Object, BuildLayer.Floor, BuildLayer.Roof })
+            {
+                BlockType type = _viewBlocks.GetBlock(tile.X, tile.Y, 0, layer);
+                if (type.IsAir || type.Build == null)
+                {
+                    continue;
+                }
+                _builder.Cursor.Copy(type, _viewBlocks.GetVariant(tile.X, tile.Y, 0, layer));
+                string item = _builder.Palette.ItemOf(type);
+                for (int h = 0; item != null && h < inv.HotbarSlots; h++)
+                {
+                    ItemStack st = inv.GetHotbar(h);
+                    if (!st.IsEmpty && inv.Catalog[st.Item].id == item)
+                    {
+                        Send(PlayerIntent.Select(h));
+                        return;
+                    }
+                }
+                Say(item == null ? "Copiada" : $"Copiada: pon {inv.Catalog[inv.Catalog.IndexOf(item)].name} en la barra");
+                return;
+            }
         }
 
         private void QueueActions()
@@ -422,37 +426,104 @@ namespace CepaCero.Unity.Prototype
             Int2 tile = _input.MouseWorld.Tile;
             Float2 aim = (_input.MouseWorld - me.Position).Normalized;
             Inventory inv = MyInventory;
-            BlockWorld blocks = _map.Blocks; // same registry and size on host and client
+            ItemDefinition held = inv.EquippedDefinition;
+            bool inBounds = _viewBlocks.InBounds(tile.X, tile.Y);
+            ClickTarget target = TargetAt(tile);
 
-            if (_input.ToggleBuild)
+            // The host takes one action per tick: the last Send of the tick wins, so the order here is the priority.
+            if (_input.ShapeStep != 0)
             {
-                _buildMode.Toggle();
-                Say(_buildMode.Active ? "Modo construcción (B para salir)" : "Modo construcción cerrado");
+                _builder.CycleShape(_input.ShapeStep);
             }
-            if (_buildMode.Active)
+            if (_input.ColorStep != 0)
             {
-                QueueBuilding(tile);
+                _builder.Cursor.CycleColor(_input.ColorStep);
+            }
+            if (_input.Rotate)
+            {
+                _builder.Cursor.Rotate(1);
+            }
+
+            if (_builder.Active)
+            {
+                if (_input.Secondary || _input.Cancel)
+                {
+                    if (_builder.DragStart.HasValue || _input.Cancel)
+                    {
+                        _builder.Cancel();
+                    }
+                    else
+                    {
+                        SendSecondary(held, true, target, tile);
+                    }
+                }
+                else
+                {
+                    if (_input.Attack)
+                    {
+                        _builder.BeginDrag(tile, _input.Ctrl ? PrototypeBuilder.DragKind.Room : _input.Sprint ? PrototypeBuilder.DragKind.Outline : PrototypeBuilder.DragKind.Line);
+                    }
+                    if (_input.AttackReleased && _builder.DragStart.HasValue)
+                    {
+                        _builder.UpdatePreview(tile, BuildContext());
+                        if (_builder.EndDrag() == 0)
+                        {
+                            Say(BuildHint());
+                        }
+                    }
+                }
+                if (_builder.TryNext(Time.time, BuildContext(), out PlayerIntent place))
+                {
+                    Send(place);
+                }
             }
             else
             {
-                if (_input.Hotbar >= 0 && _input.Hotbar < inv.HotbarSlots)
+                HandAction action = HandResolver.Resolve(held, false, target, false);
+                bool continuous = action == HandAction.HitBlock || action == HandAction.Dismantle;
+                bool fire = _input.Attack || (continuous && _input.AttackHeld && Time.time >= _nextHoldAction);
+                if (fire && inBounds)
                 {
-                    Send(PlayerIntent.Select(_input.Hotbar));
+                    switch (action)
+                    {
+                        case HandAction.MeleeAttack when aim.LengthSquared > 0f:
+                            Send(PlayerIntent.Melee(aim));
+                            break;
+                        case HandAction.RangedAttack when aim.LengthSquared > 0f:
+                            Send(PlayerIntent.Ranged(aim));
+                            break;
+                        case HandAction.HitBlock:
+                            Send(PlayerIntent.Hit(tile.X, tile.Y));
+                            break;
+                        case HandAction.Dismantle:
+                            Send(PlayerIntent.Dismantle(tile.X, tile.Y));
+                            break;
+                        case HandAction.UseItem:
+                            Send(PlayerIntent.Use());
+                            break;
+                    }
+                    _nextHoldAction = Time.time + _playerSettings.ActionCooldown + 0.02f;
                 }
-                if (_input.Attack && aim.LengthSquared > 0f)
+                if (_input.Secondary && inBounds)
                 {
-                    ItemDefinition weapon = inv.EquippedDefinition;
-                    Send(weapon != null && weapon.IsRanged ? PlayerIntent.Ranged(aim) : PlayerIntent.Melee(aim));
+                    SendSecondary(held, false, target, tile);
                 }
             }
-            if (_input.Harvest && blocks.InBounds(tile.X, tile.Y))
+            if (_input.Pick && inBounds)
             {
-                Send(PlayerIntent.Hit(tile.X, tile.Y));
+                PickPiece(tile, inv);
             }
-            if (_input.Interact && blocks.InBounds(tile.X, tile.Y))
+            if (_input.Undo)
             {
-                bool isContainer = Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile);
-                Send(isContainer ? PlayerIntent.Open(tile.X, tile.Y) : PlayerIntent.Door(tile.X, tile.Y));
+                Send(PlayerIntent.Undo());
+            }
+            if (_input.Hotbar >= 0 && _input.Hotbar < inv.HotbarSlots)
+            {
+                Send(PlayerIntent.Select(_input.Hotbar));
+            }
+            else if (_input.Scroll != 0 && inv.HotbarSlots > 0)
+            {
+                Send(PlayerIntent.Select(((inv.SelectedHotbar + _input.Scroll) % inv.HotbarSlots + inv.HotbarSlots) % inv.HotbarSlots));
             }
             if (_input.Take)
             {
@@ -465,10 +536,6 @@ namespace CepaCero.Unity.Prototype
             if (_input.PickUp)
             {
                 Send(PlayerIntent.PickUpNearest());
-            }
-            if (_input.Use)
-            {
-                Send(PlayerIntent.Use());
             }
             if (_input.EquipFromBag && inv.Bag.Count > 0)
             {
@@ -486,6 +553,21 @@ namespace CepaCero.Unity.Prototype
                 {
                     Send(PlayerIntent.ReviveTeammate(downed));
                 }
+            }
+        }
+
+        /// <summary>Right click: open the door or chest, or (material in hand) take the piece down.</summary>
+        private void SendSecondary(ItemDefinition held, bool builds, in ClickTarget target, Int2 tile)
+        {
+            switch (HandResolver.Resolve(held, builds, target, true))
+            {
+                case HandAction.Interact:
+                    bool isContainer = Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile);
+                    Send(isContainer ? PlayerIntent.Open(tile.X, tile.Y) : PlayerIntent.Door(tile.X, tile.Y));
+                    break;
+                case HandAction.Dismantle:
+                    Send(PlayerIntent.Dismantle(tile.X, tile.Y));
+                    break;
             }
         }
 
@@ -673,10 +755,17 @@ namespace CepaCero.Unity.Prototype
             Hotbar("pistol", 1, 2);
             Hotbar("bandage", 3, 3);
             Hotbar("food_can", 2, 4);
+            Hotbar("hammer", 1, 5);
+            Hotbar("shovel", 1, 6);
+            Hotbar("pickaxe", 1, 7);
             inv.Add(items.IndexOf("water_bottle"), 2); // first in the bag, so V swaps it into your hand
             inv.Add(items.IndexOf("pistol_ammo"), 12);
-            inv.Add(items.IndexOf("wood"), 40);
-            inv.Add(items.IndexOf("nails"), 20);
+            Hotbar("wood", 60, 8);                       // the building material goes in the last quick slot
+            inv.Add(items.IndexOf("nails"), 30);
+            foreach (string material in new[] { "brick", "log", "pallet", "plasterboard", "glass_pane", "stone", "concrete_mix", "straw" })
+            {
+                inv.Add(items.IndexOf(material), 40);
+            }
             inv.Add(items.IndexOf("scrap_cloth"), 6);
             inv.SelectHotbar(0);
         }

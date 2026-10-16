@@ -31,7 +31,6 @@ namespace CepaCero.Unity.Prototype
 
         public Inventory Inventory;
         public Inventory OpenContainer;
-        public string Building;
         public string Message;
         public string Diary;
 
@@ -41,13 +40,13 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Show the controls panel (toggled with H).</summary>
         public bool ShowHelp;
 
-        /// <summary>Building mode (D-020): pieces, selection, queue.</summary>
-        public PrototypeBuildMode Build;
+        /// <summary>Building with the hand (D-022): what the item in the hand can place, the ghost and the queue.</summary>
+        public PrototypeBuilder Build;
 
-        /// <summary>Cost line per building piece, same order as PrototypeBuildMode.Pieces.</summary>
-        public string[] BuildCosts;
+        /// <summary>"Muro de ladrillo · 3 Ladrillo" while the hand holds a material, otherwise "".</summary>
+        public string BuildTitle;
 
-        /// <summary>What the ghost says: a problem, or how to use the mode.</summary>
+        /// <summary>What the ghost says: a problem, or how to use the piece.</summary>
         public string BuildHint;
     }
 }

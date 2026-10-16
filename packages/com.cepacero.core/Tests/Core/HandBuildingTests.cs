@@ -58,6 +58,16 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void ABlockKnowsWhichItemBuildsIt()
+        {
+            Assert.That(_palette.ItemOf(_registry.Get("wall_brick")), Is.EqualTo("brick"));
+            Assert.That(_palette.ItemOf(_registry.Get("door_wood")), Is.EqualTo("wood"));
+            Assert.That(_palette.ItemOf(_registry.Get("wall_rebar")), Is.EqualTo("rebar"));
+            Assert.That(_palette.ItemOf(_registry.Get("roof_thatch")), Is.EqualTo("straw"));
+            Assert.That(_palette.ItemOf(_registry.Get("building_wall")), Is.Null);
+        }
+
+        [Test]
         public void TheCursorRemembersTheShapeAcrossMaterialsAndWraps()
         {
             var cursor = new BuildCursor();

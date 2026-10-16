@@ -84,6 +84,27 @@ namespace CepaCero.Building
         /// <summary>The material an item stands for ("brick"), or null (roof-only items, other items).</summary>
         public string MaterialOf(string itemId) => itemId != null && _materialOfItem.TryGetValue(itemId, out string m) ? m : null;
 
+        /// <summary>The item that builds a block (a plank for a wooden wall, a brick for a roof tile), or null.</summary>
+        public string ItemOf(CepaCero.World.BlockType type)
+        {
+            if (type.Build == null)
+            {
+                return null;
+            }
+            if (type.Layer == CepaCero.World.BuildLayer.Roof)
+            {
+                return type.Build.Cost.Count > 0 ? type.Build.Cost[0].Item : null;
+            }
+            foreach (KeyValuePair<string, string> kv in _materialOfItem)
+            {
+                if (kv.Value == type.Build.MaterialId)
+                {
+                    return kv.Key;
+                }
+            }
+            return null;
+        }
+
         private static readonly BuildPiece[] Empty = new BuildPiece[0];
     }
 }

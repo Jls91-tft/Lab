@@ -36,7 +36,7 @@ namespace UnityEngine
     public class SpriteRenderer : Renderer { public Sprite sprite; public Color color; public bool flipX; }
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
-    public static class Mathf { public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; }
+    public static class Mathf { public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; public static int Clamp(int v, int a, int b) => v; }
     public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; }
     public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} }
     public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; }
@@ -53,7 +53,7 @@ namespace UnityEngine
 namespace UnityEngine.Tilemaps
 {
     public class TileBase : UnityEngine.ScriptableObject { }
-    public class Tile : TileBase { public UnityEngine.Sprite sprite; }
+    public class Tile : TileBase { public UnityEngine.Sprite sprite; public UnityEngine.Color color; }
     public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} }
     public class TilemapRenderer : UnityEngine.Renderer { }
 }
@@ -61,6 +61,6 @@ namespace UnityEngine.InputSystem
 {
     public class ButtonControl { public bool isPressed; public bool wasPressedThisFrame; public bool wasReleasedThisFrame; }
     public class Vector2Control { public UnityEngine.Vector2 ReadValue() => default; }
-    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, escapeKey; }
-    public class Mouse { public static Mouse current; public ButtonControl leftButton, rightButton; public Vector2Control position; public Vector2Control scroll; }
+    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, digit9Key, escapeKey, leftCtrlKey, rightCtrlKey, leftBracketKey, rightBracketKey, commaKey, periodKey, zKey; }
+    public class Mouse { public static Mouse current; public ButtonControl leftButton, rightButton, middleButton; public Vector2Control position; public Vector2Control scroll; }
 }
