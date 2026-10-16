@@ -25,11 +25,15 @@ antigua como **Sustituida por D-XXX**.
 
 ---
 
-## D-022 · 16/10/2026 · Construcción avanzada: pisos y subsuelo, 14+ materiales, pintura, planos y construcción "en la mano"
-- **Estado:** Propuesta (Javier eligió las opciones el 16/10/2026 y aprobó el orden de fases; falta su OK al modelo "en la mano" y al subsuelo de `docs/propuesta-construccion-avanzada.md`). Amplía D-020.
-- **Decisión de Javier:** pisos reales y **subsuelo** (sótanos y poder **cavar** para casas subterráneas), 14 o más materiales con pintura, planos (copiar, pegar y guardar) y una construcción **tan cómoda como la de Minecraft**. Quiere "auténticas locuras" de casas. Orden aprobado: primero la construcción rica en una planta, las plantas y el subsuelo después.
-- **Propuesta:** niveles de −3 a +3 (configurable); cavar con pala y pico, la tierra es material y **el ruido atrae a los zombis**; materiales como **objetos del inventario** (bolsa de construcción aparte) y **la forma elegida con Q/E** con el material en la mano; clic izquierdo pone y derecho rompe; poner encima sustituye y mejora; cuentagotas, habitación, planos y deshacer; ajuste de coste normal, barato o gratis.
-- **Riesgo:** los niveles tocan núcleo, red, guardado, mapa y Unity a la vez; es lo más caro del proyecto. Por eso se entrega por fases (A-E una planta, F-H verticalidad y subsuelo).
+## D-022 · 16/10/2026 · Construcción avanzada: pisos y subsuelo, 14+ materiales, pintura, planos y construcción con la mano
+- **Estado:** Aceptada (OK de Javier el 16/10/2026: orden de fases, niveles de −3 a +3, ruido de cavar y construcción "como Minecraft"). Amplía D-020 y **sustituye** su modo construcción con **B** (paso 1) por el modelo de abajo. Detalle en `docs/propuesta-construccion-avanzada.md`.
+- **Decisión:**
+  - **Altura:** niveles de **−3 a +3** (configurable hasta ±4): plantas altas y **subsuelo**, con **cavar** (pala para tierra, pico para roca) para casas subterráneas. Bajo tierra todo es macizo por defecto y solo se guarda lo excavado. **Cavar hace ruido y atrae a los zombis.**
+  - **Construir con la mano:** no hay modo construcción. Se elige material o herramienta en la hotbar (9 huecos, mochila de 27) y **el clic hace la acción del objeto**: el arma ataca, el hacha tala, la pala y el pico cavan, el martillo desmonta y repara, el material **pone la pieza**. Clic derecho: interactúa primero; con material, quita. Forma con Q/E, color con [ ], rotar con R, cuentagotas con clic central, poner encima sustituye, habitación, planos y deshacer.
+  - **Materiales:** 14 o más (palé, pladur, tablón, tronco, sacos de arena, chatarra, adobe, contenedor, ladrillo, piedra, hormigón, hormigón armado, acero, cristal) combinados con las formas; **16 colores de pintura**. Cada material tiene dureza y herramienta que lo rompe bien.
+  - **Orden de trabajo:** A datos y arte · B núcleo (capas, color, nivel) · C red y guardado · D construcción con la mano (una planta) · E planos · F niveles para el jugador y cavar · G zombis multinivel · H mapa con plantas.
+- **Motivo:** que la gente pueda hacerse "auténticas locuras" de casas y que construir sea tan cómodo como pegar un hachazo. La construcción rica funciona en una planta antes de pagar el coste de la verticalidad.
+- **Riesgo:** los niveles tocan núcleo, red, guardado, mapa y Unity a la vez; es lo más caro del proyecto. Se entrega por fases y se puede parar en cualquiera con el juego jugable.
 
 ## D-021 · 16/10/2026 · Arte del mundo a 32 px con `tools/spritegen` (sustituye en parte a D-018 y D-019)
 - **Estado:** Aceptada (OK de Javier el 16/10/2026: "quedamos en 32 y construye la herramienta", tras ver las pruebas de 32 px y elegir pulir a 32 antes que subir a 48). **Sustituye** el tile de 16 px de D-018 y el arte de mundo y personajes de D-019 (Kenney) para lo que `spritegen` cubre.

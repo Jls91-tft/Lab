@@ -1,6 +1,6 @@
 # Propuesta: construcción avanzada ("locuras de casas")
 
-**Estado: propuesta (D-022), en revisión.** Recoge lo que Javier eligió el 16/10/2026. Falta su OK al **modelo de construcción "en la mano"** (§3) y al **subsuelo** (§2).
+**Estado: decidida en D-022 (16/10/2026).** Javier aprobó el orden de fases, los niveles de −3 a +3, el ruido de cavar y el modelo de construcción de §3 (con su ajuste: la mano decide el clic, sin modo construcción).
 Amplía D-020 (`docs/propuesta-construccion.md`), que sigue vigente: tres capas, ventanas, barricadas, cama como reaparición.
 
 ## 1. Lo que Javier ha decidido
@@ -8,7 +8,7 @@ Amplía D-020 (`docs/propuesta-construccion.md`), que sigue vigente: tres capas,
 | --- | --- |
 | Altura | **Pisos reales y también subsuelo**: sótanos y poder **cavar** para hacer una casa subterránea |
 | Materiales | **14 o más, más pintura** |
-| Interfaz | Primero fue "solo teclas"; después pidió **algo tan cómodo como construir en Minecraft** (§3) |
+| Interfaz | **Como Minecraft: eliges material o herramienta en la hotbar y el clic hace la acción**, igual que atacar o talar. Sin modo construcción aparte (§3) |
 | Herramientas | **Planos**: copiar, pegar y guardar |
 | Orden de trabajo | **Aprobado el de §7**: primero la construcción rica en una planta, las plantas y el subsuelo después |
 | Objetivo | Que la gente pueda hacerse "auténticas locuras" de casas, y que elegir material y pieza sea cómodo e intuitivo |
@@ -35,24 +35,41 @@ Por defecto: de **−3 a +3** (tres sótanos y tres plantas), configurable en la
 - **Seguridad:** los zombis solo llegan por la escalera. Una **trampilla** sellada con barricada convierte un sótano en búnker. Pero **el ruido de cavar los atrae**: se cava de día, o se paga el riesgo.
 - **Agua:** cerca de agua del mapa, cavar profundo se **inunda** (fuera del MVP, pero el modelo lo permite).
 
-## 3. Cómo se construye: "lo que tienes en la mano es lo que pones"
-Lo que hace cómodo construir en Minecraft **no es la hotbar, es que no hay menús**: tienes un bloque en la mano, haces clic y se pone; el mismo clic rompe. Lo copiamos:
+## 3. Cómo se construye: la mano decide
+Lo que hace cómodo construir en Minecraft **no es un menú, es que no hay modo**: eliges algo en la hotbar y el clic hace lo que ese objeto hace. Aquí igual, **atacar, talar, cavar y construir son lo mismo**:
 
-1. **Los materiales son objetos del inventario**: tablones, ladrillos, cemento, chatarra… Una **bolsa de construcción** aparte (16 huecos, montones de 200) guarda los materiales sin atascar la mochila.
-2. **Tu hotbar de construcción son tus materiales**, con su cantidad (como Minecraft). Rueda del ratón o 1-9 para elegir. Sin catálogo ni recetas en medio.
-3. **La forma se elige aparte**, con el material ya en la mano: **Q / E** (o Mayús+rueda) pasa por muro, medio muro, pilar, arco, puerta, portón, ventana, ventanal, valla, suelo, techo, escalera… El fantasma cambia al instante. Un solo material sirve para todas las formas.
-4. **Color**: **[ ]**, 16 colores, solo en piezas pintables.
-5. **Clic izquierdo** pone y **clic derecho** rompe, con el mismo ritmo. **Mantener y arrastrar** dibuja una línea; el mismo gesto con **Mayús** lo bloquea en un eje y con **Ctrl** rellena un rectángulo.
-6. **Poner encima sustituye**: una puerta sobre un muro lo reemplaza en su sitio, un ladrillo sobre un tablón **mejora el muro** y te devuelve lo que había. Esto es lo que hace rápido rehacer.
-7. **Cuentagotas (clic central)** copia pieza, material y color de lo que señalas.
-8. **Herramienta "habitación"**: arrastras un rectángulo y construye muros, suelo y techo con un hueco para la puerta. Para construir rápido o planear.
-9. **Planos**: **V** selecciona, **Ctrl+C / Ctrl+V** copia y pega con fantasma y **R** para rotar; **Ctrl+S** guarda un archivo `.cepaplan`; se comparte como archivo. Pegar usa la cola de obra y dice qué material falta.
-10. **Ctrl+Z** deshace. **Re Pág / Av Pág** cambia de nivel (incluidos los sótanos). **G** muestra la rejilla.
-11. **Ajuste de partida de coste**: *normal*, *barato* o *gratis* (modo creativo), para quien solo quiere crear.
+| Llevas en la mano | Clic izquierdo | Clic derecho |
+| --- | --- | --- |
+| **Arma** (bate, cuchillo, pistola) | Ataca | Usa o interactúa |
+| **Hacha** | Tala y rompe madera | Usa o interactúa |
+| **Pala** | **Cava tierra** | Usa o interactúa |
+| **Pico** | **Cava roca** y rompe piedra y hormigón | Usa o interactúa |
+| **Martillo** | **Desmonta y repara** lo construido | Usa o interactúa |
+| **Material** (tablones, ladrillos…) | **Pone la pieza** (fantasma verde o rojo con el motivo) | **Quita** la pieza señalada (recuperas lo que cueste) |
+| Comida o venda | — | La usa |
 
-Un **libro de piezas** (Tab, solo de consulta) enseña todas las formas con su coste en unidades de material, para que se descubran. No hace falta para jugar.
+El clic derecho **interactúa primero** con lo que se pueda abrir o usar (puertas, cofres, camas, escaleras), como en Minecraft; solo si no hay nada, hace lo suyo.
 
-Coste de las formas en **unidades de material** (el catálogo concreto se afina): muro 1, medio muro ½, pilar 1, arco 2, puerta 2, portón 4, ventana 2, ventanal 4, valla 1, suelo 1, techo 1, escalera 3, trampilla 2.
+**Una hotbar de 9 huecos** (hoy son 5) y una mochila de **27**. Los materiales son objetos normales que se apilan hasta **200**, así que no hace falta una bolsa aparte.
+
+Con un material en la mano:
+1. **La forma** se elige con **Q / E** (o **Mayús + rueda**): muro, medio muro, pilar, arco, puerta, portón, ventana, ventanal, valla, suelo, techo, escalera… El fantasma cambia al instante; **un solo material sirve para todas las formas**.
+2. **Color**: **[ ]**, 16 colores, solo en piezas pintables.
+3. **Rotar**: **R**. **Rueda del ratón**: cambia de hueco, como en Minecraft.
+4. **Mantener y arrastrar** dibuja una línea; con **Mayús** se bloquea en un eje y con **Ctrl** rellena un rectángulo.
+5. **Poner encima sustituye**: una puerta sobre un muro lo reemplaza en su sitio; un ladrillo sobre un tablón **mejora el muro** y te devuelve lo que había.
+6. **Cuentagotas (clic central)**: copia pieza, material y color de lo que señalas y te pone ese material en la mano si lo tienes.
+7. **Habitación**: con **H** pulsada, arrastrar un rectángulo levanta muros, suelo y techo con un hueco para la puerta.
+
+**Romper con la herramienta correcta.** Cada material tiene una dureza y una herramienta que lo rompe bien (madera → hacha, roca y hormigón → pico, tierra → pala); con la equivocada se rompe mucho más despacio. Es la misma regla para lo que construyes, lo que talas y lo que cavas.
+
+Además: **planos** (V selecciona, Ctrl+C / Ctrl+V pega con fantasma y R, Ctrl+S guarda un `.cepaplan` que se comparte como archivo; pegar usa la cola de obra y dice qué material falta),
+**Ctrl+Z** para deshacer, **Re Pág / Av Pág** para cambiar de nivel (también los sótanos), **G** para la rejilla, y un **ajuste de partida de coste** (*normal*, *barato* o *gratis* como modo creativo).
+Un **libro de piezas** (consulta, sin hacer falta para jugar) enseña todas las formas con su coste.
+
+**Qué cambia respecto a hoy:** desaparece el modo construcción con **B** y la barra de piezas del paso 1 de D-020; el clic derecho deja de construir; las teclas **Q** (usar), **F** (talar) y **B** se liberan. **E** pasa a abrir el inventario, y puertas y cofres se usan con el clic derecho.
+
+Coste de las formas en **unidades de material** (se afina): muro 1, medio muro ½, pilar 1, arco 2, puerta 2, portón 4, ventana 2, ventanal 4, valla 1, suelo 1, techo 1, escalera 3, trampilla 2.
 
 ## 4. Materiales
 Los materiales se **combinan** con las formas (no hay un bloque por combinación):
@@ -101,7 +118,8 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
   El `BlockRegistry` se rellena desde ahí (forma × material), en vez de escribir 200 bloques a mano.
 - **Celda**: `(forma, material, color, rotación)` por capa y nivel.
 - **Delta de red**: `x, y, z, capa, tipo, color/rotación` (≈ 11 bytes). Medir con `simbench` con 4 jugadores construyendo y cavando a la vez.
-- **Bolsa de construcción**: un segundo inventario (`Inventory`) con montones grandes; las formas cobran unidades de material de ahí.
+- **Inventario como Minecraft**: hotbar de 9 y mochila de 27 (`Inventory.ForPlayer`); los materiales apilan hasta 200. Las formas cobran sus unidades de material de ahí.
+- **Herramientas**: un objeto con `tool_kind` (hacha, pico, pala, martillo) y cada material una `hardness` y la herramienta que lo rompe bien.
 - **Subsuelo**: bajo Z=0 la "tierra" no se almacena; solo las celdas excavadas o construidas. Excavar es una intención nueva validada por el anfitrión (alcance, herramienta, ruido).
 - **Arte**: `spritegen` por material, los mismos juegos de muro, puerta, ventana, valla y suelo; más tejados, escaleras y el subsuelo.
 - **Pruebas**: construir por nivel, apoyos, caer por un hueco, cavar y bajar, zombis que suben una escalera, sustituir una pieza por otra, planos que se guardan y se pegan igual, migraciones, y una prueba de aceptación
@@ -113,7 +131,7 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 | **A** | Datos de materiales y formas (`docs/construccion.md` → datagen → `BlockRegistry`); `spritegen` con los 14 materiales y el subsuelo | M |
 | **B** | Núcleo: capas (D-020) + color + rotación + **nivel (Z) en el modelo** sin gameplay aún | L |
 | **C** | Red v3 y guardado v6 con migración | M |
-| **D** | Construir "en la mano": bolsa de construcción, forma con Q/E, color, sustituir, cuentagotas, habitación, deshacer, libro de piezas (**ya usable en una planta**) | L |
+| **D** | Construir con la mano: hotbar de 9, clic por objeto (arma, herramienta, material), forma con Q/E, color, sustituir, cuentagotas, habitación, deshacer, libro de piezas (**ya usable en una planta**) | L |
 | **E** | Planos: copiar, pegar, guardar | M |
 | **F** | Niveles para el jugador: escaleras, suelo, caídas, **cavar**, cámara con corte de niveles | L |
 | **G** | Zombis multinivel: flow field con portales, caída por huecos, percepción, ruido de cavar | L |
@@ -124,7 +142,8 @@ Con A-E la gente ya construye casas ricas con 14 materiales y pintura en una pla
 ## 8. Qué no entra todavía
 Derrumbes en cadena, fuego que se propaga por la madera, electricidad y generadores, inundaciones y pintura por patrones.
 
-## 9. Preguntas abiertas para Javier
-1. ¿Te encaja el modelo "en la mano" (§3), con la bolsa de construcción aparte y la forma con Q/E?
-2. ¿Niveles por defecto de −3 a +3 (configurable hasta ±4)?
-3. ¿Cavar con ruido que atrae a los zombis, como riesgo de la mecánica?
+## 9. Decididas por Javier (16/10/2026)
+1. Orden de fases de §7: aprobado.
+2. Modelo de §3 con su ajuste: **sin modo construcción; la mano decide el clic**, material o herramienta, como en Minecraft.
+3. Niveles por defecto de **−3 a +3** (configurable hasta ±4).
+4. **Cavar hace ruido** y atrae a los zombis.
