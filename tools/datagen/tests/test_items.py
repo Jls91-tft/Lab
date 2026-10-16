@@ -15,7 +15,7 @@ def _item(**kw):
 
 def test_real_docs_build_and_cross_check():
     outputs = build_all()
-    assert len(outputs) == 6  # bestiary, items, recipes, loot, diary, strings
+    assert len(outputs) == 7  # bestiary, items, recipes, loot, construction, diary, strings
 
 
 def test_weapons_are_flattened():
@@ -77,3 +77,88 @@ def test_cross_references_are_checked():
     locked = [recipe_to_runtime({"id": "r", "result": "wood", "ingredients": {"wood": 1}, "unlocked_by": "key"})]
     with pytest.raises(DataError, match="must be a sample"):
         cross_check(samples, locked, loot, {"zombies": []})
+
+
+# ------------------------------------------------------------ construction (D-022)
+def _construction():
+    return build_all()
+
+
+def _construction_doc():
+    from datagen.__main__ import DOCS
+    from datagen.construction import build_construction
+    return build_construction((DOCS / "construccion.md").read_text(encoding="utf-8"))
+
+
+def test_construction_blocks_are_derived_from_shape_times_material():
+    c = _construction_doc()
+    keys = {b["key"] for b in c["blocks"]}
+    assert len(keys) == len(c["blocks"])
+    assert {"wall_wood", "wall_brick", "door_steel", "door_steel_open", "gate_wood", "stairs_stone", "roof_tile", "earth", "rock"} <= keys
+    assert len(c["materials"]) >= 14
+    # every material block exists for exactly the shapes it declares
+    for m in c["materials"]:
+        for s in m["shapes"]:
+            assert f"{s}_{m['id']}" in keys
+
+
+def test_costs_health_and_open_variants():
+    c = _construction_doc()
+    b = {x["key"]: x for x in c["blocks"]}
+    assert b["wall_wood"]["cost"] == [{"item": "wood", "count": 2}, {"item": "nails", "count": 1}]
+    assert b["halfwall_wood"]["cost"] == [{"item": "wood", "count": 1}, {"item": "nails", "count": 1}]       # ceil(0.5 * n), at least 1
+    assert b["gate_wood"]["cost"][0]["count"] == 8 and b["gate_wood"]["width"] == 2
+    assert b["wall_concrete"]["hp"] == 600 and b["door_wood"]["hp"] == 50
+    assert b["door_wood"]["toggle_to"] == "door_wood_open" and b["door_wood_open"]["solid"] is False and b["door_wood_open"]["cost"] == []
+    assert b["door_wood_open"]["is_open_variant"] and b["door_wood_open"]["toggle_to"] == "door_wood"
+    assert b["stairs_stone"]["connects"] == "up" and b["hatch_wood"]["connects"] == "down"
+    assert b["window_glass"]["see_through"] and not b["wall_brick"]["see_through"]
+
+
+def test_materials_get_harder_as_designed():
+    c = _construction_doc()
+    hp = {m["id"]: m["hp"] for m in c["materials"]}
+    order = ["pallet", "glass", "drywall", "wood", "sandbag", "log", "adobe", "scrap", "container", "brick", "stone", "concrete", "rebar", "steel"]
+    assert hp["pallet"] < hp["wood"] < hp["log"] < hp["scrap"] < hp["brick"] < hp["stone"] < hp["concrete"] < hp["rebar"] < hp["steel"]
+    assert set(order) == set(hp)
+
+
+def test_construction_items_and_tools_exist():
+    out = _construction()
+    from datagen.__main__ import OUT
+    assert OUT / "construction.json" in out
+    import json
+    items = {i["id"]: i for i in json.loads(out[OUT / "items.json"])["items"]}
+    for tool in ("shovel", "pickaxe", "hammer", "axe"):
+        assert items[tool]["tool_kind"] == tool
+    assert items["earth"]["category"] == "material"
+
+
+@pytest.mark.parametrize("edit, message", [
+    (lambda c: c.replace("kind: rules", "kind: rulez", 1), "kind"),
+    (lambda c: c.replace("tool: axe", "tool: spoon", 1), "tool"),
+    (lambda c: c.replace("shapes: [wall, halfwall, fence, door, floor]", "shapes: [wall, castle]", 1), "unknown shapes"),
+    (lambda c: c.replace("layer: structure", "layer: attic", 1), "layer"),
+    (lambda c: c.replace("hp: 40\ntool: axe", "hp: 0\ntool: axe", 1), "hp"),
+])
+def test_invalid_construction(edit, message):
+    from datagen.__main__ import DOCS
+    from datagen.construction import build_construction
+    text = edit((DOCS / "construccion.md").read_text(encoding="utf-8"))
+    with pytest.raises(DataError, match=message):
+        build_construction(text)
+
+
+def test_unknown_item_in_a_material_is_caught():
+    from datagen.construction import build_construction, cross_check_construction
+    from datagen.__main__ import DOCS
+    c = build_construction((DOCS / "construccion.md").read_text(encoding="utf-8").replace("{ pallet: 1 }", "{ unobtainium: 1 }", 1))
+    items = [{"id": "wood", "tool_kind": ""}]
+    with pytest.raises(DataError, match="unknown item"):
+        cross_check_construction(c, items)
+
+
+def test_tool_kind_needs_tool_power():
+    with pytest.raises(DataError, match="tool_kind"):
+        item_to_runtime(_item(id="spoon", category="tool", tool_kind="shovel"))
+    assert item_to_runtime(_item(id="spade", category="tool", tool_kind="shovel", tool_power=5))["tool_kind"] == "shovel"

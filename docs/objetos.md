@@ -12,6 +12,7 @@ Datos **iniciales** del MVP (D-012). Igual que el bestiario: cada objeto es un b
 | `size` | no (1) | huecos que ocupa **cada montón** (lo grande ocupa más) |
 | `weapon` | no | `damage`, `damage_type`, `range` (tiles), `cooldown` (s), `noise` (tiles), `arc` (grados, cuerpo a cuerpo) o `ammo` (id, a distancia) |
 | `tool_power` | no | daño a bloques por golpe (el puño hace 8) |
+| `tool_kind` | no | `axe`, `pickaxe`, `shovel` o `hammer`: la herramienta que rompe bien cada material (D-022); con otra, rompe mucho más despacio |
 | `durability` | no | usos antes de romperse (armas y herramientas) |
 | `heal` | no | vida que cura al usarlo |
 | `food`, `water` | no | puntos de las barras de hambre y sed que rellena (solo `category: food`, hasta 100) |
@@ -97,6 +98,126 @@ category: sample
 stack: 1
 ```
 
+## Materiales de construcción (D-022)
+*Lo que se coloca con el clic y lo que sale de cavar (`earth`, `clay`, `gravel`, `stone`).*
+```yaml
+id: pallet
+name: Palé
+category: material
+stack: 20
+```
+```yaml
+id: plasterboard
+name: Placa de pladur
+category: material
+stack: 40
+```
+```yaml
+id: log
+name: Tronco
+category: material
+stack: 50
+```
+```yaml
+id: sandbag
+name: Saco de arena
+category: material
+stack: 50
+```
+```yaml
+id: adobe_brick
+name: Adobe
+category: material
+stack: 100
+```
+```yaml
+id: container_panel
+name: Panel de contenedor
+category: material
+stack: 20
+```
+```yaml
+id: brick
+name: Ladrillo
+category: material
+stack: 100
+```
+```yaml
+id: stone
+name: Piedra
+category: material
+stack: 100
+```
+```yaml
+id: rebar
+name: Varilla de acero
+category: material
+stack: 50
+```
+```yaml
+id: glass_pane
+name: Cristal
+category: material
+stack: 40
+```
+```yaml
+id: earth
+name: Tierra
+category: material
+stack: 100
+```
+```yaml
+id: clay
+name: Arcilla
+category: material
+stack: 100
+```
+```yaml
+id: gravel
+name: Grava
+category: material
+stack: 100
+```
+```yaml
+id: straw
+name: Paja
+category: material
+stack: 100
+```
+
+## Herramientas de obra (D-022)
+```yaml
+id: shovel
+name: Pala
+category: tool
+stack: 1
+size: 2
+durability: 140
+tool_power: 25
+tool_kind: shovel
+```
+```yaml
+id: pickaxe
+name: Pico
+category: tool
+stack: 1
+size: 2
+durability: 160
+weapon: { damage: 20, damage_type: sharp, range: 1.4, arc: 90, cooldown: 0.8, noise: 8 }
+tool_power: 40
+tool_kind: pickaxe
+```
+```yaml
+id: hammer
+name: Martillo
+category: tool
+stack: 1
+durability: 220
+weapon: { damage: 14, damage_type: blunt, range: 1.2, arc: 80, cooldown: 0.5, noise: 6 }
+tool_power: 12
+tool_kind: hammer
+```
+
 ## Armas y herramientas
 ```yaml
 id: bat
@@ -126,6 +247,7 @@ size: 2
 durability: 150
 weapon: { damage: 24, damage_type: sharp, range: 1.4, arc: 100, cooldown: 0.7, noise: 7 }
 tool_power: 40
+tool_kind: axe
 ```
 ```yaml
 id: pistol

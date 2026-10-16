@@ -32,6 +32,18 @@
           "min": 1,
           "max": 1,
           "chance": 0.15
+        },
+        {
+          "item": "pallet",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "earth",
+          "min": 1,
+          "max": 2,
+          "chance": 0.05
         }
       ]
     },
@@ -80,6 +92,24 @@
           "min": 1,
           "max": 1,
           "chance": 0.08
+        },
+        {
+          "item": "plasterboard",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "glass_pane",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
+        },
+        {
+          "item": "straw",
+          "min": 1,
+          "max": 2,
+          "chance": 0.05
         }
       ]
     },
@@ -116,6 +146,24 @@
           "min": 1,
           "max": 1,
           "chance": 0.04
+        },
+        {
+          "item": "pallet",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        },
+        {
+          "item": "glass_pane",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        },
+        {
+          "item": "plasterboard",
+          "min": 1,
+          "max": 2,
+          "chance": 0.12
         }
       ]
     },
@@ -179,6 +227,66 @@
         },
         {
           "item": "concrete_mix",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "pallet",
+          "min": 1,
+          "max": 2,
+          "chance": 0.25
+        },
+        {
+          "item": "brick",
+          "min": 2,
+          "max": 6,
+          "chance": 0.3
+        },
+        {
+          "item": "stone",
+          "min": 1,
+          "max": 4,
+          "chance": 0.1
+        },
+        {
+          "item": "plasterboard",
+          "min": 1,
+          "max": 3,
+          "chance": 0.2
+        },
+        {
+          "item": "glass_pane",
+          "min": 1,
+          "max": 2,
+          "chance": 0.15
+        },
+        {
+          "item": "rebar",
+          "min": 1,
+          "max": 2,
+          "chance": 0.12
+        },
+        {
+          "item": "shovel",
+          "min": 1,
+          "max": 1,
+          "chance": 0.14
+        },
+        {
+          "item": "pickaxe",
+          "min": 1,
+          "max": 1,
+          "chance": 0.1
+        },
+        {
+          "item": "hammer",
+          "min": 1,
+          "max": 1,
+          "chance": 0.16
+        },
+        {
+          "item": "metal_plate",
           "min": 1,
           "max": 1,
           "chance": 0.1
@@ -362,6 +470,48 @@
           "min": 1,
           "max": 1,
           "chance": 0.05
+        },
+        {
+          "item": "container_panel",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        },
+        {
+          "item": "rebar",
+          "min": 1,
+          "max": 3,
+          "chance": 0.25
+        },
+        {
+          "item": "metal_plate",
+          "min": 1,
+          "max": 2,
+          "chance": 0.2
+        },
+        {
+          "item": "pallet",
+          "min": 1,
+          "max": 3,
+          "chance": 0.3
+        },
+        {
+          "item": "brick",
+          "min": 2,
+          "max": 8,
+          "chance": 0.2
+        },
+        {
+          "item": "hammer",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
+        },
+        {
+          "item": "pickaxe",
+          "min": 1,
+          "max": 1,
+          "chance": 0.06
         }
       ]
     },
@@ -392,6 +542,18 @@
           "min": 1,
           "max": 1,
           "chance": 0.05
+        },
+        {
+          "item": "pallet",
+          "min": 1,
+          "max": 1,
+          "chance": 0.12
+        },
+        {
+          "item": "metal_plate",
+          "min": 1,
+          "max": 1,
+          "chance": 0.08
         }
       ]
     }

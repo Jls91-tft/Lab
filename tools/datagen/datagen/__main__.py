@@ -3,6 +3,7 @@
 Regenerates data/generated/*.json from the design docs:
   docs/bestiario.md → bestiary.json · docs/objetos.md → items.json
   docs/recetas.md → recipes.json   · docs/botin.md → loot.json
+  docs/construccion.md → construction.json
   docs/lore.md → diary.json        · all texts (+ docs/traducciones/*.csv) → loc/strings.csv
 --check fails (exit 1) if a committed file is out of date: use it in CI.
 """
@@ -14,6 +15,7 @@ import sys
 from pathlib import Path
 
 from .bestiary import BestiaryError, build, render
+from .construction import build_construction, cross_check_construction
 from .diary import build_diary, localization_rows, render_strings_csv
 from .items import build_items, build_loot, build_recipes, cross_check
 
@@ -31,8 +33,10 @@ def build_all() -> dict[Path, str]:
     recipes = build_recipes((DOCS / "recetas.md").read_text(encoding="utf-8"))
     loot = build_loot((DOCS / "botin.md").read_text(encoding="utf-8"))
     cross_check(items, recipes, loot, bestiary)
+    construction = build_construction((DOCS / "construccion.md").read_text(encoding="utf-8"))
+    cross_check_construction(construction, items)
     diary = build_diary((DOCS / "lore.md").read_text(encoding="utf-8"), items)
-    strings, missing = render_strings_csv(localization_rows(bestiary, items, diary), DOCS / "traducciones")
+    strings, missing = render_strings_csv(localization_rows(bestiary, items, diary, construction), DOCS / "traducciones")
     MISSING_TRANSLATIONS.clear()
     MISSING_TRANSLATIONS.update(missing)
     return {
@@ -40,6 +44,7 @@ def build_all() -> dict[Path, str]:
         OUT / "items.json": render({"format": "cepacero.items", "version": 1, "source": "docs/objetos.md", "items": items}),
         OUT / "recipes.json": render({"format": "cepacero.recipes", "version": 1, "source": "docs/recetas.md", "recipes": recipes}),
         OUT / "loot.json": render({"format": "cepacero.loot", "version": 1, "source": "docs/botin.md", **loot}),
+        OUT / "construction.json": render({"format": "cepacero.construction", "version": 1, "source": "docs/construccion.md", **construction}),
         OUT / "diary.json": render({"format": "cepacero.diary", "version": 1, "source": "docs/lore.md", "entries": diary}),
         OUT / "loc" / "strings.csv": strings,
     }

@@ -234,6 +234,110 @@
       ],
       "station": "workbench",
       "unlocked_by": "sample_brute"
+    },
+    {
+      "id": "craft_sandbag",
+      "result": "sandbag",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "scrap_cloth",
+          "count": 1
+        },
+        {
+          "item": "earth",
+          "count": 2
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_adobe",
+      "result": "adobe_brick",
+      "result_block": "",
+      "count": 2,
+      "ingredients": [
+        {
+          "item": "clay",
+          "count": 2
+        },
+        {
+          "item": "straw",
+          "count": 1
+        }
+      ],
+      "station": "hand",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_brick",
+      "result": "brick",
+      "result_block": "",
+      "count": 2,
+      "ingredients": [
+        {
+          "item": "clay",
+          "count": 3
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_shovel",
+      "result": "shovel",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "metal_plate",
+          "count": 1
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_pickaxe",
+      "result": "pickaxe",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "metal_plate",
+          "count": 2
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
+    },
+    {
+      "id": "craft_hammer",
+      "result": "hammer",
+      "result_block": "",
+      "count": 1,
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "metal_scrap",
+          "count": 2
+        }
+      ],
+      "station": "workbench",
+      "unlocked_by": ""
     }
   ]
 }

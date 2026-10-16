@@ -19,7 +19,8 @@ BUILDABLE_BLOCKS = ("wood_wall", "metal_wall", "concrete_wall", "door", "fence",
 BUILDING_KINDS = ("generic", "residential", "commercial", "food", "hardware", "medical",
                   "police", "school", "religious", "office", "industrial", "garage")
 WEAPON_KEYS = {"damage", "damage_type", "range", "cooldown", "noise", "arc", "ammo"}
-ITEM_KEYS = {"id", "name", "category", "stack", "size", "weapon", "tool_power", "durability", "heal", "food", "water"}
+TOOL_KINDS = ("axe", "pickaxe", "shovel", "hammer")
+ITEM_KEYS = {"id", "name", "category", "stack", "size", "weapon", "tool_power", "durability", "heal", "food", "water", "tool_kind"}
 RECIPE_KEYS = {"id", "result", "result_block", "count", "ingredients", "station", "unlocked_by"}
 
 _ID = re.compile(r"[a-z][a-z0-9_]*")
@@ -68,6 +69,9 @@ def item_to_runtime(entry: dict) -> dict:
     for bar in ("food", "water"):
         if bar in entry and (_number(entry, bar, 0, zid) > 100 or entry.get("category") != "food"):
             raise DataError(f"{zid}: '{bar}' is for food items and goes up to 100 (a full bar)")
+    kind = entry.get("tool_kind", "")
+    if kind and (kind not in TOOL_KINDS or _number(entry, "tool_power", 0, zid) <= 0):
+        raise DataError(f"{zid}: tool_kind must be one of {TOOL_KINDS} and the item needs tool_power")
     return {
         "id": zid,
         "name": entry["name"],
@@ -76,6 +80,7 @@ def item_to_runtime(entry: dict) -> dict:
         "size": int(size),
         "durability": int(_number(entry, "durability", 0, zid)),
         "tool_power": int(_number(entry, "tool_power", 0, zid)),
+        "tool_kind": kind,
         "heal": int(_number(entry, "heal", 0, zid)),
         "food": int(_number(entry, "food", 0, zid)),
         "water": int(_number(entry, "water", 0, zid)),

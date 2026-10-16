@@ -16,6 +16,8 @@ loot:
   scrap_cloth: [1, 2, 0.3]
   nails: [2, 6, 0.2]
   food_can: [1, 1, 0.15]
+  pallet: [1, 1, 0.1]
+  earth: [1, 2, 0.05]
 ```
 ```yaml
 kind: residential
@@ -28,6 +30,9 @@ loot:
   bandage: [1, 1, 0.1]
   wood: [1, 2, 0.25]
   tape: [1, 1, 0.08]
+  plasterboard: [1, 1, 0.1]
+  glass_pane: [1, 1, 0.08]
+  straw: [1, 2, 0.05]
 ```
 ```yaml
 kind: commercial
@@ -38,6 +43,9 @@ loot:
   water_bottle: [1, 2, 0.2]
   metal_scrap: [1, 3, 0.2]
   bat: [1, 1, 0.04]
+  pallet: [1, 2, 0.2]
+  glass_pane: [1, 2, 0.2]
+  plasterboard: [1, 2, 0.12]
 ```
 ```yaml
 kind: food
@@ -57,6 +65,16 @@ loot:
   axe: [1, 1, 0.12]
   wood: [2, 6, 0.4]
   concrete_mix: [1, 1, 0.1]
+  pallet: [1, 2, 0.25]
+  brick: [2, 6, 0.3]
+  stone: [1, 4, 0.1]
+  plasterboard: [1, 3, 0.2]
+  glass_pane: [1, 2, 0.15]
+  rebar: [1, 2, 0.12]
+  shovel: [1, 1, 0.14]
+  pickaxe: [1, 1, 0.1]
+  hammer: [1, 1, 0.16]
+  metal_plate: [1, 1, 0.1]
 ```
 ```yaml
 kind: medical
@@ -111,6 +129,13 @@ loot:
   wood: [2, 6, 0.4]
   concrete_mix: [1, 2, 0.15]
   axe: [1, 1, 0.05]
+  container_panel: [1, 2, 0.2]
+  rebar: [1, 3, 0.25]
+  metal_plate: [1, 2, 0.2]
+  pallet: [1, 3, 0.3]
+  brick: [2, 8, 0.2]
+  hammer: [1, 1, 0.08]
+  pickaxe: [1, 1, 0.06]
 ```
 ```yaml
 kind: garage
@@ -120,6 +145,8 @@ loot:
   tape: [1, 2, 0.25]
   nails: [2, 8, 0.3]
   bat: [1, 1, 0.05]
+  pallet: [1, 1, 0.12]
+  metal_plate: [1, 1, 0.08]
 ```
 
 ## Parámetros de colocación

@@ -94,3 +94,41 @@ ingredients: { metal_scrap: 2, bone_claw: 2 }
 station: workbench
 unlocked_by: sample_brute
 ```
+
+## Fabricación de obra (D-022)
+```yaml
+id: craft_sandbag
+result: sandbag
+ingredients: { scrap_cloth: 1, earth: 2 }
+```
+```yaml
+id: craft_adobe
+result: adobe_brick
+count: 2
+ingredients: { clay: 2, straw: 1 }
+```
+```yaml
+id: craft_brick
+result: brick
+count: 2
+ingredients: { clay: 3 }
+station: workbench
+```
+```yaml
+id: craft_shovel
+result: shovel
+ingredients: { wood: 2, metal_plate: 1 }
+station: workbench
+```
+```yaml
+id: craft_pickaxe
+result: pickaxe
+ingredients: { wood: 2, metal_plate: 2 }
+station: workbench
+```
+```yaml
+id: craft_hammer
+result: hammer
+ingredients: { wood: 2, metal_scrap: 2 }
+station: workbench
+```

@@ -1,0 +1,4680 @@
+{
+  "format": "cepacero.construction",
+  "version": 1,
+  "source": "docs/construccion.md",
+  "rules": {
+    "wrong_tool_factor": 0.25,
+    "dismantle_refund": 0.5,
+    "dig_noise": 9.0
+  },
+  "shapes": [
+    {
+      "id": "wall",
+      "name": "Muro",
+      "layer": "structure",
+      "units": 1.0,
+      "hp_factor": 1.0,
+      "solid": true,
+      "see_through": false,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "halfwall",
+      "name": "Medio muro",
+      "layer": "structure",
+      "units": 0.5,
+      "hp_factor": 0.6,
+      "solid": true,
+      "see_through": true,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "pillar",
+      "name": "Pilar",
+      "layer": "structure",
+      "units": 1.0,
+      "hp_factor": 0.8,
+      "solid": true,
+      "see_through": true,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "arch",
+      "name": "Arco",
+      "layer": "structure",
+      "units": 2.0,
+      "hp_factor": 0.7,
+      "solid": false,
+      "see_through": true,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "door",
+      "name": "Puerta",
+      "layer": "structure",
+      "units": 2.0,
+      "hp_factor": 0.5,
+      "solid": true,
+      "see_through": false,
+      "opens": true,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "gate",
+      "name": "Portón",
+      "layer": "structure",
+      "units": 4.0,
+      "hp_factor": 0.8,
+      "solid": true,
+      "see_through": false,
+      "opens": true,
+      "width": 2,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "window",
+      "name": "Ventana",
+      "layer": "structure",
+      "units": 2.0,
+      "hp_factor": 0.5,
+      "solid": true,
+      "see_through": true,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "bigwindow",
+      "name": "Ventanal",
+      "layer": "structure",
+      "units": 4.0,
+      "hp_factor": 0.5,
+      "solid": true,
+      "see_through": true,
+      "opens": false,
+      "width": 2,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "fence",
+      "name": "Valla",
+      "layer": "structure",
+      "units": 1.0,
+      "hp_factor": 0.4,
+      "solid": true,
+      "see_through": true,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "floor",
+      "name": "Suelo",
+      "layer": "floor",
+      "units": 1.0,
+      "hp_factor": 0.8,
+      "solid": false,
+      "see_through": false,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": ""
+    },
+    {
+      "id": "stairs",
+      "name": "Escalera",
+      "layer": "structure",
+      "units": 3.0,
+      "hp_factor": 0.8,
+      "solid": false,
+      "see_through": false,
+      "opens": false,
+      "width": 1,
+      "height": 1,
+      "connects": "up"
+    },
+    {
+      "id": "hatch",
+      "name": "Trampilla",
+      "layer": "floor",
+      "units": 2.0,
+      "hp_factor": 0.5,
+      "solid": false,
+      "see_through": false,
+      "opens": true,
+      "width": 1,
+      "height": 1,
+      "connects": "down"
+    }
+  ],
+  "materials": [
+    {
+      "id": "pallet",
+      "name": "Palé",
+      "ingredients": [
+        {
+          "item": "pallet",
+          "count": 1
+        }
+      ],
+      "hp": 40,
+      "tool": "axe",
+      "noise": 4.0,
+      "build_seconds": 0.3,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "fence",
+        "door",
+        "floor"
+      ]
+    },
+    {
+      "id": "drywall",
+      "name": "Pladur",
+      "ingredients": [
+        {
+          "item": "plasterboard",
+          "count": 1
+        }
+      ],
+      "hp": 60,
+      "tool": "hammer",
+      "noise": 3.0,
+      "build_seconds": 0.5,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "window",
+        "floor"
+      ]
+    },
+    {
+      "id": "wood",
+      "name": "Tablón",
+      "ingredients": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "hp": 100,
+      "tool": "axe",
+      "noise": 6.0,
+      "build_seconds": 0.8,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs",
+        "hatch"
+      ]
+    },
+    {
+      "id": "log",
+      "name": "Tronco",
+      "ingredients": [
+        {
+          "item": "log",
+          "count": 2
+        }
+      ],
+      "hp": 160,
+      "tool": "axe",
+      "noise": 7.0,
+      "build_seconds": 1.0,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs"
+      ]
+    },
+    {
+      "id": "sandbag",
+      "name": "Sacos de arena",
+      "ingredients": [
+        {
+          "item": "sandbag",
+          "count": 3
+        }
+      ],
+      "hp": 130,
+      "tool": "shovel",
+      "noise": 2.0,
+      "build_seconds": 0.6,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "fence"
+      ]
+    },
+    {
+      "id": "scrap",
+      "name": "Chatarra",
+      "ingredients": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "hp": 300,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "build_seconds": 1.0,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor"
+      ]
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe",
+      "ingredients": [
+        {
+          "item": "adobe_brick",
+          "count": 3
+        }
+      ],
+      "hp": 260,
+      "tool": "shovel",
+      "noise": 4.0,
+      "build_seconds": 1.4,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "window",
+        "fence",
+        "floor"
+      ]
+    },
+    {
+      "id": "container",
+      "name": "Contenedor",
+      "ingredients": [
+        {
+          "item": "container_panel",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "hp": 350,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "build_seconds": 1.2,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor"
+      ]
+    },
+    {
+      "id": "brick",
+      "name": "Ladrillo",
+      "ingredients": [
+        {
+          "item": "brick",
+          "count": 3
+        }
+      ],
+      "hp": 400,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "build_seconds": 1.6,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs"
+      ]
+    },
+    {
+      "id": "stone",
+      "name": "Piedra",
+      "ingredients": [
+        {
+          "item": "stone",
+          "count": 3
+        }
+      ],
+      "hp": 500,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "build_seconds": 2.0,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs"
+      ]
+    },
+    {
+      "id": "concrete",
+      "name": "Hormigón",
+      "ingredients": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "hp": 600,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "build_seconds": 2.0,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs"
+      ]
+    },
+    {
+      "id": "rebar",
+      "name": "Hormigón armado",
+      "ingredients": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "hp": 900,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "build_seconds": 2.6,
+      "paintable": false,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "arch",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor"
+      ]
+    },
+    {
+      "id": "steel",
+      "name": "Acero",
+      "ingredients": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "hp": 1000,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "build_seconds": 2.4,
+      "paintable": true,
+      "see_through": false,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "door",
+        "gate",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor",
+        "stairs",
+        "hatch"
+      ]
+    },
+    {
+      "id": "glass",
+      "name": "Cristal",
+      "ingredients": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "hp": 40,
+      "tool": "hammer",
+      "noise": 16.0,
+      "build_seconds": 1.0,
+      "paintable": false,
+      "see_through": true,
+      "shapes": [
+        "wall",
+        "halfwall",
+        "pillar",
+        "door",
+        "window",
+        "bigwindow",
+        "fence",
+        "floor"
+      ]
+    }
+  ],
+  "roofs": [
+    {
+      "id": "tile",
+      "name": "Teja",
+      "ingredients": [
+        {
+          "item": "brick",
+          "count": 1
+        }
+      ],
+      "hp": 80
+    },
+    {
+      "id": "sheet",
+      "name": "Chapa",
+      "ingredients": [
+        {
+          "item": "metal_scrap",
+          "count": 1
+        }
+      ],
+      "hp": 100
+    },
+    {
+      "id": "thatch",
+      "name": "Paja",
+      "ingredients": [
+        {
+          "item": "straw",
+          "count": 2
+        }
+      ],
+      "hp": 40
+    },
+    {
+      "id": "flat",
+      "name": "Tejado plano",
+      "ingredients": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "hp": 200
+    },
+    {
+      "id": "glasshouse",
+      "name": "Invernadero",
+      "ingredients": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        },
+        {
+          "item": "metal_scrap",
+          "count": 1
+        }
+      ],
+      "hp": 40
+    }
+  ],
+  "naturals": [
+    {
+      "id": "earth",
+      "name": "Tierra",
+      "hp": 40,
+      "tool": "shovel",
+      "noise": 5.0,
+      "drops": [
+        {
+          "item": "earth",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "rock",
+      "name": "Roca",
+      "hp": 160,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "drops": [
+        {
+          "item": "stone",
+          "count": 1
+        },
+        {
+          "item": "gravel",
+          "count": 1
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "key": "wall_pallet",
+      "shape": "wall",
+      "material": "pallet",
+      "layer": "structure",
+      "hp": 40,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.3,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "pallet",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_pallet",
+      "shape": "halfwall",
+      "material": "pallet",
+      "layer": "structure",
+      "hp": 24,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.15,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "pallet",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_pallet",
+      "shape": "door",
+      "material": "pallet",
+      "layer": "structure",
+      "hp": 20,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.6,
+      "connects": "",
+      "toggle_to": "door_pallet_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "pallet",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_pallet_open",
+      "shape": "door",
+      "material": "pallet",
+      "layer": "structure",
+      "hp": 20,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.6,
+      "connects": "",
+      "toggle_to": "door_pallet",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "fence_pallet",
+      "shape": "fence",
+      "material": "pallet",
+      "layer": "structure",
+      "hp": 16,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.3,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "pallet",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_pallet",
+      "shape": "floor",
+      "material": "pallet",
+      "layer": "floor",
+      "hp": 32,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 4.0,
+      "paintable": false,
+      "build_seconds": 0.3,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "pallet",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_drywall",
+      "shape": "wall",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 60,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_drywall",
+      "shape": "halfwall",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 36,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 0.25,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_drywall",
+      "shape": "pillar",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 48,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_drywall",
+      "shape": "arch",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 42,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_drywall",
+      "shape": "door",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 30,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "door_drywall_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_drywall_open",
+      "shape": "door",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 30,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "door_drywall",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_drywall",
+      "shape": "window",
+      "material": "drywall",
+      "layer": "structure",
+      "hp": 30,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_drywall",
+      "shape": "floor",
+      "material": "drywall",
+      "layer": "floor",
+      "hp": 48,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 3.0,
+      "paintable": true,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "plasterboard",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_wood",
+      "shape": "wall",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 100,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 0.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_wood",
+      "shape": "halfwall",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 60,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 0.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_wood",
+      "shape": "pillar",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 80,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 0.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_wood",
+      "shape": "arch",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 70,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_wood",
+      "shape": "door",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 50,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "door_wood_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_wood_open",
+      "shape": "door",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 50,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "door_wood",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_wood",
+      "shape": "gate",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 80,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "gate_wood_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 8
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_wood_open",
+      "shape": "gate",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 80,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "gate_wood",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_wood",
+      "shape": "window",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 50,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_wood",
+      "shape": "bigwindow",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 50,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 8
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_wood",
+      "shape": "fence",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 40,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 0.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_wood",
+      "shape": "floor",
+      "material": "wood",
+      "layer": "floor",
+      "hp": 80,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 0.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_wood",
+      "shape": "stairs",
+      "material": "wood",
+      "layer": "structure",
+      "hp": 80,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 6
+        },
+        {
+          "item": "nails",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "hatch_wood",
+      "shape": "hatch",
+      "material": "wood",
+      "layer": "floor",
+      "hp": 50,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "down",
+      "toggle_to": "hatch_wood_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "wood",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "hatch_wood_open",
+      "shape": "hatch",
+      "material": "wood",
+      "layer": "floor",
+      "hp": 50,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 6.0,
+      "paintable": true,
+      "build_seconds": 1.6,
+      "connects": "down",
+      "toggle_to": "hatch_wood",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "wall_log",
+      "shape": "wall",
+      "material": "log",
+      "layer": "structure",
+      "hp": 160,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_log",
+      "shape": "halfwall",
+      "material": "log",
+      "layer": "structure",
+      "hp": 96,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_log",
+      "shape": "pillar",
+      "material": "log",
+      "layer": "structure",
+      "hp": 128,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_log",
+      "shape": "arch",
+      "material": "log",
+      "layer": "structure",
+      "hp": 112,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_log",
+      "shape": "door",
+      "material": "log",
+      "layer": "structure",
+      "hp": 80,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_log_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_log_open",
+      "shape": "door",
+      "material": "log",
+      "layer": "structure",
+      "hp": 80,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_log",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_log",
+      "shape": "gate",
+      "material": "log",
+      "layer": "structure",
+      "hp": 128,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "gate_log_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 8
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_log_open",
+      "shape": "gate",
+      "material": "log",
+      "layer": "structure",
+      "hp": 128,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "gate_log",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_log",
+      "shape": "window",
+      "material": "log",
+      "layer": "structure",
+      "hp": 80,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_log",
+      "shape": "bigwindow",
+      "material": "log",
+      "layer": "structure",
+      "hp": 80,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 8
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_log",
+      "shape": "fence",
+      "material": "log",
+      "layer": "structure",
+      "hp": 64,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_log",
+      "shape": "floor",
+      "material": "log",
+      "layer": "floor",
+      "hp": 128,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_log",
+      "shape": "stairs",
+      "material": "log",
+      "layer": "structure",
+      "hp": 128,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "axe",
+      "noise": 7.0,
+      "paintable": false,
+      "build_seconds": 3.0,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "log",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_sandbag",
+      "shape": "wall",
+      "material": "sandbag",
+      "layer": "structure",
+      "hp": 130,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 2.0,
+      "paintable": false,
+      "build_seconds": 0.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "sandbag",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_sandbag",
+      "shape": "halfwall",
+      "material": "sandbag",
+      "layer": "structure",
+      "hp": 78,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 2.0,
+      "paintable": false,
+      "build_seconds": 0.3,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "sandbag",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_sandbag",
+      "shape": "fence",
+      "material": "sandbag",
+      "layer": "structure",
+      "hp": 52,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 2.0,
+      "paintable": false,
+      "build_seconds": 0.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "sandbag",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_scrap",
+      "shape": "wall",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 300,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_scrap",
+      "shape": "halfwall",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 180,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_scrap",
+      "shape": "pillar",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 240,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_scrap",
+      "shape": "arch",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 210,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_scrap",
+      "shape": "door",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 150,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_scrap_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_scrap_open",
+      "shape": "door",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 150,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_scrap",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_scrap",
+      "shape": "gate",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 240,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "gate_scrap_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 8
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_scrap_open",
+      "shape": "gate",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 240,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "gate_scrap",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_scrap",
+      "shape": "window",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 150,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_scrap",
+      "shape": "bigwindow",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 150,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 8
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_scrap",
+      "shape": "fence",
+      "material": "scrap",
+      "layer": "structure",
+      "hp": 120,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_scrap",
+      "shape": "floor",
+      "material": "scrap",
+      "layer": "floor",
+      "hp": 240,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 12.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_adobe",
+      "shape": "wall",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 260,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 1.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_adobe",
+      "shape": "halfwall",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 156,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 0.7,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_adobe",
+      "shape": "pillar",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 208,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 1.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_adobe",
+      "shape": "arch",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 182,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 2.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_adobe",
+      "shape": "door",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 130,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 2.8,
+      "connects": "",
+      "toggle_to": "door_adobe_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_adobe_open",
+      "shape": "door",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 130,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 2.8,
+      "connects": "",
+      "toggle_to": "door_adobe",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_adobe",
+      "shape": "window",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 130,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 2.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_adobe",
+      "shape": "fence",
+      "material": "adobe",
+      "layer": "structure",
+      "hp": 104,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 1.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_adobe",
+      "shape": "floor",
+      "material": "adobe",
+      "layer": "floor",
+      "hp": 208,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 4.0,
+      "paintable": true,
+      "build_seconds": 1.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "adobe_brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_container",
+      "shape": "wall",
+      "material": "container",
+      "layer": "structure",
+      "hp": 350,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 1.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_container",
+      "shape": "halfwall",
+      "material": "container",
+      "layer": "structure",
+      "hp": 210,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 0.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_container",
+      "shape": "door",
+      "material": "container",
+      "layer": "structure",
+      "hp": 175,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "door_container_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_container_open",
+      "shape": "door",
+      "material": "container",
+      "layer": "structure",
+      "hp": 175,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "door_container",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_container",
+      "shape": "gate",
+      "material": "container",
+      "layer": "structure",
+      "hp": 280,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "gate_container_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 8
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_container_open",
+      "shape": "gate",
+      "material": "container",
+      "layer": "structure",
+      "hp": 280,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "gate_container",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_container",
+      "shape": "window",
+      "material": "container",
+      "layer": "structure",
+      "hp": 175,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_container",
+      "shape": "bigwindow",
+      "material": "container",
+      "layer": "structure",
+      "hp": 175,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 8
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_container",
+      "shape": "fence",
+      "material": "container",
+      "layer": "structure",
+      "hp": 140,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 1.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_container",
+      "shape": "floor",
+      "material": "container",
+      "layer": "floor",
+      "hp": 280,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 1.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "container_panel",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_brick",
+      "shape": "wall",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 400,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_brick",
+      "shape": "halfwall",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 240,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 0.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_brick",
+      "shape": "pillar",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 320,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_brick",
+      "shape": "arch",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 280,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_brick",
+      "shape": "door",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 200,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "door_brick_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_brick_open",
+      "shape": "door",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 200,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "door_brick",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_brick",
+      "shape": "gate",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 320,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 6.4,
+      "connects": "",
+      "toggle_to": "gate_brick_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 12
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_brick_open",
+      "shape": "gate",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 320,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 6.4,
+      "connects": "",
+      "toggle_to": "gate_brick",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_brick",
+      "shape": "window",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 200,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 3.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_brick",
+      "shape": "bigwindow",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 200,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 6.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 12
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_brick",
+      "shape": "fence",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 160,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_brick",
+      "shape": "floor",
+      "material": "brick",
+      "layer": "floor",
+      "hp": 320,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 1.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_brick",
+      "shape": "stairs",
+      "material": "brick",
+      "layer": "structure",
+      "hp": 320,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 8.0,
+      "paintable": false,
+      "build_seconds": 4.8,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 9
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_stone",
+      "shape": "wall",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 500,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_stone",
+      "shape": "halfwall",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 300,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_stone",
+      "shape": "pillar",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 400,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_stone",
+      "shape": "arch",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 350,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_stone",
+      "shape": "door",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 250,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "door_stone_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_stone_open",
+      "shape": "door",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 250,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "door_stone",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_stone",
+      "shape": "gate",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 400,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "gate_stone_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 12
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_stone_open",
+      "shape": "gate",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 400,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "gate_stone",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_stone",
+      "shape": "window",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 250,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 6
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_stone",
+      "shape": "bigwindow",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 250,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 12
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_stone",
+      "shape": "fence",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 200,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_stone",
+      "shape": "floor",
+      "material": "stone",
+      "layer": "floor",
+      "hp": 400,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_stone",
+      "shape": "stairs",
+      "material": "stone",
+      "layer": "structure",
+      "hp": 400,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 6.0,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "stone",
+          "count": 9
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_concrete",
+      "shape": "wall",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 600,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_concrete",
+      "shape": "halfwall",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 360,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_concrete",
+      "shape": "pillar",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 480,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_concrete",
+      "shape": "arch",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 420,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_concrete",
+      "shape": "door",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 300,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "door_concrete_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_concrete_open",
+      "shape": "door",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 300,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "door_concrete",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_concrete",
+      "shape": "gate",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 480,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "gate_concrete_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_concrete_open",
+      "shape": "gate",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 480,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "gate_concrete",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_concrete",
+      "shape": "window",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 300,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_concrete",
+      "shape": "bigwindow",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 300,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 8.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_concrete",
+      "shape": "fence",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 240,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_concrete",
+      "shape": "floor",
+      "material": "concrete",
+      "layer": "floor",
+      "hp": 480,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_concrete",
+      "shape": "stairs",
+      "material": "concrete",
+      "layer": "structure",
+      "hp": 480,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 10.0,
+      "paintable": true,
+      "build_seconds": 6.0,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_rebar",
+      "shape": "wall",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 900,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 2.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_rebar",
+      "shape": "halfwall",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 540,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 1.3,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_rebar",
+      "shape": "pillar",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 720,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 2.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "arch_rebar",
+      "shape": "arch",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 630,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 5.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        },
+        {
+          "item": "rebar",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_rebar",
+      "shape": "door",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 450,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 5.2,
+      "connects": "",
+      "toggle_to": "door_rebar_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        },
+        {
+          "item": "rebar",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_rebar_open",
+      "shape": "door",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 450,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 5.2,
+      "connects": "",
+      "toggle_to": "door_rebar",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_rebar",
+      "shape": "gate",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 720,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 10.4,
+      "connects": "",
+      "toggle_to": "gate_rebar_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 4
+        },
+        {
+          "item": "rebar",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_rebar_open",
+      "shape": "gate",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 720,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 10.4,
+      "connects": "",
+      "toggle_to": "gate_rebar",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_rebar",
+      "shape": "window",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 450,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 5.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 2
+        },
+        {
+          "item": "rebar",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_rebar",
+      "shape": "bigwindow",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 450,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 10.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 4
+        },
+        {
+          "item": "rebar",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_rebar",
+      "shape": "fence",
+      "material": "rebar",
+      "layer": "structure",
+      "hp": 360,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 2.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_rebar",
+      "shape": "floor",
+      "material": "rebar",
+      "layer": "floor",
+      "hp": 720,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 11.0,
+      "paintable": false,
+      "build_seconds": 2.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        },
+        {
+          "item": "rebar",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "wall_steel",
+      "shape": "wall",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 1000,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_steel",
+      "shape": "halfwall",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 600,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 1.2,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_steel",
+      "shape": "pillar",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 800,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_steel",
+      "shape": "door",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 500,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "door_steel_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_steel_open",
+      "shape": "door",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 500,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "door_steel",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "gate_steel",
+      "shape": "gate",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 800,
+      "solid": true,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 9.6,
+      "connects": "",
+      "toggle_to": "gate_steel_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "gate_steel_open",
+      "shape": "gate",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 800,
+      "solid": false,
+      "see_through": false,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 9.6,
+      "connects": "",
+      "toggle_to": "gate_steel",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_steel",
+      "shape": "window",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 500,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_steel",
+      "shape": "bigwindow",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 500,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 9.6,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 4
+        },
+        {
+          "item": "nails",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_steel",
+      "shape": "fence",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 400,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_steel",
+      "shape": "floor",
+      "material": "steel",
+      "layer": "floor",
+      "hp": 800,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 2.4,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 1
+        },
+        {
+          "item": "nails",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "stairs_steel",
+      "shape": "stairs",
+      "material": "steel",
+      "layer": "structure",
+      "hp": 800,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 7.2,
+      "connects": "up",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 3
+        },
+        {
+          "item": "nails",
+          "count": 3
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "hatch_steel",
+      "shape": "hatch",
+      "material": "steel",
+      "layer": "floor",
+      "hp": 500,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "down",
+      "toggle_to": "hatch_steel_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_plate",
+          "count": 2
+        },
+        {
+          "item": "nails",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "hatch_steel_open",
+      "shape": "hatch",
+      "material": "steel",
+      "layer": "floor",
+      "hp": 500,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 14.0,
+      "paintable": true,
+      "build_seconds": 4.8,
+      "connects": "down",
+      "toggle_to": "hatch_steel",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "wall_glass",
+      "shape": "wall",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 40,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "halfwall_glass",
+      "shape": "halfwall",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 24,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "pillar_glass",
+      "shape": "pillar",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 32,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_glass",
+      "shape": "door",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 20,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_glass_open",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "door_glass_open",
+      "shape": "door",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 20,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "door_glass",
+      "is_open_variant": true,
+      "cost": [],
+      "drops": []
+    },
+    {
+      "key": "window_glass",
+      "shape": "window",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 20,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 2.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "bigwindow_glass",
+      "shape": "bigwindow",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 20,
+      "solid": true,
+      "see_through": true,
+      "width": 2,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 4.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 4
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "fence_glass",
+      "shape": "fence",
+      "material": "glass",
+      "layer": "structure",
+      "hp": 16,
+      "solid": true,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "floor_glass",
+      "shape": "floor",
+      "material": "glass",
+      "layer": "floor",
+      "hp": 32,
+      "solid": false,
+      "see_through": true,
+      "width": 1,
+      "height": 1,
+      "tool": "hammer",
+      "noise": 16.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "roof_tile",
+      "shape": "roof",
+      "material": "tile",
+      "layer": "roof",
+      "hp": 80,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "brick",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "roof_sheet",
+      "shape": "roof",
+      "material": "sheet",
+      "layer": "roof",
+      "hp": 100,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "metal_scrap",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "roof_thatch",
+      "shape": "roof",
+      "material": "thatch",
+      "layer": "roof",
+      "hp": 40,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "straw",
+          "count": 2
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "roof_flat",
+      "shape": "roof",
+      "material": "flat",
+      "layer": "roof",
+      "hp": 200,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "concrete_mix",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "roof_glasshouse",
+      "shape": "roof",
+      "material": "glasshouse",
+      "layer": "roof",
+      "hp": 40,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 0.5,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [
+        {
+          "item": "glass_pane",
+          "count": 1
+        },
+        {
+          "item": "metal_scrap",
+          "count": 1
+        }
+      ],
+      "drops": []
+    },
+    {
+      "key": "earth",
+      "shape": "natural",
+      "material": "earth",
+      "layer": "structure",
+      "hp": 40,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 5.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [],
+      "drops": [
+        {
+          "item": "earth",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "key": "rock",
+      "shape": "natural",
+      "material": "rock",
+      "layer": "structure",
+      "hp": 160,
+      "solid": true,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "pickaxe",
+      "noise": 9.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [],
+      "drops": [
+        {
+          "item": "stone",
+          "count": 1
+        },
+        {
+          "item": "gravel",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

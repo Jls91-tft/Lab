@@ -39,7 +39,7 @@ def build_diary(markdown_text: str, items: list[dict]) -> list[dict]:
     return entries
 
 
-def localization_rows(bestiary: dict, items: list[dict], diary: list[dict]) -> list[tuple[str, str]]:
+def localization_rows(bestiary: dict, items: list[dict], diary: list[dict], construction: dict | None = None) -> list[tuple[str, str]]:
     """(key, Spanish text) for every string the player can see. Keys are stable ids."""
     rows = []
     for z in bestiary["zombies"]:
@@ -50,6 +50,9 @@ def localization_rows(bestiary: dict, items: list[dict], diary: list[dict]) -> l
     for d in diary:
         rows.append((f"diary.{d['id']}.source", d["source"]))
         rows.append((f"diary.{d['id']}.text", d["text"]))
+    for group in ("materials", "shapes", "roofs", "naturals"):
+        for e in (construction or {}).get(group, []):
+            rows.append((f"build.{group[:-1]}.{e['id']}.name", e["name"]))
     return rows
 
 
