@@ -128,6 +128,16 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void ShovelsAndPickaxesDigWhereTheGroundAllowsIt()
+        {
+            var ground = new ClickTarget(false, false, false, true);
+            Assert.That(HandResolver.Resolve(Def("shovel"), false, ground, false), Is.EqualTo(HandAction.Dig));
+            Assert.That(HandResolver.Resolve(Def("pickaxe"), false, ground, false), Is.EqualTo(HandAction.Dig));
+            Assert.That(HandResolver.Resolve(Def("axe"), false, ground, false), Is.EqualTo(HandAction.MeleeAttack), "an axe cannot dig");
+            Assert.That(HandResolver.Resolve(Def("shovel"), false, Nothing, false), Is.EqualTo(HandAction.None));
+        }
+
+        [Test]
         public void BareHandsHitBlocksOrPunch()
         {
             Assert.That(HandResolver.Resolve(null, false, Wall, false), Is.EqualTo(HandAction.HitBlock));

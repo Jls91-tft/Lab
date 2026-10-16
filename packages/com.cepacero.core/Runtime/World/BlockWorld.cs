@@ -100,6 +100,28 @@ namespace CepaCero.World
 
         public bool IsSolid(int x, int y) => !InBounds(x, y) || GetBlock(x, y).IsSolid;
 
+        /// <summary>
+        /// Solid at any level. Above the street only solid structures block. Below it, everything is solid until dug: a cell with
+        /// no structure and no (cave) floor is untouched ground, so only the excavated cells ever need storing.
+        /// </summary>
+        public bool IsSolidAt(int x, int y, int z)
+        {
+            if (z == 0)
+            {
+                return IsSolid(x, y);
+            }
+            if (!InBounds(x, y) || !InLevels(z) || GetBlock(x, y, z, BuildLayer.Structure).IsSolid)
+            {
+                return true;
+            }
+            return z < 0 && GetTypeId(x, y, z, BuildLayer.Floor) == BlockRegistry.AirId;
+        }
+
+        /// <summary>Untouched ground below the street: solid until somebody digs it.</summary>
+        public bool IsUndug(int x, int y, int z) =>
+            z < 0 && InBounds(x, y) && InLevels(z) && GetTypeId(x, y, z, BuildLayer.Structure) == BlockRegistry.AirId
+            && GetTypeId(x, y, z, BuildLayer.Floor) == BlockRegistry.AirId;
+
         /// <summary>Unconditional write at full health (map loading, host commands). The type decides its own layer.</summary>
         public void SetBlock(int x, int y, ushort typeId)
         {

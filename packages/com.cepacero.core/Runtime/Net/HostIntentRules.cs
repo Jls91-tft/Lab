@@ -147,6 +147,9 @@ namespace CepaCero.Net
                 case IntentType.Dismantle:
                     result = Dismantle(playerIndex, player, intent);
                     break;
+                case IntentType.Dig:
+                    result = Dig(playerIndex, player, intent);
+                    break;
                 case IntentType.UndoPlace:
                     result = Undo(playerIndex, player);
                     break;
@@ -184,7 +187,8 @@ namespace CepaCero.Net
         {
             int x = intent.X;
             int y = intent.Y;
-            if (!_blocks.InBounds(x, y) || !_placeable.Contains(intent.Arg) || intent.Z != 0)       // players act on the ground level until they can climb (D-022 phase F)
+            int z = players[playerIndex].Level;
+            if (!_blocks.InBounds(x, y) || !_placeable.Contains(intent.Arg) || intent.Z != z)       // players act on the level they stand on
             {
                 return IntentResult.InvalidTarget;
             }
@@ -194,7 +198,7 @@ namespace CepaCero.Net
             }
             BlockType placing = _blocks.Registry[intent.Arg];
             byte variant = BlockVariant.Sanitize(intent.Variant, placing);
-            ushort existing = _blocks.GetTypeId(x, y, 0, placing.Layer);
+            ushort existing = _blocks.GetTypeId(x, y, z, placing.Layer);
             BlockType old = existing == BlockRegistry.AirId ? null : _blocks.Registry[existing];
             if (old != null)
             {
@@ -204,20 +208,28 @@ namespace CepaCero.Net
                 }
                 if (existing == intent.Arg)
                 {
-                    if (_blocks.GetVariant(x, y, 0, placing.Layer) == variant)
+                    if (_blocks.GetVariant(x, y, z, placing.Layer) == variant)
                     {
                         return IntentResult.Occupied;
                     }
-                    _blocks.SetVariant(x, y, 0, placing.Layer, variant);    // same piece, other colour or turn: free, health stays
+                    _blocks.SetVariant(x, y, z, placing.Layer, variant);    // same piece, other colour or turn: free, health stays
                     LastNoise = 1f;
                     return IntentResult.Ok;
                 }
+                if (old.Build.Shape == NaturalShape && old.Layer != BuildLayer.Floor)
+                {
+                    return IntentResult.Occupied;                           // a pit stays a pit
+                }
             }
-            if (!GroundLayer.IsBuildable(_ground.Get(x, y)))
+            if (z == 0 && !GroundLayer.IsBuildable(_ground.Get(x, y)))
             {
                 return IntentResult.InvalidTarget;
             }
-            if (placing.IsSolid && (old == null || !old.IsSolid) && IsOccupiedByBody(x, y, players))
+            if (!LevelRules.CanBuildAt(_blocks, x, y, z))
+            {
+                return IntentResult.InvalidTarget;                          // nothing to hold it up, or solid ground
+            }
+            if (placing.IsSolid && (old == null || !old.IsSolid) && IsOccupiedByBody(x, y, z, players))
             {
                 return IntentResult.Occupied;
             }
@@ -229,28 +241,30 @@ namespace CepaCero.Net
             if (old != null)
             {
                 RefundBlock(playerIndex, old, DismantleRefund);             // replacing in place: the old piece goes back to the bag
-                _blocks.SetBlock(x, y, 0, placing.Layer, intent.Arg, variant);
+                _blocks.SetBlock(x, y, z, placing.Layer, intent.Arg, variant);
             }
             else
             {
-                _blocks.TryPlace(x, y, 0, intent.Arg, variant, _ground);
-                Remember(playerIndex, x, y, placing.Layer, intent.Arg);
+                _blocks.TryPlace(x, y, z, intent.Arg, variant, _ground);
+                Remember(playerIndex, x, y, z, placing.Layer, intent.Arg);
             }
             LastNoise = 3f;
             return IntentResult.Ok;
         }
 
+        private const string NaturalShape = "natural";
+
         /// <summary>The piece on top of a cell: structure, then object, floor and roof.</summary>
-        private bool TopPiece(int x, int y, int layerArg, out BuildLayer layer)
+        private bool TopPiece(int x, int y, int z, int layerArg, out BuildLayer layer)
         {
             if (layerArg > 0)
             {
                 layer = (BuildLayer)(layerArg - 1);
-                return _blocks.GetTypeId(x, y, 0, layer) != BlockRegistry.AirId;
+                return _blocks.GetTypeId(x, y, z, layer) != BlockRegistry.AirId;
             }
             foreach (BuildLayer l in TopOrder)
             {
-                if (_blocks.GetTypeId(x, y, 0, l) != BlockRegistry.AirId)
+                if (_blocks.GetTypeId(x, y, z, l) != BlockRegistry.AirId)
                 {
                     layer = l;
                     return true;
@@ -264,12 +278,13 @@ namespace CepaCero.Net
 
         private IntentResult Dismantle(int playerIndex, PlayerState player, in PlayerIntent intent)
         {
-            if (!_blocks.InBounds(intent.X, intent.Y) || intent.Arg > 4 || !TopPiece(intent.X, intent.Y, intent.Arg, out BuildLayer layer))
+            int z = player.Level;
+            if (!_blocks.InBounds(intent.X, intent.Y) || intent.Arg > 4 || intent.Z != z || !TopPiece(intent.X, intent.Y, z, intent.Arg, out BuildLayer layer))
             {
                 return IntentResult.InvalidTarget;
             }
-            BlockType type = _blocks.GetBlock(intent.X, intent.Y, 0, layer);
-            if (type.Build == null)
+            BlockType type = _blocks.GetBlock(intent.X, intent.Y, z, layer);
+            if (type.Build == null || type.Build.Shape == NaturalShape)
             {
                 return IntentResult.InvalidTarget;                          // only what players built
             }
@@ -278,9 +293,20 @@ namespace CepaCero.Net
                 return IntentResult.OutOfReach;
             }
             RefundBlock(playerIndex, type, DismantleRefund);
-            _blocks.SetBlock(intent.X, intent.Y, 0, layer, BlockRegistry.AirId);
+            RemovePiece(intent.X, intent.Y, z, layer);
             LastNoise = type.Build.Noise > 0f ? type.Build.Noise * 0.5f : DefaultHitNoise * 0.5f;
             return IntentResult.Ok;
+        }
+
+        /// <summary>Takes a piece away. Underground the floor goes back to bare cave, never to solid ground (that would bury whoever stands there).</summary>
+        private void RemovePiece(int x, int y, int z, BuildLayer layer)
+        {
+            ushort replacement = BlockRegistry.AirId;
+            if (z < 0 && layer == BuildLayer.Floor && _blocks.Registry.TryGet("cave", out BlockType cave))
+            {
+                replacement = cave.Id;
+            }
+            _blocks.SetBlock(x, y, z, layer, replacement);
         }
 
         private IntentResult Undo(int playerIndex, PlayerState player)
@@ -288,24 +314,24 @@ namespace CepaCero.Net
             while (_historyCount[playerIndex] > 0)
             {
                 PlacedPiece last = _history[playerIndex][--_historyCount[playerIndex]];
-                if (_blocks.GetTypeId(last.X, last.Y, 0, last.Layer) != last.Type)
+                if (_blocks.GetTypeId(last.X, last.Y, last.Z, last.Layer) != last.Type)
                 {
                     continue;                                               // already broken or replaced: look further back
                 }
-                if (!InReach(player, last.X, last.Y))
+                if (last.Z != player.Level || !InReach(player, last.X, last.Y))
                 {
                     _historyCount[playerIndex]++;                           // keep it: walk back to it
                     return IntentResult.OutOfReach;
                 }
                 RefundBlock(playerIndex, _blocks.Registry[last.Type], 1f);
-                _blocks.SetBlock(last.X, last.Y, 0, last.Layer, BlockRegistry.AirId);
+                RemovePiece(last.X, last.Y, last.Z, last.Layer);
                 LastNoise = 1f;
                 return IntentResult.Ok;
             }
             return IntentResult.InvalidTarget;
         }
 
-        private void Remember(int player, int x, int y, BuildLayer layer, ushort type)
+        private void Remember(int player, int x, int y, int z, BuildLayer layer, ushort type)
         {
             PlacedPiece[] ring = _history[player];
             if (_historyCount[player] == ring.Length)
@@ -313,20 +339,89 @@ namespace CepaCero.Net
                 Array.Copy(ring, 1, ring, 0, ring.Length - 1);              // forget the oldest
                 _historyCount[player]--;
             }
-            ring[_historyCount[player]++] = new PlacedPiece { X = x, Y = y, Layer = layer, Type = type };
+            ring[_historyCount[player]++] = new PlacedPiece { X = x, Y = y, Z = z, Layer = layer, Type = type };
         }
 
         private struct PlacedPiece
         {
             public int X;
             public int Y;
+            public int Z;
             public BuildLayer Layer;
             public ushort Type;
         }
 
+        // ------------------------------------------------------------------ digging
+
+        private readonly Dictionary<long, int> _digProgress = new Dictionary<long, int>();
+
+        private static long DigKey(int x, int y, int z) => ((long)(z + 8) << 40) | ((long)y << 20) | (long)x;
+
+        /// <summary>
+        /// The shovel and the pickaxe (D-022): sideways into untouched ground underground, or down through a bare floor of the street or a cave
+        /// (which leaves a pit and the cell below, open). Tools do their job at full speed on earth or rock; the wrong one at a quarter.
+        /// </summary>
+        private IntentResult Dig(int playerIndex, PlayerState player, in PlayerIntent intent)
+        {
+            int x = intent.X;
+            int y = intent.Y;
+            int z = player.Level;
+            if (!_blocks.InBounds(x, y) || intent.Z != z || z > 0)
+            {
+                return IntentResult.InvalidTarget;
+            }
+            int mode = LevelRules.DigMode(_blocks, _ground, x, y, z);
+            bool sideways = mode == LevelRules.DigSideways;
+            if (mode == LevelRules.NotDiggable)
+            {
+                return IntentResult.InvalidTarget;
+            }
+            if (!InReach(player, x, y))
+            {
+                return IntentResult.OutOfReach;
+            }
+            int cellLevel = sideways ? z : z - 1;                           // rock from the third level down
+            BlockType soil = _blocks.Registry.TryGet(cellLevel <= -3 ? "rock" : "earth", out BlockType found) ? found : null;
+            if (soil == null || !_blocks.Registry.TryGet("cave", out BlockType cave))
+            {
+                return IntentResult.InvalidTarget;
+            }
+            ItemDefinition tool = Equipped(playerIndex);
+            int damage = tool != null && tool.tool_power > 0 ? tool.tool_power : _settings.BlockHitDamage;
+            if (soil.Build.Tool.Length > 0 && (tool == null || tool.tool_kind != soil.Build.Tool))
+            {
+                damage = Math.Max(1, (int)Math.Round(damage * WrongToolFactor, MidpointRounding.AwayFromZero));
+            }
+            long key = DigKey(x, y, z);
+            int left = (_digProgress.TryGetValue(key, out int remaining) ? remaining : soil.MaxHealth) - damage;
+            LastNoise = soil.Build.Noise > 0f ? soil.Build.Noise : DefaultHitNoise;
+            if (tool != null && tool.tool_power > 0)
+            {
+                InventoryOf(playerIndex).WearEquipped();
+            }
+            if (left > 0)
+            {
+                _digProgress[key] = left;
+                return IntentResult.Ok;
+            }
+            _digProgress.Remove(key);
+            if (sideways)
+            {
+                _blocks.SetBlock(x, y, z, BuildLayer.Floor, cave.Id);
+            }
+            else
+            {
+                _blocks.SetBlock(x, y, z, BuildLayer.Structure, _blocks.Registry.Get("pit").Id);
+                _blocks.SetBlock(x, y, z - 1, BuildLayer.Floor, cave.Id);
+            }
+            LastBrokenBlock = soil.Id;                                     // the earth or stone comes out as items
+            return IntentResult.Ok;
+        }
+
         private IntentResult HitBlock(int playerIndex, PlayerState player, in PlayerIntent intent)
         {
-            if (!_blocks.InBounds(intent.X, intent.Y) || _blocks.GetBlock(intent.X, intent.Y).IsAir)
+            int z = player.Level;
+            if (!_blocks.InBounds(intent.X, intent.Y) || intent.Z != z || _blocks.GetBlock(intent.X, intent.Y, z, BuildLayer.Structure).IsAir)
             {
                 return IntentResult.InvalidTarget;
             }
@@ -334,15 +429,19 @@ namespace CepaCero.Net
             {
                 return IntentResult.OutOfReach;
             }
+            ushort type = _blocks.GetTypeId(intent.X, intent.Y, z, BuildLayer.Structure);
+            BlockBuildInfo build = _blocks.Registry[type].Build;
+            if (build != null && build.Shape == NaturalShape)
+            {
+                return IntentResult.InvalidTarget;                          // the ground is dug, not broken
+            }
             ItemDefinition tool = Equipped(playerIndex);
             int damage = tool != null && tool.tool_power > 0 ? tool.tool_power : _settings.BlockHitDamage;
-            ushort type = _blocks.GetTypeId(intent.X, intent.Y);
-            BlockBuildInfo build = _blocks.Registry[type].Build;
             if (build != null && build.Tool.Length > 0 && (tool == null || tool.tool_kind != build.Tool))
             {
                 damage = Math.Max(1, (int)Math.Round(damage * WrongToolFactor, MidpointRounding.AwayFromZero));   // the wrong tool: much slower
             }
-            DamageResult hit = _blocks.Damage(intent.X, intent.Y, damage);
+            DamageResult hit = _blocks.Damage(intent.X, intent.Y, z, BuildLayer.Structure, damage);
             if (hit == DamageResult.None)
             {
                 return IntentResult.InvalidTarget;
@@ -361,7 +460,8 @@ namespace CepaCero.Net
 
         private IntentResult ToggleDoor(PlayerState player, in PlayerIntent intent, IReadOnlyList<PlayerState> players)
         {
-            if (!_blocks.InBounds(intent.X, intent.Y))
+            int z = player.Level;
+            if (!_blocks.InBounds(intent.X, intent.Y) || intent.Z != z)
             {
                 return IntentResult.InvalidTarget;
             }
@@ -369,13 +469,13 @@ namespace CepaCero.Net
             {
                 return IntentResult.OutOfReach;
             }
-            BlockType type = _blocks.GetBlock(intent.X, intent.Y);
+            BlockType type = _blocks.GetBlock(intent.X, intent.Y, z, BuildLayer.Structure);
             // Closing a door on someone would trap them inside a solid block.
-            if (!type.IsSolid && type.ToggleTo != 0 && IsOccupiedByBody(intent.X, intent.Y, players))
+            if (!type.IsSolid && type.ToggleTo != 0 && IsOccupiedByBody(intent.X, intent.Y, z, players))
             {
                 return IntentResult.Occupied;
             }
-            return _blocks.Toggle(intent.X, intent.Y) ? IntentResult.Ok : IntentResult.InvalidTarget;
+            return _blocks.Toggle(intent.X, intent.Y, z, BuildLayer.Structure) ? IntentResult.Ok : IntentResult.InvalidTarget;
         }
 
         private IntentResult Melee(int playerIndex, IReadOnlyList<PlayerState> players, in PlayerIntent intent, ref float cooldown)
@@ -396,11 +496,12 @@ namespace CepaCero.Net
             Float2 aim = intent.AimDirection;
             float cosHalfArc = MathF.Cos(arc * 0.5f * MathF.PI / 180f);
             int hits = 0;
-            if (_zombies != null)
+            int level = players[playerIndex].Level;
+            if (_zombies != null && level == 0)
             {
                 for (int i = 0; i < _zombies.Capacity; i++)
                 {
-                    if (_zombies.IsAlive(i) && InArc(origin, aim, _zombies.GetPosition(i), range, cosHalfArc))
+                    if (_zombies.IsAlive(i) && InArc(origin, aim, _zombies.GetPosition(i), range, cosHalfArc, level))
                     {
                         _zombies.Damage(i, damage, type);
                         hits++;
@@ -411,7 +512,7 @@ namespace CepaCero.Net
             {
                 for (int p = 0; p < players.Count; p++)
                 {
-                    if (p != playerIndex && !players[p].IsDowned && InArc(origin, aim, players[p].Position, range, cosHalfArc))
+                    if (p != playerIndex && !players[p].IsDowned && players[p].Level == level && InArc(origin, aim, players[p].Position, range, cosHalfArc, level))
                     {
                         _playerDamage.Add(new PlayerDamage(playerIndex, p, damage));
                         hits++;
@@ -426,7 +527,7 @@ namespace CepaCero.Net
             return hits > 0 ? IntentResult.Ok : IntentResult.Missed;
         }
 
-        private bool InArc(Float2 origin, Float2 aim, Float2 target, float range, float cosHalfArc)
+        private bool InArc(Float2 origin, Float2 aim, Float2 target, float range, float cosHalfArc, int level)
         {
             Float2 to = target - origin;
             float d2 = to.LengthSquared;
@@ -435,7 +536,7 @@ namespace CepaCero.Net
                 return false;
             }
             bool inArc = d2 < 0.04f || (to.X * aim.X + to.Y * aim.Y) / MathF.Sqrt(d2) >= cosHalfArc;
-            return inArc && TileCollision.HasClearLine(origin, target, _blocks);
+            return inArc && TileCollision.HasClearLine(origin, target, _blocks, level);
         }
 
         /// <summary>Hitscan: the first zombie (or player, with friendly fire) on the line; walls stop the bullet.</summary>
@@ -458,15 +559,16 @@ namespace CepaCero.Net
 
             Float2 origin = players[playerIndex].Position;
             Float2 aim = intent.AimDirection;
+            int shooterLevel = players[playerIndex].Level;
             for (float t = 0.3f; t <= weapon.range; t += RayStep)
             {
                 Float2 p = origin + aim * t;
                 Int2 cell = p.Tile;
-                if (_blocks.IsSolid(cell.X, cell.Y))
+                if (_blocks.IsSolidAt(cell.X, cell.Y, shooterLevel))
                 {
                     break;
                 }
-                if (_zombies != null)
+                if (_zombies != null && shooterLevel == 0)
                 {
                     for (int i = 0; i < _zombies.Capacity; i++)
                     {
@@ -482,7 +584,7 @@ namespace CepaCero.Net
                 {
                     for (int pl = 0; pl < players.Count; pl++)
                     {
-                        if (pl != playerIndex && !players[pl].IsDowned && (players[pl].Position - p).LengthSquared <= BodyRadius * BodyRadius)
+                        if (pl != playerIndex && !players[pl].IsDowned && players[pl].Level == shooterLevel && (players[pl].Position - p).LengthSquared <= BodyRadius * BodyRadius)
                         {
                             _playerDamage.Add(new PlayerDamage(playerIndex, pl, weapon.damage));
                             LastMeleeHits = 1;
@@ -494,19 +596,19 @@ namespace CepaCero.Net
             return IntentResult.Missed;
         }
 
-        private bool IsOccupiedByBody(int x, int y, IReadOnlyList<PlayerState> players)
+        private bool IsOccupiedByBody(int x, int y, int z, IReadOnlyList<PlayerState> players)
         {
             if (players != null)
             {
                 foreach (PlayerState p in players)
                 {
-                    if (!p.IsDowned && TileCollision.CircleTouchesCell(p.Position, _settings.Radius, x, y))
+                    if (!p.IsDowned && p.Level == z && TileCollision.CircleTouchesCell(p.Position, _settings.Radius, x, y))
                     {
                         return true;
                     }
                 }
             }
-            if (_zombies != null)
+            if (_zombies != null && z == 0)
             {
                 for (int i = 0; i < _zombies.Capacity; i++)
                 {

@@ -361,7 +361,7 @@ namespace CepaCero.Tests.World
             var loaded = new GameSession(Calm(), new PlayerSettings(), again.Blocks, again.Ground, data);
             SaveGame.Load(writer.ToArray(), loaded, "m");
             AssertSame(map.Blocks, again.Blocks);
-            Assert.That(SaveGame.Version, Is.EqualTo((ushort)5));
+            Assert.That(SaveGame.Version, Is.EqualTo((ushort)6));
         }
 
         [Test]

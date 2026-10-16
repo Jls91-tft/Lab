@@ -31,6 +31,9 @@ namespace CepaCero.Core
 
         /// <summary>A water bar ran low (Value 0) or empty (Value 1).</summary>
         Thirsty = 16,
+
+        /// <summary>A player fell to a lower level (Value = levels fallen).</summary>
+        PlayerFell = 17,
     }
 
     /// <summary>Match-level happenings the host broadcasts (UI, music, results of intents).</summary>

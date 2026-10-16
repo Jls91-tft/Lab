@@ -6,6 +6,9 @@ namespace CepaCero.Player
     public struct PlayerState
     {
         public Float2 Position;
+
+        /// <summary>Level the player is on: 0 is the street, above are floors, below is underground (D-022).</summary>
+        public int Level;
         public float Stamina;
         public bool IsSprinting;
         public int Health;

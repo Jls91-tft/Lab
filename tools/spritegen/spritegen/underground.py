@@ -165,6 +165,7 @@ def build() -> dict[str, Image.Image]:
             out[f"floor_{m}_{v}"] = st.floor(m, v)
     for v in range(2):
         out[f"pit_{v}"] = pit(v)
+        out[f"floor_cave_{v}"] = st.floor("earth", v)               # the bare floor of a dug-out cell (the "cave" block)
     for m in ("wood", "stone", "concrete", "steel"):
         for d in "nesw":
             out[f"stairs_down_{m}_{d}"] = stairs_down(m, d)

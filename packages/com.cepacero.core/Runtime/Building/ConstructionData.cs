@@ -83,6 +83,9 @@ namespace CepaCero.Building
         public int hp;
         public string tool;
         public float noise;
+        public string layer;
+        public bool solid;
+        public string connects;
         public ConstructionCost[] drops;
     }
 

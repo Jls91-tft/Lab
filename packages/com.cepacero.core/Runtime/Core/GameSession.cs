@@ -44,6 +44,7 @@ namespace CepaCero.Core
         private readonly List<Int2> _openContainer = new List<Int2>();
         private readonly List<KeyValuePair<int, PlayerIntent>> _intents = new List<KeyValuePair<int, PlayerIntent>>();
         private readonly List<SessionEvent> _events = new List<SessionEvent>();
+        private readonly float[] _nextClimb = new float[MaxPlayers];
         private readonly List<Float2> _livingPositions = new List<Float2>();
         private readonly List<int> _livingIndex = new List<int>();
         private readonly List<string> _due = new List<string>();
@@ -366,7 +367,62 @@ namespace CepaCero.Core
                 float noise = PlayerMotor.Step(ref state, _inputs[p], _dt, Blocks, Ground, _playerSettings,
                     SurvivalRules.StaminaRegenFactor(state, Settings));
                 _players[p] = state;
-                Zombies.EmitNoise(state.Position, noise);
+                Zombies.EmitNoise(state.Position, state.Level != 0 ? noise * 0.5f : noise);                    // muffled by the floors
+                Fall(p);
+            }
+        }
+
+        /// <summary>Nothing under your feet and a way down: you drop, and it hurts.</summary>
+        private void Fall(int p)
+        {
+            PlayerState state = _players[p];
+            if (state.IsDowned)
+            {
+                return;
+            }
+            Int2 cell = state.Position.Tile;
+            int fallen = 0;
+            while (Blocks.InBounds(cell.X, cell.Y) && LevelRules.ShouldFall(Blocks, cell.X, cell.Y, state.Level))
+            {
+                state.Level--;
+                fallen++;
+            }
+            if (fallen > 0)
+            {
+                state.Health = Math.Max(0, state.Health - fallen * _playerSettings.FallDamagePerLevel);
+                _players[p] = state;
+                _events.Add(new SessionEvent(SessionEventType.PlayerFell, p, fallen));
+            }
+        }
+
+        private IntentResult TryClimb(int p, bool up)
+        {
+            PlayerState state = _players[p];
+            if (state.IsDowned)
+            {
+                return IntentResult.PlayerDowned;
+            }
+            if (Time < _nextClimb[p])
+            {
+                return IntentResult.TooSoon;
+            }
+            ChangeLevel(p, up);
+            if (_players[p].Level == state.Level)
+            {
+                return IntentResult.InvalidTarget;                                     // no stairs, trapdoor or open landing here
+            }
+            _nextClimb[p] = Time + _playerSettings.ClimbCooldown;
+            return IntentResult.Ok;
+        }
+
+        private void ChangeLevel(int p, bool up)
+        {
+            PlayerState state = _players[p];
+            int level = LevelRules.Change(Blocks, state.Position, state.Level, up);
+            if (level != state.Level)
+            {
+                state.Level = level;
+                _players[p] = state;
             }
         }
 
@@ -386,7 +442,11 @@ namespace CepaCero.Core
                     continue;
                 }
                 IntentResult result;
-                if (intent.IsInventoryAction)
+                if (intent.Type == IntentType.ChangeLevel)
+                {
+                    result = TryClimb(p, intent.Arg == 1);
+                }
+                else if (intent.IsInventoryAction)
                 {
                     result = ItemRules == null ? IntentResult.NotAllowed : ItemRules.Apply(p, intent, _players, _inventories);
                     if (result == IntentResult.Ok)
@@ -430,6 +490,22 @@ namespace CepaCero.Core
             if (intent.Type == IntentType.PlaceBlock && intent.Arg == _chestId && Containers != null)
             {
                 Containers.AddChest(new Int2(intent.X, intent.Y));
+            }
+            if (Rules.LastBrokenBlock != ushort.MaxValue && Data.HasItems)
+            {
+                BlockType broken = Blocks.Registry[Rules.LastBrokenBlock];
+                if (broken.Build != null && broken.Build.Drops.Count > 0)
+                {
+                    foreach (BlockCostItem d in broken.Build.Drops)                         // earth, stone... from the construction data (D-022)
+                    {
+                        ushort dropIndex = Data.Items.IndexOf(d.Item);
+                        int got = _inventories[p].Add(dropIndex, d.Count);
+                        if (got < d.Count)
+                        {
+                            DropPile(new Float2(intent.X + 0.5f, intent.Y + 0.5f), new[] { new ItemStack(dropIndex, (ushort)(d.Count - got)) });
+                        }
+                    }
+                }
             }
             if (Rules.LastBrokenBlock != ushort.MaxValue && Data.HasItems
                 && BlockDrops.TryGet(Blocks.Registry[Rules.LastBrokenBlock].Key, out string item, out int count))
@@ -708,7 +784,7 @@ namespace CepaCero.Core
             _livingIndex.Clear();
             for (int p = 0; p < _players.Count; p++)
             {
-                if (!_players[p].IsDowned)
+                if (!_players[p].IsDowned && _players[p].Level == 0)           // zombies do not know about people on other levels yet (phase G)
                 {
                     _livingPositions.Add(_players[p].Position);
                     _livingIndex.Add(p);

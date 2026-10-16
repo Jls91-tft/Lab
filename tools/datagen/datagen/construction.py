@@ -18,7 +18,7 @@ KINDS = ("rules", "shape", "material", "roof", "natural")
 SHAPE_KEYS = {"kind", "id", "name", "layer", "units", "hp_factor", "solid", "see_through", "opens", "width", "height", "connects"}
 MATERIAL_KEYS = {"kind", "id", "name", "ingredients", "hp", "tool", "noise", "build_seconds", "paintable", "see_through", "shapes"}
 ROOF_KEYS = {"kind", "id", "name", "ingredients", "hp"}
-NATURAL_KEYS = {"kind", "id", "name", "hp", "tool", "noise", "drops"}
+NATURAL_KEYS = {"kind", "id", "name", "hp", "tool", "noise", "drops", "layer", "solid", "connects"}
 RULES_KEYS = {"kind", "wrong_tool_factor", "dismantle_refund", "dig_noise"}
 MAX_HP = 60000
 
@@ -144,7 +144,15 @@ def roof_to_runtime(entry: dict) -> dict:
 def natural_to_runtime(entry: dict) -> dict:
     nid = _check_id(entry.get("id"), "natural")
     _check_keys(entry, NATURAL_KEYS, f"natural {nid}")
+    layer = entry.get("layer", "structure")
+    if layer not in LAYERS:
+        raise DataError(f"natural {nid}: layer must be one of {LAYERS}")
+    if entry.get("connects", "") not in CONNECTS:
+        raise DataError(f"natural {nid}: connects must be one of {CONNECTS}")
     return {
+        "layer": layer,
+        "solid": _bool(entry, "solid", True, f"natural {nid}"),
+        "connects": entry.get("connects", ""),
         "id": nid,
         "name": _name(entry, f"natural {nid}"),
         "hp": _hp(entry, f"natural {nid}"),
@@ -183,8 +191,8 @@ def derive_blocks(shapes: list[dict], materials: list[dict], roofs: list[dict], 
         blocks.append(_block(key=f"roof_{r['id']}", shape="roof", material=r["id"], layer="roof", hp=r["hp"], solid=False, see_through=False,
                              cost=[{"item": i["item"], "count": i["count"]} for i in r["ingredients"]], build_seconds=0.5))
     for n in naturals:
-        blocks.append(_block(key=n["id"], shape="natural", material=n["id"], layer="structure", hp=n["hp"], solid=True, tool=n["tool"],
-                             noise=n["noise"], drops=n["drops"]))
+        blocks.append(_block(key=n["id"], shape="natural", material=n["id"], layer=n["layer"], hp=n["hp"], solid=n["solid"], tool=n["tool"],
+                             noise=n["noise"], drops=n["drops"], connects=n["connects"]))
     keys = [b["key"] for b in blocks]
     dupes = sorted({k for k in keys if keys.count(k) > 1})
     if dupes:

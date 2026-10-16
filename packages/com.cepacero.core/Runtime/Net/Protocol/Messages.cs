@@ -17,7 +17,7 @@ namespace CepaCero.Net.Protocol
     public static class Messages
     {
         /// <summary>Bump on any incompatible change; Welcome refuses mismatches.</summary>
-        public const ushort ProtocolVersion = 3;
+        public const ushort ProtocolVersion = 4;
 
         public const byte FlagSprinting = 1;
         public const byte FlagDowned = 2;
@@ -137,7 +137,7 @@ namespace CepaCero.Net.Protocol
             }
         }
 
-        /// <summary>All players: position (float, exact for reconciliation), health, stamina (0-255) and flags. 12 B each.</summary>
+        /// <summary>All players: position (float, exact for reconciliation), level, health, stamina (0-255) and flags. 13 B each.</summary>
         public static void WritePlayerStates(ByteWriter w, uint tick, IReadOnlyList<PlayerState> players, float maxStamina)
         {
             using (Begin(w, MessageType.PlayerStates))
@@ -148,6 +148,7 @@ namespace CepaCero.Net.Protocol
                 {
                     w.WriteFloat(p.Position.X);
                     w.WriteFloat(p.Position.Y);
+                    w.WriteByte((byte)(sbyte)p.Level);
                     w.WriteUShort((ushort)Math.Clamp(p.Health, 0, ushort.MaxValue));
                     w.WriteByte((byte)Math.Clamp((int)MathF.Round(p.Stamina / Math.Max(1f, maxStamina) * 255f), 0, 255));
                     byte flags = 0;

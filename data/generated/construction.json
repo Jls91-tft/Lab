@@ -628,6 +628,9 @@
   ],
   "naturals": [
     {
+      "layer": "structure",
+      "solid": true,
+      "connects": "",
       "id": "earth",
       "name": "Tierra",
       "hp": 40,
@@ -641,6 +644,9 @@
       ]
     },
     {
+      "layer": "structure",
+      "solid": true,
+      "connects": "",
       "id": "rock",
       "name": "Roca",
       "hp": 160,
@@ -653,6 +659,38 @@
         },
         {
           "item": "gravel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "layer": "floor",
+      "solid": false,
+      "connects": "",
+      "id": "cave",
+      "name": "Suelo de cueva",
+      "hp": 1,
+      "tool": "shovel",
+      "noise": 0.0,
+      "drops": [
+        {
+          "item": "earth",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "layer": "structure",
+      "solid": false,
+      "connects": "down",
+      "id": "pit",
+      "name": "Fosa",
+      "hp": 1,
+      "tool": "shovel",
+      "noise": 0.0,
+      "drops": [
+        {
+          "item": "earth",
           "count": 1
         }
       ]
@@ -4672,6 +4710,56 @@
         },
         {
           "item": "gravel",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "key": "cave",
+      "shape": "natural",
+      "material": "cave",
+      "layer": "floor",
+      "hp": 1,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [],
+      "drops": [
+        {
+          "item": "earth",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "key": "pit",
+      "shape": "natural",
+      "material": "pit",
+      "layer": "structure",
+      "hp": 1,
+      "solid": false,
+      "see_through": false,
+      "width": 1,
+      "height": 1,
+      "tool": "shovel",
+      "noise": 0.0,
+      "paintable": false,
+      "build_seconds": 1.0,
+      "connects": "down",
+      "toggle_to": "",
+      "is_open_variant": false,
+      "cost": [],
+      "drops": [
+        {
+          "item": "earth",
           "count": 1
         }
       ]

@@ -32,6 +32,12 @@ namespace CepaCero.Player
         public string MeleeDamageType = "blunt";
         public int BlockHitDamage = 8;
 
+        /// <summary>Health lost per level fallen (D-022).</summary>
+        public int FallDamagePerLevel = 15;
+
+        /// <summary>Seconds between two level changes by stairs or trapdoor.</summary>
+        public float ClimbCooldown = 0.4f;
+
         public float PickUpReach = 1.5f;
         public float ReviveReach = 1.5f;
 

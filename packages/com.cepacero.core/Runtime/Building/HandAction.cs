@@ -21,13 +21,17 @@ namespace CepaCero.Building
 
         /// <summary>Eat, drink, bandage, analyse.</summary>
         UseItem,
+
+        /// <summary>Shovel or pickaxe on ground that can be dug (D-022 phase F).</summary>
+        Dig,
     }
 
     /// <summary>The target of a click, as the client knows it.</summary>
     public readonly struct ClickTarget
     {
-        public ClickTarget(bool hasBlock, bool isInteractive, bool hasPieceOfMine)
+        public ClickTarget(bool hasBlock, bool isInteractive, bool hasPieceOfMine, bool isDiggable = false)
         {
+            IsDiggable = isDiggable;
             HasBlock = hasBlock;
             IsInteractive = isInteractive;
             HasPieceOfMine = hasPieceOfMine;
@@ -38,6 +42,9 @@ namespace CepaCero.Building
 
         /// <summary>A door, chest or workbench: the right button opens it.</summary>
         public bool IsInteractive { get; }
+
+        /// <summary>Untouched ground underground, or a bare floor: the shovel and the pickaxe dig it.</summary>
+        public bool IsDiggable { get; }
 
         /// <summary>A construction piece (not a map building) that the hammer or a material click can take down.</summary>
         public bool HasPieceOfMine { get; }
@@ -63,6 +70,10 @@ namespace CepaCero.Building
             if (held == null)
             {
                 return target.HasBlock ? HandAction.HitBlock : HandAction.MeleeAttack;
+            }
+            if ((held.tool_kind == "shovel" || held.tool_kind == "pickaxe") && target.IsDiggable)
+            {
+                return HandAction.Dig;
             }
             if (held.tool_kind == "hammer" && target.HasPieceOfMine)
             {

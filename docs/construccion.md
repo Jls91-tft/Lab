@@ -366,3 +366,29 @@ tool: pickaxe
 noise: 9
 drops: { stone: 1, gravel: 1 }
 ```
+
+Bajo tierra todo es macizo por defecto (tierra en los niveles −1 y −2, roca más abajo) y no se guarda. Lo que se cava se marca con un **suelo de cueva** y queda abierto.
+La **fosa** es lo que deja cavar el suelo del nivel 0: se puede bajar por ella al nivel −1 y volver a subir.
+```yaml
+kind: natural
+id: cave
+name: Suelo de cueva
+layer: floor
+solid: false
+hp: 1
+tool: shovel
+noise: 0
+drops: { earth: 1 }
+```
+```yaml
+kind: natural
+id: pit
+name: Fosa
+layer: structure
+solid: false
+connects: down
+hp: 1
+tool: shovel
+noise: 0
+drops: { earth: 1 }
+```

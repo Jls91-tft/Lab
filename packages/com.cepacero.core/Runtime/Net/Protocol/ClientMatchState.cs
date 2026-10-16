@@ -228,6 +228,7 @@ namespace CepaCero.Net.Protocol
                 var p = new PlayerState
                 {
                     Position = new Float2(r.ReadFloat(), r.ReadFloat()),
+                    Level = (sbyte)r.ReadByte(),
                     Health = r.ReadUShort(),
                     Stamina = r.ReadByte() / 255f * _maxStamina,
                 };

@@ -13,7 +13,7 @@ namespace CepaCero.World
     {
         private const float MaxSubStep = 0.25f;
 
-        public static Float2 Move(Float2 position, Float2 delta, float radius, BlockWorld blocks, GroundLayer ground)
+        public static Float2 Move(Float2 position, Float2 delta, float radius, BlockWorld blocks, GroundLayer ground, int level = 0)
         {
             float length = delta.Length;
             if (length < 1e-6f)
@@ -26,18 +26,18 @@ namespace CepaCero.World
             for (int s = 0; s < steps; s++)
             {
                 var both = p + step;
-                if (IsFree(both, radius, blocks, ground))
+                if (IsFree(both, radius, blocks, ground, level))
                 {
                     p = both;
                     continue;
                 }
                 var xOnly = new Float2(p.X + step.X, p.Y);
                 var yOnly = new Float2(p.X, p.Y + step.Y);
-                if (step.X != 0f && IsFree(xOnly, radius, blocks, ground))
+                if (step.X != 0f && IsFree(xOnly, radius, blocks, ground, level))
                 {
                     p = xOnly;
                 }
-                else if (step.Y != 0f && IsFree(yOnly, radius, blocks, ground))
+                else if (step.Y != 0f && IsFree(yOnly, radius, blocks, ground, level))
                 {
                     p = yOnly;
                 }
@@ -50,7 +50,7 @@ namespace CepaCero.World
         }
 
         /// <summary>True if a circle at <paramref name="p"/> overlaps no solid block, water or map edge.</summary>
-        public static bool IsFree(Float2 p, float radius, BlockWorld blocks, GroundLayer ground)
+        public static bool IsFree(Float2 p, float radius, BlockWorld blocks, GroundLayer ground, int level = 0)
         {
             int minX = (int)MathF.Floor(p.X - radius);
             int maxX = (int)MathF.Floor(p.X + radius);
@@ -60,7 +60,7 @@ namespace CepaCero.World
             {
                 for (int x = minX; x <= maxX; x++)
                 {
-                    if (!blocks.InBounds(x, y) || blocks.GetBlock(x, y).IsSolid || GroundLayer.WalkCost(ground.Get(x, y)) == 0)
+                    if (!blocks.InBounds(x, y) || blocks.IsSolidAt(x, y, level) || (level == 0 && GroundLayer.WalkCost(ground.Get(x, y)) == 0))
                     {
                         if (CircleTouchesCell(p, radius, x, y))
                         {
@@ -83,14 +83,14 @@ namespace CepaCero.World
         }
 
         /// <summary>No solid block on the straight segment (sampled every quarter tile). Used for sight and melee.</summary>
-        public static bool HasClearLine(Float2 from, Float2 to, BlockWorld blocks)
+        public static bool HasClearLine(Float2 from, Float2 to, BlockWorld blocks, int level = 0)
         {
             Float2 delta = to - from;
             int samples = Math.Max(1, (int)MathF.Ceiling(delta.Length * 4f));
             for (int s = 1; s < samples; s++)
             {
                 Int2 t = (from + delta * (s / (float)samples)).Tile;
-                if (blocks.IsSolid(t.X, t.Y))
+                if (blocks.IsSolidAt(t.X, t.Y, level))
                 {
                     return false;
                 }

@@ -326,4 +326,7 @@ def test_roofs_and_diggable_ground_have_art():
         for shape in structures.ROOF_SHAPES:
             assert f"roof_{r['id']}_{shape}" in names, r["id"]
     for n in c["naturals"]:
-        assert f"wall_{n['id']}_top_15" in names and f"floor_{n['id']}_0" in names, n["id"]
+        if n["solid"]:
+            assert f"wall_{n['id']}_top_15" in names and f"floor_{n['id']}_0" in names, n["id"]
+        else:                                                         # cave floor and pit
+            assert f"floor_{n['id']}_0" in names or f"{n['id']}_0" in names, n["id"]

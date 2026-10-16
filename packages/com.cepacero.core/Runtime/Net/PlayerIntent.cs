@@ -17,6 +17,12 @@ namespace CepaCero.Net
         /// <summary>Takes back the player's last fresh placement and refunds all of it (Ctrl+Z).</summary>
         UndoPlace = 7,
 
+        /// <summary>Digs the cell: sideways into untouched ground underground, or down through a bare floor (shovel or pickaxe).</summary>
+        Dig = 8,
+
+        /// <summary>Goes up (Arg 1) or down (Arg 0) a level through stairs, a trapdoor or a pit. Handled by the session, not the world rules.</summary>
+        ChangeLevel = 9,
+
         // Inventory actions (HostItemRules). X/Y/Arg meaning in each factory below.
         SelectHotbar = 10,
         MoveToHotbar = 11,
@@ -61,14 +67,19 @@ namespace CepaCero.Net
             new PlayerIntent { Type = IntentType.PlaceBlock, X = (ushort)x, Y = (ushort)y, Arg = blockType, Variant = variant, Z = (sbyte)z };
 
         /// <summary>layer: 0 = whatever is on top, otherwise <see cref="CepaCero.World.BuildLayer"/> + 1.</summary>
-        public static PlayerIntent Dismantle(int x, int y, int layer = 0) =>
-            new PlayerIntent { Type = IntentType.Dismantle, X = (ushort)x, Y = (ushort)y, Arg = (ushort)layer };
+        public static PlayerIntent Dismantle(int x, int y, int layer = 0, int z = 0) =>
+            new PlayerIntent { Type = IntentType.Dismantle, X = (ushort)x, Y = (ushort)y, Arg = (ushort)layer, Z = (sbyte)z };
+
+        public static PlayerIntent Dig(int x, int y, int z = 0) =>
+            new PlayerIntent { Type = IntentType.Dig, X = (ushort)x, Y = (ushort)y, Z = (sbyte)z };
+
+        public static PlayerIntent Climb(bool up) => new PlayerIntent { Type = IntentType.ChangeLevel, Arg = (ushort)(up ? 1 : 0) };
 
         public static PlayerIntent Undo() => new PlayerIntent { Type = IntentType.UndoPlace };
 
-        public static PlayerIntent Hit(int x, int y) => new PlayerIntent { Type = IntentType.HitBlock, X = (ushort)x, Y = (ushort)y };
+        public static PlayerIntent Hit(int x, int y, int z = 0) => new PlayerIntent { Type = IntentType.HitBlock, X = (ushort)x, Y = (ushort)y, Z = (sbyte)z };
 
-        public static PlayerIntent Door(int x, int y) => new PlayerIntent { Type = IntentType.ToggleDoor, X = (ushort)x, Y = (ushort)y };
+        public static PlayerIntent Door(int x, int y, int z = 0) => new PlayerIntent { Type = IntentType.ToggleDoor, X = (ushort)x, Y = (ushort)y, Z = (sbyte)z };
 
         public static PlayerIntent Ranged(Float2 aim)
         {

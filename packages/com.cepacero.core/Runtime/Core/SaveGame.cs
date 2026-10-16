@@ -30,7 +30,7 @@ namespace CepaCero.Core
     public static class SaveGame
     {
         public const uint Magic = 0x56534343; // "CCSV"
-        public const ushort Version = 5;
+        public const ushort Version = 6;
 
         public static void Write(GameSession session, string mapName, ByteWriter writer)
         {
@@ -71,6 +71,7 @@ namespace CepaCero.Core
                 writer.WriteByte(s.IsDead ? (byte)1 : (byte)0);
                 writer.WriteFloat(s.Food);
                 writer.WriteFloat(s.Water);
+                writer.WriteByte((byte)(sbyte)s.Level);
                 if (items != null)
                 {
                     session.Inventories[p].Write(writer);
@@ -151,7 +152,7 @@ namespace CepaCero.Core
                 throw new FormatException("Not a Cepa Cero save file.");
             }
             ushort version = reader.ReadUShort();
-            if (version != Version && version != 4 && version != 3)
+            if (version != Version && version != 5 && version != 4 && version != 3)
             {
                 throw new FormatException($"Unsupported save version {version} (this build reads v{Version}).");
             }
@@ -200,6 +201,10 @@ namespace CepaCero.Core
                     {
                         state.Food = Clamp(reader.ReadFloat());
                         state.Water = Clamp(reader.ReadFloat());
+                    }
+                    if (version >= 6)
+                    {
+                        state.Level = (sbyte)reader.ReadByte();
                     }
                     players.Add(state);
                     if (hasItems)

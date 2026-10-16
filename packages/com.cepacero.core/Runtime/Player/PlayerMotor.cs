@@ -46,7 +46,7 @@ namespace CepaCero.Player
                 return 0f;
             }
             float speed = state.IsSprinting ? settings.SprintSpeed : settings.WalkSpeed;
-            state.Position = TileCollision.Move(state.Position, move * (speed * dt), settings.Radius, blocks, ground);
+            state.Position = TileCollision.Move(state.Position, move * (speed * dt), settings.Radius, blocks, ground, state.Level);
             return state.IsSprinting ? settings.SprintNoise : settings.WalkNoise;
         }
     }
