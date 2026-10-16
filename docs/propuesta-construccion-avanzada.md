@@ -129,8 +129,8 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 | Fase | Qué | Tamaño |
 | --- | --- | --- |
 | **A** | Datos de materiales y formas (`docs/construccion.md` → datagen → `BlockRegistry`); `spritegen` con los 14 materiales y el subsuelo | M · **hecha** (falta conectarla en Unity) |
-| **B** | Núcleo: capas (D-020) + color + rotación + **nivel (Z) en el modelo** sin gameplay aún | L |
-| **C** | Red v3 y guardado v6 con migración | M |
+| **B** | Núcleo: capas (D-020) + color + rotación + **nivel (Z) en el modelo** sin gameplay aún | L · **hecha** (183 tests; el jugador aún solo actúa en Z=0) |
+| **C** | Red v3 y guardado con migración | M · **adelantada en B**: protocolo v3 (un mensaje por plano de chunk, deltas de 11 bytes, intención de 9) y guardado **v5** que aún lee v3/v4. Queda solo lo que añadan D-F |
 | **D** | Construir con la mano: hotbar de 9, clic por objeto (arma, herramienta, material), forma con Q/E, color, sustituir, cuentagotas, habitación, deshacer, libro de piezas (**ya usable en una planta**) | L |
 | **E** | Planos: copiar, pegar, guardar | M |
 | **F** | Niveles para el jugador: escaleras, suelo, caídas, **cavar**, cámara con corte de niveles | L |

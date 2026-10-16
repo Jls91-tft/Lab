@@ -17,7 +17,7 @@ namespace CepaCero.Net.Protocol
     public static class Messages
     {
         /// <summary>Bump on any incompatible change; Welcome refuses mismatches.</summary>
-        public const ushort ProtocolVersion = 2;
+        public const ushort ProtocolVersion = 3;
 
         public const byte FlagSprinting = 1;
         public const byte FlagDowned = 2;
@@ -105,11 +105,17 @@ namespace CepaCero.Net.Protocol
             }
         }
 
+        /// <summary>A chunk for a late joiner: one message per plane that has something (the first one resets the chunk).</summary>
         public static void WriteChunk(ByteWriter w, BlockWorld blocks, int chunkX, int chunkY)
         {
-            using (Begin(w, MessageType.ChunkSnapshot))
+            var planes = new List<KeyValuePair<int, BuildLayer>>();
+            blocks.GetChunkPlanes(chunkX, chunkY, planes);
+            for (int i = 0; i < planes.Count; i++)
             {
-                blocks.WriteChunk(chunkX, chunkY, w);
+                using (Begin(w, MessageType.ChunkSnapshot))
+                {
+                    blocks.WriteChunkPlane(chunkX, chunkY, planes[i].Key, planes[i].Value, reset: i == 0, w);
+                }
             }
         }
 
@@ -125,11 +131,7 @@ namespace CepaCero.Net.Protocol
                     w.WriteUShort((ushort)count);
                     for (int i = start; i < start + count; i++)
                     {
-                        BlockChange c = changes[i];
-                        w.WriteUShort(c.X);
-                        w.WriteUShort(c.Y);
-                        w.WriteUShort(c.Type);
-                        w.WriteUShort(c.Health);
+                        changes[i].Write(w);
                     }
                 }
             }

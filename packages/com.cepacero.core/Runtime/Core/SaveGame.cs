@@ -14,7 +14,7 @@ namespace CepaCero.Core
     /// and progress. The ground is not saved: it comes from the map file,
     /// identified by name and size. Zombies are not saved either (D-013).
     ///
-    /// Layout v4 (little-endian; v3 is still read, without the bars):
+    /// Layout v5 (little-endian; v3 and v4 are still read: v3 has no hunger and thirst bars, v4 has chunks of one plane):
     ///   magic "CCSV" (uint) · version (ushort) · map name (string) · width, height (ushort)
     ///   tick (long) · nights survived, zombies killed (int) · respawn x, y (float)
     ///   block keys: count (ushort) + key (string) each    ← old saves load after blocks are added or reordered
@@ -24,13 +24,13 @@ namespace CepaCero.Core
     ///   unlocked samples: count (ushort) + id (string) each
     ///   containers (<see cref="ContainerStore.Write"/>) · ground piles: count (int) + x, y, stacks
     ///   diary: count (ushort) + entry id (string) each, in discovery order
-    ///   chunks: count (ushort) + <see cref="BlockWorld.WriteChunk"/> each
+    ///   chunks: count (ushort) + <see cref="BlockWorld.WriteChunk"/> each (planes by level and layer, with colour and rotation)
     ///   checksum: FNV-1a 32 of everything before it (uint)
     /// </summary>
     public static class SaveGame
     {
         public const uint Magic = 0x56534343; // "CCSV"
-        public const ushort Version = 4;
+        public const ushort Version = 5;
 
         public static void Write(GameSession session, string mapName, ByteWriter writer)
         {
@@ -151,7 +151,7 @@ namespace CepaCero.Core
                 throw new FormatException("Not a Cepa Cero save file.");
             }
             ushort version = reader.ReadUShort();
-            if (version != Version && version != 3)
+            if (version != Version && version != 4 && version != 3)
             {
                 throw new FormatException($"Unsupported save version {version} (this build reads v{Version}).");
             }
@@ -254,7 +254,14 @@ namespace CepaCero.Core
                 }
                 for (int c = 0; c < chunks; c++)
                 {
-                    blocks.ReadChunk(reader, blockRemap);
+                    if (version >= 5)
+                    {
+                        blocks.ReadChunk(reader, blockRemap);
+                    }
+                    else
+                    {
+                        blocks.ReadChunkLegacy(reader, blockRemap);       // saves from before levels and layers
+                    }
                 }
                 if (reader.Remaining != 0)
                 {

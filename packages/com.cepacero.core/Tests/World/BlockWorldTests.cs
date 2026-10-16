@@ -91,7 +91,7 @@ namespace CepaCero.Tests.World
 
             var writer = new ByteWriter();
             BlockChange.WriteBatch(changes, writer);
-            Assert.That(writer.Length, Is.EqualTo(2 + 3 * 8));
+            Assert.That(writer.Length, Is.EqualTo(2 + 3 * BlockChange.Bytes), "11 bytes per change: position, type, health, level, layer, variant");
 
             var received = new List<BlockChange>();
             BlockChange.ReadBatch(new ByteReader(writer.ToArray()), received);
@@ -114,7 +114,7 @@ namespace CepaCero.Tests.World
 
             var writer = new ByteWriter();
             host.WriteChunk(0, 0, writer);
-            Assert.That(writer.Length, Is.EqualTo(4 + 6), "an all-air chunk is a single run");
+            Assert.That(writer.Length, Is.EqualTo(4 + 1 + 2 + 7), "an all-air chunk is a header, one plane and a single run");
 
             writer.Clear();
             host.WriteChunk(1, 1, writer);

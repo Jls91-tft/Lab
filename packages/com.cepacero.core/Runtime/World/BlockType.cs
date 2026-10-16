@@ -44,6 +44,9 @@ namespace CepaCero.World
         /// <summary>Cost, tool, noise, size and layer from the construction data (D-022); null for the legacy blocks.</summary>
         public BlockBuildInfo Build { get; }
 
+        /// <summary>The layer of the cell this block lives in: legacy blocks are all structure.</summary>
+        public BuildLayer Layer => Build != null ? Build.Layer : BuildLayer.Structure;
+
         public bool IsTrap => ContactDamage > 0;
 
         public bool IsAir => Id == BlockRegistry.AirId;

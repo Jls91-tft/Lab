@@ -126,7 +126,7 @@ namespace CepaCero.Net.Protocol
                         ReadWelcome(payload);
                         break;
                     case MessageType.ChunkSnapshot:
-                        Blocks.ReadChunk(payload);
+                        Blocks.ReadChunkPlane(payload);
                         break;
                     case MessageType.BlockDeltas:
                         _changes.Clear();

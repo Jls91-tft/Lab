@@ -32,7 +32,7 @@ namespace CepaCero.Net
     /// <summary>
     /// What a client asks the host to do. Clients never send results (damage,
     /// health, success): the host validates and computes them.
-    /// Wire format: type (byte), x, y, arg (ushort each) = 7 bytes.
+    /// Wire format: type (byte), x, y, arg (ushort each), level (sbyte), variant (byte) = 9 bytes.
     /// </summary>
     public struct PlayerIntent
     {
@@ -43,10 +43,16 @@ namespace CepaCero.Net
         /// <summary>PlaceBlock: block type id. MeleeAttack: aim angle (0..65535 = 0..360°). Otherwise 0.</summary>
         public ushort Arg;
 
-        public const int Bytes = 7;
+        /// <summary>Level the action is for (0 = ground). The host only accepts the level the player is on.</summary>
+        public sbyte Z;
 
-        public static PlayerIntent Place(int x, int y, ushort blockType) =>
-            new PlayerIntent { Type = IntentType.PlaceBlock, X = (ushort)x, Y = (ushort)y, Arg = blockType };
+        /// <summary>PlaceBlock: colour and rotation of the piece (<see cref="CepaCero.World.BlockVariant"/>). Otherwise 0.</summary>
+        public byte Variant;
+
+        public const int Bytes = 9;
+
+        public static PlayerIntent Place(int x, int y, ushort blockType, byte variant = 0, int z = 0) =>
+            new PlayerIntent { Type = IntentType.PlaceBlock, X = (ushort)x, Y = (ushort)y, Arg = blockType, Variant = variant, Z = (sbyte)z };
 
         public static PlayerIntent Hit(int x, int y) => new PlayerIntent { Type = IntentType.HitBlock, X = (ushort)x, Y = (ushort)y };
 
@@ -114,6 +120,8 @@ namespace CepaCero.Net
             writer.WriteUShort(X);
             writer.WriteUShort(Y);
             writer.WriteUShort(Arg);
+            writer.WriteByte((byte)Z);
+            writer.WriteByte(Variant);
         }
 
         public static PlayerIntent Read(ByteReader reader) => new PlayerIntent
@@ -122,6 +130,8 @@ namespace CepaCero.Net
             X = reader.ReadUShort(),
             Y = reader.ReadUShort(),
             Arg = reader.ReadUShort(),
+            Z = (sbyte)reader.ReadByte(),
+            Variant = reader.ReadByte(),
         };
     }
 }

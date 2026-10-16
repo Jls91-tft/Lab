@@ -163,7 +163,7 @@ namespace CepaCero.Net
         {
             int x = intent.X;
             int y = intent.Y;
-            if (!_blocks.InBounds(x, y) || !_placeable.Contains(intent.Arg))
+            if (!_blocks.InBounds(x, y) || !_placeable.Contains(intent.Arg) || intent.Z != 0)       // players act on the ground level until they can climb (D-022 phase F)
             {
                 return IntentResult.InvalidTarget;
             }
@@ -171,7 +171,8 @@ namespace CepaCero.Net
             {
                 return IntentResult.OutOfReach;
             }
-            if (!_blocks.GetBlock(x, y).IsAir)
+            BlockType placing = _blocks.Registry[intent.Arg];
+            if (_blocks.GetTypeId(x, y, 0, placing.Layer) != BlockRegistry.AirId)
             {
                 return IntentResult.Occupied;
             }
@@ -179,7 +180,7 @@ namespace CepaCero.Net
             {
                 return IntentResult.InvalidTarget;
             }
-            if (IsOccupiedByBody(x, y, players))
+            if (placing.IsSolid && IsOccupiedByBody(x, y, players))
             {
                 return IntentResult.Occupied;
             }
@@ -188,7 +189,7 @@ namespace CepaCero.Net
             {
                 return IntentResult.MissingIngredients;
             }
-            _blocks.TryPlace(x, y, intent.Arg, _ground);
+            _blocks.TryPlace(x, y, 0, intent.Arg, intent.Variant, _ground);
             LastNoise = 3f;
             return IntentResult.Ok;
         }
