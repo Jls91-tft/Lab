@@ -144,6 +144,7 @@ namespace CepaCero.AI
             _type = new byte[capacity];
             _pos = new Float2[capacity];
             _level = new sbyte[capacity];
+            _portalCooldown = new float[capacity];
             _health = new int[capacity];
             _state = new ZombieState[capacity];
             _cooldown = new float[capacity];
@@ -276,6 +277,7 @@ namespace CepaCero.AI
             _type[slot] = typeIndex;
             _pos[slot] = position;
             _level[slot] = (sbyte)level;
+            _portalCooldown[slot] = 0f;
             _health[slot] = _catalog[typeIndex].HealthFor(players);
             _state[slot] = aware ? ZombieState.Idle : ZombieState.Unaware;
             _cooldown[slot] = 0f;
@@ -471,6 +473,10 @@ namespace CepaCero.AI
             byte type = _type[i];
             ZombieDefinition def = _catalog[type];
             _cooldown[i] -= dt;
+            if (_portalCooldown[i] > 0f)
+            {
+                _portalCooldown[i] -= dt;
+            }
             _ability[i] -= dt;
             _ability2[i] -= dt;
             if (_buff[i] > 0f)
@@ -538,19 +544,24 @@ namespace CepaCero.AI
             byte type = _type[i];
             Float2 pos = _pos[i];
             Int2 cell = pos.Tile;
-            Float2 desired;
-            if (_level[i] != 0 && nearest < 0)
+            FlowField field = FieldOf(_level[i]);
+            if (field == null)
             {
-                _state[i] = ZombieState.Idle;                       // no field for this level yet (D-022 phase G2)
+                _state[i] = ZombieState.Idle;                       // nobody to go to from this level
                 return;
             }
-            if (nearest >= 0 && (_level[i] != 0 || Field.GetDistance(cell.X, cell.Y) == 0))
+            Float2 desired;
+            if (nearest >= 0 && field.GetDistance(cell.X, cell.Y) == 0)
             {
                 desired = players[nearest] - pos; // same tile as the player: go straight for them
             }
             else
             {
-                Int2 step = Field.GetStep(cell.X, cell.Y);
+                if (TryUsePortal(i, field, cell))
+                {
+                    return;
+                }
+                Int2 step = field.GetStep(cell.X, cell.Y);
                 if (step == new Int2(0, 0))
                 {
                     _state[i] = ZombieState.Idle;
@@ -580,6 +591,70 @@ namespace CepaCero.AI
             }
             Move(i, desired.Normalized * speed + Separation(i, pos) * SeparationStrength, dt);
             Face(i, desired);
+        }
+
+        // ------------------------------------------------------------- levels (D-022 phase G2)
+
+        private struct Portal
+        {
+            public int ToLevel;
+            public Int2 Landing;
+            public int Cost;
+            public bool IsFall;
+        }
+
+        private const int StairsCost = 20;
+        private const int FallCost = 60;
+        private const float PortalReach = 0.35f;
+
+        /// <summary>Health a zombie loses per level it falls (a player loses 15; zombies take a bit less).</summary>
+        public int FallDamage { get; set; } = 10;
+
+        private readonly Dictionary<int, FlowField> _levelFields = new Dictionary<int, FlowField>();
+        private readonly Dictionary<int, Dictionary<int, Portal>> _portals = new Dictionary<int, Dictionary<int, Portal>>();
+        private readonly HashSet<int> _builtLevels = new HashSet<int>();
+        private readonly Dictionary<int, List<Int2>> _levelTargets = new Dictionary<int, List<Int2>>();
+        private readonly List<FlowSeed> _seeds = new List<FlowSeed>();
+        private int _signature = int.MinValue;
+        private float[] _portalCooldown;
+
+        /// <summary>The field that covers a level, or null when nobody there is wanted by anyone (nothing to walk to).</summary>
+        private FlowField FieldOf(int level)
+        {
+            if (level == 0)
+            {
+                return _builtLevels.Contains(0) ? Field : null;
+            }
+            return _builtLevels.Contains(level) && _levelFields.TryGetValue(level, out FlowField f) ? f : null;
+        }
+
+        /// <summary>Takes a stairwell or jumps down a pit when that is the cheapest way on. Returns true if the zombie changed level.</summary>
+        private bool TryUsePortal(int i, FlowField field, Int2 cell)
+        {
+            if (_portalCooldown[i] > 0f || !_portals.TryGetValue(_level[i], out Dictionary<int, Portal> here))
+            {
+                return false;
+            }
+            if (!here.TryGetValue(cell.Y * _blocks.Width + cell.X, out Portal portal) || field.GetDistance(cell.X, cell.Y) > portal.Cost)
+            {
+                return false;
+            }
+            Float2 centre = new Float2(cell.X + 0.5f, cell.Y + 0.5f);
+            if ((_pos[i] - centre).LengthSquared > PortalReach * PortalReach)
+            {
+                _pos[i] = _pos[i] + (centre - _pos[i]).Normalized * Math.Min(0.1f, (centre - _pos[i]).Length);   // step onto the middle of it
+                _state[i] = ZombieState.Chasing;
+                return true;
+            }
+            _level[i] = (sbyte)portal.ToLevel;
+            _pos[i] = new Float2(portal.Landing.X + 0.5f, portal.Landing.Y + 0.5f);
+            _portalCooldown[i] = 1.5f;
+            if (portal.IsFall)
+            {
+                _stun[i] = 0.6f;
+                Damage(i, FallDamage, "fall");
+            }
+            return true;
         }
 
         private void Move(int i, Float2 velocity, float dt)
@@ -620,7 +695,7 @@ namespace CepaCero.AI
             {
                 return;
             }
-            BlockType block = _blocks.GetBlock(target.X, target.Y);
+            BlockType block = _blocks.GetBlock(target.X, target.Y, _level[i], BuildLayer.Structure);
             if (!_policy.CanBreak(block.Material))
             {
                 return;
@@ -628,7 +703,7 @@ namespace CepaCero.AI
             int damage = ZombieCatalog.StructureDamage(def, block.Material);
             if (damage > 0)
             {
-                _blocks.Damage(target.X, target.Y, damage);
+                _blocks.Damage(target.X, target.Y, _level[i], BuildLayer.Structure, damage);
             }
             _cooldown[i] = Math.Max(0.1f, def.attack_interval);
         }
@@ -847,9 +922,10 @@ namespace CepaCero.AI
             else
             {
                 Int2 cell = _pos[i].Tile;
-                Int2 step = Field.GetStep(cell.X, cell.Y);
+                FlowField field = FieldOf(_level[i]);
+                Int2 step = field != null ? field.GetStep(cell.X, cell.Y) : new Int2(0, 0);
                 Int2 next = cell + step;
-                if (step != new Int2(0, 0) && _blocks.InBounds(next.X, next.Y) && _blocks.IsSolid(next.X, next.Y))
+                if (step != new Int2(0, 0) && _blocks.InBounds(next.X, next.Y) && _blocks.IsSolidAt(next.X, next.Y, _level[i]))
                 {
                     direction = new Float2(next.X + 0.5f, next.Y + 0.5f) - _pos[i]; // blocked: smash through
                 }
@@ -973,33 +1049,198 @@ namespace CepaCero.AI
 
         // ---------------------------------------------------------------- shared
 
-        private readonly List<Int2> _wanted = new List<Int2>();
-
+        /// <summary>
+        /// One field per level that has people or zombies, linked through stairwells and pits: the levels with players are
+        /// searched first and every other level is seeded from the cells that lead to an already searched neighbour, at the cost of
+        /// the rest of the way (so a zombie in the street walks to the stairs because that is where the way to the player starts).
+        /// </summary>
         private void UpdateFlowField(IReadOnlyList<Float2> players)
         {
-            _wanted.Clear();
+            foreach (List<Int2> list in _levelTargets.Values)
+            {
+                list.Clear();
+            }
+            int low = int.MaxValue, high = int.MinValue, signature = _blocks.NavigationRevision * 31 + _blocks.StructureRevision;
             for (int p = 0; p < players.Count; p++)
             {
-                if (PlayerLevel(p) == 0)                       // the street's field only chases people on the street
+                int level = PlayerLevel(p);
+                if (!_levelTargets.TryGetValue(level, out List<Int2> list))
                 {
-                    _wanted.Add(players[p].Tile);
+                    list = new List<Int2>();
+                    _levelTargets.Add(level, list);
+                }
+                Int2 tile = players[p].Tile;
+                list.Add(tile);
+                low = Math.Min(low, level);
+                high = Math.Max(high, level);
+                signature = unchecked(signature * 397 ^ (tile.X * 7919 + tile.Y * 104729 + level));
+            }
+            for (int i = 0; i < Capacity; i++)
+            {
+                if (_alive[i])
+                {
+                    low = Math.Min(low, _level[i]);
+                    high = Math.Max(high, _level[i]);
+                    signature = unchecked(signature * 31 ^ (_level[i] + 17));
                 }
             }
-            bool targetsChanged = _wanted.Count != _targets.Count;
-            for (int p = 0; !targetsChanged && p < _wanted.Count; p++)
-            {
-                targetsChanged = _wanted[p] != _targets[p];
-            }
-            bool stale = Field.BuiltFromRevision != _blocks.StructureRevision || targetsChanged;
+            bool stale = signature != _signature;
             if (!stale || _time - _lastRebuild < FlowRebuildInterval)
             {
                 return;
             }
-            _targets.Clear();
-            _targets.AddRange(_wanted);
-            Field.Build(_ground, _blocks, _policy, _targets, FlowMaxDistance);
+            _signature = signature;
             _lastRebuild = _time;
-            FlowRebuilds++;
+            _builtLevels.Clear();
+            _portals.Clear();
+            if (low > high)
+            {
+                return;                                                 // nobody about
+            }
+            _targets.Clear();
+            foreach (KeyValuePair<int, List<Int2>> entry in _levelTargets)
+            {
+                if (entry.Value.Count > 0 && _blocks.InLevels(entry.Key))
+                {
+                    BuildLevel(entry.Key, entry.Value, null);
+                }
+            }
+            bool progress = true;
+            while (progress)
+            {
+                progress = false;
+                for (int level = low; level <= high; level++)
+                {
+                    if (_builtLevels.Contains(level) || !_blocks.InLevels(level))
+                    {
+                        continue;
+                    }
+                    _seeds.Clear();
+                    Dictionary<int, Portal> portals = new Dictionary<int, Portal>();
+                    SeedFrom(level, level + 1, portals);
+                    SeedFrom(level, level - 1, portals);
+                    if (_seeds.Count > 0)
+                    {
+                        BuildLevel(level, null, portals);
+                        progress = true;
+                    }
+                }
+            }
+            // A level that has people may also be left through a stairwell or a pit to reach someone nearer: search it again with those seeds.
+            foreach (KeyValuePair<int, List<Int2>> entry in _levelTargets)
+            {
+                if (entry.Value.Count == 0 || !_builtLevels.Contains(entry.Key))
+                {
+                    continue;
+                }
+                _seeds.Clear();
+                foreach (Int2 t in entry.Value)
+                {
+                    _seeds.Add(new FlowSeed(t, 0));
+                }
+                var portals = new Dictionary<int, Portal>();
+                SeedFrom(entry.Key, entry.Key + 1, portals);
+                SeedFrom(entry.Key, entry.Key - 1, portals);
+                if (portals.Count > 0)
+                {
+                    BuildLevel(entry.Key, null, portals);
+                }
+            }
+        }
+
+        private void BuildLevel(int level, List<Int2> targets, Dictionary<int, Portal> portals)
+        {
+            FlowField field;
+            if (level == 0)
+            {
+                field = Field;
+            }
+            else if (!_levelFields.TryGetValue(level, out field))
+            {
+                field = new FlowField(_blocks.Width, _blocks.Height, level);
+                _levelFields.Add(level, field);
+            }
+            if (targets != null)
+            {
+                _seeds.Clear();
+                foreach (Int2 t in targets)
+                {
+                    _seeds.Add(new FlowSeed(t, 0));
+                }
+                if (level == 0)
+                {
+                    _targets.Clear();
+                    _targets.AddRange(targets);
+                    FlowRebuilds++;
+                }
+            }
+            field.Build(_ground, _blocks, _policy, _seeds, FlowMaxDistance);
+            _builtLevels.Add(level);
+            if (portals != null && portals.Count > 0)
+            {
+                _portals[level] = portals;
+            }
+        }
+
+        /// <summary>
+        /// Adds to the seeds the cells of <paramref name="level"/> from which a searched neighbour can be reached: stairs both ways,
+        /// and pits or open trapdoors downwards (a fall).
+        /// </summary>
+        private void SeedFrom(int level, int neighbour, Dictionary<int, Portal> portals)
+        {
+            if (!_builtLevels.Contains(neighbour) || !_blocks.InLevels(neighbour))
+            {
+                return;
+            }
+            FlowField other = neighbour == 0 ? Field : _levelFields[neighbour];
+            int width = _blocks.Width;
+            if (neighbour == level + 1)
+            {
+                foreach (int index in _blocks.ConnectorCells(level))                   // stairs up from here
+                {
+                    int x = index % width, y = index / width;
+                    if (_blocks.ConnectorAt(x, y, level, out _) == LevelRules.Up)
+                    {
+                        AddPortal(level, neighbour, x, y, other, StairsCost, false, portals);
+                    }
+                }
+            }
+            else
+            {
+                foreach (int index in _blocks.ConnectorCells(neighbour))               // stairs below: walk down them
+                {
+                    int x = index % width, y = index / width;
+                    if (_blocks.ConnectorAt(x, y, neighbour, out _) == LevelRules.Up)
+                    {
+                        AddPortal(level, neighbour, x, y, other, StairsCost, false, portals);
+                    }
+                }
+                foreach (int index in _blocks.ConnectorCells(level))                   // pits and open trapdoors: fall
+                {
+                    int x = index % width, y = index / width;
+                    if (_blocks.ConnectorAt(x, y, level, out BlockType piece) == LevelRules.Down && !(piece.Build.Shape == "hatch" && !piece.Build.IsOpenVariant))
+                    {
+                        AddPortal(level, neighbour, x, y, other, FallCost, true, portals);
+                    }
+                }
+            }
+        }
+
+        private void AddPortal(int level, int to, int x, int y, FlowField other, int extra, bool fall, Dictionary<int, Portal> portals)
+        {
+            int distance = other.GetDistance(x, y);
+            if (distance == FlowField.Unreachable || _blocks.IsSolidAt(x, y, to) || _blocks.IsSolidAt(x, y, level))
+            {
+                return;
+            }
+            int cost = distance + extra;
+            int key = y * _blocks.Width + x;
+            if (portals.TryGetValue(key, out Portal old) && old.Cost <= cost)
+            {
+                return;
+            }
+            portals[key] = new Portal { ToLevel = to, Landing = new Int2(x, y), Cost = cost, IsFall = fall };
+            _seeds.Add(new FlowSeed(new Int2(x, y), cost));
         }
 
         private void BuildSpatialHash()

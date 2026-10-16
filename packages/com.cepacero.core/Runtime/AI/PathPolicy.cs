@@ -22,8 +22,31 @@ namespace CepaCero.AI
         public static PathPolicy Zombie => new PathPolicy();
 
         /// <summary>Cost of entering a cell, or 0 if impassable.</summary>
-        public int CellCost(GroundLayer ground, BlockWorld blocks, int x, int y)
+        public int CellCost(GroundLayer ground, BlockWorld blocks, int x, int y) => CellCost(ground, blocks, x, y, 0);
+
+        /// <summary>
+        /// As above on any level (D-022). Untouched ground underground is impassable (zombies do not dig) and so is an upper cell with
+        /// nothing under it (they would fall; falling is a portal, not a path).
+        /// </summary>
+        public int CellCost(GroundLayer ground, BlockWorld blocks, int x, int y, int level)
         {
+            if (level != 0)
+            {
+                if (!blocks.InBounds(x, y) || blocks.IsUndug(x, y, level) || (level > 0 && !LevelRules.Supports(blocks, x, y, level)))
+                {
+                    return 0;
+                }
+                BlockType here = blocks.GetBlock(x, y, level, BuildLayer.Structure);
+                if (!here.IsSolid)
+                {
+                    return 10;
+                }
+                if (here.IsIndestructible || !CanBreak(here.Material))
+                {
+                    return 0;
+                }
+                return 10 + BreakBaseCost + (int)(blocks.GetHealth(x, y, level, BuildLayer.Structure) * BreakCostPerHealth);
+            }
             int cost = GroundLayer.WalkCost(ground.Get(x, y));
             if (cost == 0)
             {

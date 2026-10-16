@@ -349,16 +349,29 @@ namespace CepaCero.Tests.Core
 
         // ------------------------------------------------------------------ the rest of the match
         [Test]
-        public void ZombiesDoNotSenseAPlayerOnAnotherLevel()
+        public void ZombiesFallDownAnOpenPitToReachSomeoneUnderground()
         {
             var (s, map, p) = Underground();
-            Assert.That(s.Players[p].Level, Is.EqualTo(-1));
+            int z = s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(5.5f, 7.5f));
+            for (int t = 0; t < 400 && s.Zombies.GetLevel(z) == 0; t++)
+            {
+                s.Step();
+            }
+            Assert.That(s.Zombies.GetLevel(z), Is.EqualTo(-1), "it walked to the pit and fell in");
+        }
+
+        [Test]
+        public void ZombiesDoNotSenseAPlayerInACaveWithNoWayIn()
+        {
+            var (s, map, p) = Match();
+            map.Blocks.SetBlock(12, 12, -1, BuildLayer.Floor, Id("cave"));
+            int z = s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(11.5f, 12.5f));
             int health = s.Players[p].Health;
-            s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(5.5f, 6.5f));
             for (int t = 0; t < 100; t++)
             {
                 s.Step();
             }
+            Assert.That(s.Zombies.GetLevel(z), Is.Zero);
             Assert.That(s.Players[p].Health, Is.EqualTo(health));
         }
 

@@ -77,6 +77,59 @@ namespace CepaCero.World
         public int StructureRevision { get; private set; }
 
         /// <summary>
+        /// Counts every change to structures and floors on any level (what walkers care about). Pathfinding rebuilds when it moves
+        /// (<see cref="StructureRevision"/> only follows the street's structures).
+        /// </summary>
+        public int NavigationRevision { get; private set; }
+
+        private readonly Dictionary<int, HashSet<int>> _connectors = new Dictionary<int, HashSet<int>>();
+        private static readonly HashSet<int> NoConnectors = new HashSet<int>();
+
+        /// <summary>Cells (index = y × Width + x) of a level that hold stairs, a pit or a trapdoor (Structure or Floor layer).</summary>
+        public IReadOnlyCollection<int> ConnectorCells(int level) => _connectors.TryGetValue(level, out HashSet<int> cells) ? cells : NoConnectors;
+
+        /// <summary>The connector piece in a cell ("up", "down" or "" when none), looking at the structure first and then the floor.</summary>
+        public string ConnectorAt(int x, int y, int level, out BlockType piece)
+        {
+            piece = GetBlock(x, y, level, BuildLayer.Structure);
+            if (piece.Build != null && piece.Build.Connects.Length > 0)
+            {
+                return piece.Build.Connects;
+            }
+            piece = GetBlock(x, y, level, BuildLayer.Floor);
+            return piece.Build != null ? piece.Build.Connects : "";
+        }
+
+        private void TrackConnector(int x, int y, int z, BuildLayer layer, ushort previous, ushort current)
+        {
+            if (layer != BuildLayer.Structure && layer != BuildLayer.Floor)
+            {
+                return;
+            }
+            NavigationRevision++;
+            bool wasConnector = previous != BlockRegistry.AirId && Registry[previous].Build != null && Registry[previous].Build.Connects.Length > 0;
+            bool isConnector = current != BlockRegistry.AirId && Registry[current].Build != null && Registry[current].Build.Connects.Length > 0;
+            if (!wasConnector && !isConnector)
+            {
+                return;
+            }
+            int index = y * Width + x;
+            if (isConnector)
+            {
+                if (!_connectors.TryGetValue(z, out HashSet<int> cells))
+                {
+                    cells = new HashSet<int>();
+                    _connectors.Add(z, cells);
+                }
+                cells.Add(index);
+            }
+            else if (_connectors.TryGetValue(z, out HashSet<int> cells) && ConnectorAt(x, y, z, out _).Length == 0)
+            {
+                cells.Remove(index);
+            }
+        }
+
+        /// <summary>
         /// Raised when a ground-level structure changes type (x, y, old type, new type), e.g. a chest
         /// destroyed by zombies spilling its contents. Not raised by the readers.
         /// </summary>
@@ -459,6 +512,30 @@ namespace CepaCero.World
                 }
                 i += run;
             }
+            if (layer == BuildLayer.Structure || layer == BuildLayer.Floor)
+            {
+                ScanConnectors(chunk, z, plane);
+            }
+        }
+
+        private void ScanConnectors(Chunk chunk, int z, Chunk.Plane plane)
+        {
+            NavigationRevision++;
+            for (int k = 0; k < Chunk.CellCount; k++)
+            {
+                ushort t = plane.Types[k];
+                if (t != BlockRegistry.AirId && Registry[t].Build != null && Registry[t].Build.Connects.Length > 0)
+                {
+                    int x = chunk.ChunkX * Chunk.Size + k % Chunk.Size;
+                    int y = chunk.ChunkY * Chunk.Size + k / Chunk.Size;
+                    if (!_connectors.TryGetValue(z, out HashSet<int> cells))
+                    {
+                        cells = new HashSet<int>();
+                        _connectors.Add(z, cells);
+                    }
+                    cells.Add(y * Width + x);
+                }
+            }
         }
 
         private static ushort Remap(ushort type, ushort[] remap) => remap == null ? type : type < remap.Length ? remap[type] : ushort.MaxValue;
@@ -474,6 +551,11 @@ namespace CepaCero.World
 
         private void ClearChunk(Chunk chunk)
         {
+            NavigationRevision++;
+            foreach (HashSet<int> cells in _connectors.Values)
+            {
+                cells.RemoveWhere(c => c % Width / Chunk.Size == chunk.ChunkX && c / Width / Chunk.Size == chunk.ChunkY);
+            }
             for (int zi = 0; zi < LevelCount; zi++)
             {
                 for (int l = 0; l < Chunk.Layers; l++)
@@ -488,6 +570,7 @@ namespace CepaCero.World
             chunk.Version++;
             Revision++;
             StructureRevision++;
+            NavigationRevision++;
         }
 
         private BuildLayer LayerOf(ushort typeId) => typeId == BlockRegistry.AirId ? BuildLayer.Structure : Registry[typeId].Layer;
@@ -520,6 +603,7 @@ namespace CepaCero.World
             ushort previous = plane.Types[i];
             plane.Types[i] = typeId;
             plane.Health[i] = health;
+            TrackConnector(x, y, z, layer, previous, typeId);
             if (variant != 0 && plane.Variant == null)
             {
                 plane.Variant = new byte[Chunk.CellCount];

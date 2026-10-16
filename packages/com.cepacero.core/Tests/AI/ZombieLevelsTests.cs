@@ -121,5 +121,121 @@ namespace CepaCero.Tests.AI
             Assert.That(below, Is.GreaterThanOrEqualTo(0));
             Assert.That(underground.Length, Is.EqualTo(ZombieSnapshotCodec.HeaderBytes + ZombieSnapshotCodec.BytesPerZombie));
         }
+
+        // ------------------------------------------------------------------ between levels (phase G2)
+        private ushort Id(string key) => _map.Blocks.Registry.Get(key).Id;
+
+        private void Cave(int x0, int x1, int y, int level)
+        {
+            for (int x = x0; x <= x1; x++)
+            {
+                _map.Blocks.SetBlock(x, y, level, BuildLayer.Floor, Id("cave"));
+            }
+        }
+
+        private void FloorRun(int x0, int x1, int y, int level)
+        {
+            for (int x = x0; x <= x1; x++)
+            {
+                _map.Blocks.SetBlock(x, y, level, BuildLayer.Floor, Id("floor_wood"));
+            }
+        }
+
+        private int RunUntil(ZombieSimulation sim, List<Float2> players, List<int> levels, System.Func<bool> done, float maxSeconds = 40f)
+        {
+            int ticks = 0;
+            for (float t = 0; t < maxSeconds && !done(); t += Dt, ticks++)
+            {
+                sim.Tick(Dt, players, levels);
+            }
+            return ticks;
+        }
+
+        [Test]
+        public void AZombieFallsThroughAPitAndHurtsItself()
+        {
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Structure, Id("pit"));
+            Cave(10, 16, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
+            int full = sim.GetHealth(z);
+            var players = new List<Float2> { new Float2(15.5f, 5.5f) };
+            var levels = new List<int> { -1 };
+            RunUntil(sim, players, levels, () => sim.GetLevel(z) == -1);
+            Assert.That(sim.GetLevel(z), Is.EqualTo(-1));
+            Assert.That(sim.GetHealth(z), Is.LessThan(full), "falling hurts");
+            RunUntil(sim, players, levels, () => sim.GetPosition(z).X > 12.5f);
+            Assert.That(sim.GetPosition(z).X, Is.GreaterThan(12.5f), "and it carries on down the tunnel");
+        }
+
+        [Test]
+        public void ZombiesCannotClimbOutOfAPit()
+        {
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Structure, Id("pit"));
+            Cave(10, 16, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(14.5f, 5.5f), level: -1);
+            var players = new List<Float2> { new Float2(3.5f, 5.5f) };
+            var levels = new List<int> { 0 };
+            Run(sim, players, levels, 15f);
+            Assert.That(sim.GetLevel(z), Is.EqualTo(-1), "nothing to climb");
+            Assert.That(sim.GetPosition(z).X, Is.LessThan(17f));
+        }
+
+        [Test]
+        public void ZombiesUseStairsInBothDirections()
+        {
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Structure, Id("stairs_wood"));
+            FloorRun(11, 16, 5, 1);
+            ZombieSimulation sim = Sim();
+            int up = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
+            var players = new List<Float2> { new Float2(15.5f, 5.5f) };
+            RunUntil(sim, players, new List<int> { 1 }, () => sim.GetLevel(up) == 1);
+            Assert.That(sim.GetLevel(up), Is.EqualTo(1), "up the stairs after the player");
+            Assert.That(sim.GetHealth(up), Is.EqualTo(_catalog[_walker].HealthFor(1)), "stairs do not hurt");
+
+            ZombieSimulation sim2 = Sim();
+            int down = sim2.Spawn(_walker, new Float2(14.5f, 5.5f), level: 1);
+            var onStreet = new List<Float2> { new Float2(3.5f, 5.5f) };
+            RunUntil(sim2, onStreet, new List<int> { 0 }, () => sim2.GetLevel(down) == 0);
+            Assert.That(sim2.GetLevel(down), Is.Zero, "and down again");
+        }
+
+        [Test]
+        public void AClosedTrapdoorIsNotAWayDownYet()
+        {
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Floor, Id("hatch_wood"));
+            Cave(10, 16, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
+            Run(sim, new List<Float2> { new Float2(15.5f, 5.5f) }, new List<int> { -1 }, 20f);
+            Assert.That(sim.GetLevel(z), Is.Zero);
+        }
+
+        [Test]
+        public void AnOpenTrapdoorIsAFall()
+        {
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Floor, Id("hatch_wood_open"));
+            Cave(10, 16, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
+            var levels = new List<int> { -1 };
+            RunUntil(sim, new List<Float2> { new Float2(15.5f, 5.5f) }, levels, () => sim.GetLevel(z) == -1);
+            Assert.That(sim.GetLevel(z), Is.EqualTo(-1));
+        }
+
+        [Test]
+        public void ThePlayersLevelDecidesWhichFieldAZombieFollows()
+        {
+            // two people: one on the street far to the east, one in a cave with a pit to the west; the zombie in the middle goes for the nearer way
+            _map.Blocks.SetBlock(8, 5, 0, BuildLayer.Structure, Id("pit"));
+            Cave(8, 10, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(6.5f, 5.5f));
+            var players = new List<Float2> { new Float2(9.5f, 5.5f), new Float2(30.5f, 5.5f) };
+            var levels = new List<int> { -1, 0 };
+            RunUntil(sim, players, levels, () => sim.GetLevel(z) == -1);
+            Assert.That(sim.GetLevel(z), Is.EqualTo(-1), "the person below is closer");
+        }
     }
 }

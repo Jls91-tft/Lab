@@ -15,6 +15,20 @@ namespace CepaCero.AI
     /// stamp instead of being cleared, so a build bounded by
     /// <c>maxDistance</c> only touches the cells it explores.
     /// </summary>
+    /// <summary>A starting cell for the search with the cost already paid to get there (0 for a player; more for a stairwell leading to one).</summary>
+    public readonly struct FlowSeed
+    {
+        public FlowSeed(Int2 cell, int cost)
+        {
+            Cell = cell;
+            Cost = cost;
+        }
+
+        public Int2 Cell { get; }
+
+        public int Cost { get; }
+    }
+
     public sealed class FlowField
     {
         public const int Unreachable = int.MaxValue;
@@ -37,8 +51,9 @@ namespace CepaCero.AI
         private BlockWorld _blocks;
         private PathPolicy _policy;
 
-        public FlowField(int width, int height)
+        public FlowField(int width, int height, int level = 0)
         {
+            Level = level;
             if (width <= 0 || height <= 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(width));
@@ -58,6 +73,9 @@ namespace CepaCero.AI
 
         public int Height { get; }
 
+        /// <summary>The level this field covers (D-022): every level has its own, linked through stairwells.</summary>
+        public int Level { get; }
+
         /// <summary>World structure revision this field was built from (see <see cref="BlockWorld.StructureRevision"/>).</summary>
         public int BuiltFromRevision { get; private set; } = -1;
 
@@ -71,6 +89,20 @@ namespace CepaCero.AI
         public void Build(GroundLayer ground, BlockWorld blocks, PathPolicy policy, IReadOnlyList<Int2> targets,
             int maxDistance = Unreachable)
         {
+            _scratchSeeds.Clear();
+            for (int t = 0; t < targets.Count; t++)
+            {
+                _scratchSeeds.Add(new FlowSeed(targets[t], 0));
+            }
+            Build(ground, blocks, policy, _scratchSeeds, maxDistance);
+        }
+
+        private readonly List<FlowSeed> _scratchSeeds = new List<FlowSeed>();
+
+        /// <summary>As above, but each starting cell carries the cost already paid (a stairwell towards the players is a seed with that cost).</summary>
+        public void Build(GroundLayer ground, BlockWorld blocks, PathPolicy policy, IReadOnlyList<FlowSeed> seeds,
+            int maxDistance = Unreachable)
+        {
             if (ground.Width != Width || ground.Height != Height || blocks.Width != Width || blocks.Height != Height)
             {
                 throw new ArgumentException("Ground, blocks and field must have the same size.");
@@ -81,14 +113,17 @@ namespace CepaCero.AI
             NextStamp();
 
             _heap.Clear();
-            for (int t = 0; t < targets.Count; t++)
+            for (int t = 0; t < seeds.Count; t++)
             {
-                Int2 target = targets[t];
-                if (InBounds(target.X, target.Y))
+                Int2 target = seeds[t].Cell;
+                if (InBounds(target.X, target.Y) && seeds[t].Cost <= maxDistance)
                 {
                     int i = target.Y * Width + target.X;
-                    SetDistance(i, 0);
-                    _heap.Push(0, i);
+                    if (seeds[t].Cost < Distance(i))
+                    {
+                        SetDistance(i, seeds[t].Cost);
+                        _heap.Push(seeds[t].Cost, i);
+                    }
                 }
             }
 
@@ -217,8 +252,8 @@ namespace CepaCero.AI
             {
                 int x = i % Width;
                 int y = i / Width;
-                _cellCost[i] = _policy.CellCost(_ground, _blocks, x, y);
-                _open[i] = _cellCost[i] > 0 && !_blocks.GetBlock(x, y).IsSolid;
+                _cellCost[i] = _policy.CellCost(_ground, _blocks, x, y, Level);
+                _open[i] = _cellCost[i] > 0 && !_blocks.IsSolidAt(x, y, Level);
                 _costStamp[i] = _stamp;
             }
             return _cellCost[i];
