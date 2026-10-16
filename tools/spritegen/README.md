@@ -31,7 +31,8 @@ pytest -q
 | `decal_*` | Marcas planas (sangre, manchas, basura, cristales, alfombras ×3 casillas) | 32×32 · 96×32 |
 | `player_<dir>_<0-3>`, `player_other_…`, `player_downed` | Jugador propio, compañero y caído | 32×48 · 32×32 |
 | `zombie_<id>_<dir>_<0-3>` | Un juego por zombi del bestiario (La Mole, 64×96: dos casillas) | 32×48 |
-| `zombie_walker_v1…v3_…` | Variantes del caminante para dar variedad a la horda (el juego puede elegir una por zombi) | 32×48 |
+| `zombie_walker_v1…v9_…` | 9 variantes del caminante (corpulento, delgado, policía, enfermera, oficinista, sudadera, anciano, mecánico…) para que la horda parezca gente de la ciudad; el juego puede elegir una por zombi | 32×48 |
+| `anim_water_<0-3>` · `decor_barrel_fire_<0-3>` | Agua en movimiento y barril con fuego (con punto de luz), para ciclar a ~4 fps | 32×32 · 24×44 |
 
 Fotogramas 0 y 2: de pie con pasos a ras; 1 y 3: paso. `<dir>` es `down`, `up` o `left`.
 

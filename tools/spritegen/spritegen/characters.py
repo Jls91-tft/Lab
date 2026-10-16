@@ -61,6 +61,9 @@ class Look:
     lean: int = 0                     # forward hunch (runner)
     belly: bool = False               # swollen belly (spitter)
     prop: str = ""                    # iv (patient zero's drip stand)
+    hat_color: Color | None = None    # cap colour (defaults to the shirt)
+    tie: Color | None = None
+    badge: bool = False
     big_jaw: bool = False
     glow_eyes: Color = GLOW
     parts: dict = field(default_factory=dict)
@@ -163,6 +166,26 @@ def _hat(S: Sprite, look: Look, hx: int, hy: int, side: str = "front") -> None:
         if side == "front":
             S.set(hx, hy - 5, (255, 244, 200), True)
             S.set(hx - 1, hy - 5, (255, 244, 200)); S.set(hx + 1, hy - 5, (255, 244, 200))
+    elif look.hat == "cap":
+        cc = ramp5(look.hat_color or look.shirt)
+        if side == "front":
+            S.paint(poly([(hx - 4.6, hy - 2.2), (hx - 3.8, hy - 6.2), (hx + 3.8, hy - 6.2), (hx + 4.6, hy - 2.2)]), cc, grain=.15, edge=True)
+            S.paint(rect(hx - 5, hy - 3, hx + 5, hy - 2), [mix(c, (0, 0, 0), .25) for c in cc], edge=True)
+        elif side == "back":
+            S.paint(poly([(hx - 4.8, hy - 1.6), (hx - 3.8, hy - 6.2), (hx + 3.8, hy - 6.2), (hx + 4.8, hy - 1.6)]), cc, grain=.15, edge=True)
+        else:
+            S.paint(poly([(hx - 3.2, hy - 2.4), (hx - 2.4, hy - 6.4), (hx + 4.4, hy - 5.6), (hx + 4.6, hy - 1.4), (hx + 1, hy - 2.2)]), cc, grain=.15, edge=True)
+            S.paint(rect(hx - 7, hy - 3, hx - 2, hy - 2), [mix(c, (0, 0, 0), .25) for c in cc], edge=True)
+        if look.badge and side == "front":
+            S.set(hx, hy - 5, (226, 190, 70)); S.set(hx, hy - 4, (180, 140, 40))
+    elif look.hat == "hood":
+        hd = ramp5(look.hat_color or look.shirt)
+        outer = poly([(hx - 5.6, hy + 3), (hx - 5.2, hy - 4), (hx - 2.4, hy - 7.2), (hx + 2.4, hy - 7.2), (hx + 5.2, hy - 4), (hx + 5.6, hy + 3), (hx + 3.4, hy + 5), (hx - 3.4, hy + 5)])
+        if side == "front":
+            outer = outer - ellipse(hx, hy - .2, 3.7, 4.3)
+        elif side == "side":
+            outer = outer - ellipse(hx - 2.2, hy, 3.6, 4.3)
+        S.paint(outer, hd, grain=.2, edge=True)
     elif look.hat == "helmet":
         m = ramp5(METAL)
         S.paint(poly([(hx - 4.9, hy - 1), (hx - 4, hy - 6.2), (hx + 4, hy - 6.2), (hx + 4.9, hy - 1), (hx + 3.4, hy + 0.4), (hx - 3.4, hy + 0.4)]), m, grain=.2, edge=True)
@@ -304,6 +327,14 @@ def draw_front(look: Look, frame: int) -> Sprite:
         for y in range(sy + 4, sy + 10):
             if hnoise(fx_, y, look.seed) < .6:
                 S.set(fx_, y, shirt[1])
+    if look.tie is not None:
+        tr = ramp5(look.tie)
+        S.paint(poly([(cx - 1.4, sy + 1), (cx + 1.4, sy + 1), (cx + 1.8, sy + 3), (cx - 1.8, sy + 3)]), tr, reach=2)
+        S.paint(poly([(cx - 1.6, sy + 3), (cx + 1.6, sy + 3), (cx + 2.2, sy + 11), (cx, sy + 12.4), (cx - 2.2, sy + 11)]), tr, reach=3)
+        for x in (cx - 3, cx + 3):
+            S.set(x, sy, (232, 232, 224))
+    if look.badge:
+        S.set(cx + 3, sy + 4, (226, 190, 70)); S.set(cx + 3, sy + 5, (180, 140, 40)); S.set(cx + 2, sy + 4, (240, 214, 120))
     if look.mut == "bone":
         for (x, y) in rect(cx + 2, sy + 5, cx + 6, sy + 9):
             S.set(x, y, (84, 20, 28))
@@ -785,6 +816,19 @@ def zombie_looks() -> dict[str, Look]:
     L["walker_v1"] = random_look(11, "heavy", mut="tumor")
     L["walker_v2"] = random_look(27, "thin", mut=None)
     L["walker_v3"] = random_look(41, "normal", mut="bone")
+    # the crowd: recognisable jobs, so a horde reads as a city's people
+    L["walker_v4"] = random_look(121, "normal", shirt=(36, 50, 88), pants=(28, 36, 62), hat="cap", badge=True, hair_style="scruff",
+                                 pattern="plain", mut=None, pose="one", torn_sleeve=False, buttons=True)           # police
+    L["walker_v5"] = random_look(131, "thin", shirt=(78, 160, 148), pants=(66, 140, 130), hair_style="long", pattern="plain", mut=None,
+                                 pose="both", torn_sleeve=False, buttons=False)                                      # nurse
+    L["walker_v6"] = random_look(141, "normal", shirt=(50, 52, 62), pants=(40, 42, 52), tie=(150, 40, 44), hair_style="scruff", hair=(30, 26, 26),
+                                 pattern="plain", mut=None, pose="hang", torn_sleeve=False, buttons=True)           # office worker
+    L["walker_v7"] = random_look(151, "normal", shirt=(96, 110, 98), pants=(60, 64, 76), hat="hood", pattern="plain", mut=None,
+                                 pose="one", torn_sleeve=False)                                                      # hoodie
+    L["walker_v8"] = random_look(161, "thin", shirt=(176, 156, 114), pants=(108, 98, 84), hair=(206, 206, 210), hair_style="scruff", pattern="plain",
+                                 mut=None, pose="hang", torn_sleeve=False, buttons=True, limp=True, tilt=2)          # elderly
+    L["walker_v9"] = random_look(171, "heavy", shirt=(52, 78, 124), pants=(52, 78, 124), hat="cap", hat_color=(170, 50, 46), pattern="plain",
+                                 mut="claw", pose="both", torn_sleeve=True, hair_style="none")                       # mechanic
     L["runner"] = random_look(52, "thin", skin=(150, 162, 98), shirt=(116, 120, 124), pants=(74, 76, 84), hair_style="none", pose="run",
                               mut="claw", torn_sleeve=True, stride=3.2, arm_swing=3.0, pattern="plain", limp=False, tilt=1, lean=2)
     L["screamer"] = random_look(61, "thin", skin=(150, 128, 164), shirt=(64, 52, 76), pants=(52, 56, 48), hair=(30, 26, 26), hair_style="long",

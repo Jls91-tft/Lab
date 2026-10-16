@@ -35,6 +35,7 @@ def build_images() -> dict[str, Image.Image]:
     images: dict[str, Image.Image] = {}
     parts = [
         world.ground_tiles(),
+        world.water_frames(),
         world.block_images(),
         structures.build(),
         {n: s.image() for n, s in decor.build().items()},

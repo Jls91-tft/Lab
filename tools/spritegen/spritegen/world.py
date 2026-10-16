@@ -125,15 +125,16 @@ def dirt(seed: int) -> Tile:
     return t
 
 
-def water(seed: int) -> Tile:
+def water(seed: int, phase: float = 0.0) -> Tile:
     rng = random.Random(seed)
     t = Tile((52, 100, 116))
     for y in range(32):
         for x in range(32):
-            w = math.sin(x * .45 + y * .22 + seed * 1.7) + math.sin(y * .6 - x * .15 + seed)
+            w = math.sin(x * .45 + y * .22 + seed * 1.7 + phase) + math.sin(y * .6 - x * .15 + seed - phase)
             t.g[y][x] = mix((52, 100, 116), (30, 70, 94) if w < 0 else (84, 142, 156), min(1, abs(w) * .3))
     for _ in range(7):
         x, y = rng.randrange(1, 28), rng.randrange(1, 31)
+        x = (x + int(phase * 3)) % 28
         for i in range(rng.randint(3, 6)):
             t.put(x + i, y, (176, 214, 222))
         for i in range(2):
@@ -199,6 +200,11 @@ def ground_tiles() -> dict[str, Image.Image]:
         for v in range(3):
             out[f"ground_{name}_{v}"] = fn(hash_seed(name, v)).image()
     return out
+
+
+def water_frames() -> dict[str, Image.Image]:
+    """Four looping frames of moving water, for the game to cycle when it wants living water."""
+    return {f"anim_water_{f}": water(hash_seed("water", 0), f * math.pi / 2).image() for f in range(4)}
 
 
 def hash_seed(name: str, v: int) -> int:

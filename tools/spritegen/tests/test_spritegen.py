@@ -198,3 +198,19 @@ def test_materials_are_distinguishable():
     pairs = [(a, b) for a in mean for b in mean if a < b]
     for a, b in pairs:
         assert sum(abs(x - y) for x, y in zip(mean[a], mean[b])) > 15, (a, b)
+
+
+# ------------------------------------------------------------------ polish
+def test_walker_crowd_variants_are_all_different():
+    variants = ["walker"] + [f"walker_v{i}" for i in range(1, 10)]
+    views = {v: images()[f"zombie_{v}_down_1"].tobytes() for v in variants}
+    assert len(set(views.values())) == len(variants)
+    for v in variants:
+        for d in DIRS:
+            assert f"zombie_{v}_{d}_0" in images()
+
+
+def test_animated_extras_exist_and_move():
+    for prefix in ("anim_water", "decor_barrel_fire", "obj_campfire"):
+        frames = [images()[f"{prefix}_{f}"].tobytes() for f in range(4)]
+        assert len(set(frames)) == 4, prefix

@@ -283,6 +283,133 @@ def tree(kind: int) -> Sprite:
     return S
 
 
+# ------------------------------------------------------------------ more street props
+def dumpster() -> Sprite:
+    S = Sprite(64, 44, salt=300)
+    _shadow(S, 32, 40, 29, 3)
+    body = ramp5((52, 96, 72))
+    S.paint(poly([(3, 12), (61, 12), (59, 36), (5, 36)]), body, grain=.2, edge=True, reach=8)
+    S.paint(poly([(1, 7), (63, 7), (62, 13), (2, 13)]), ramp5((38, 74, 56)), edge=True, reach=4)
+    for x in range(8, 58, 10):
+        for y in range(15, 34):
+            S.set(x, y, body[1])
+    S.paint(rect(8, 3, 28, 7), ramp5((30, 58, 44)), edge=True, reach=3)
+    for (x, y) in ((14, 22), (30, 26), (44, 20), (50, 30)):
+        S.tint(ellipse(x, y, 3.4, 2.6), (150, 82, 40), .6, .85)
+    for (x, y) in ((22, 8), (26, 4), (40, 9)):
+        S.set(x, y, (226, 224, 214)); S.set(x + 1, y, (170, 150, 100))
+    for wx in (9, 55):
+        S.paint(ellipse(wx, 38, 3, 2.4), ramp5((30, 30, 34)), edge=True, reach=2)
+    S.outline()
+    return S
+
+
+def cart() -> Sprite:
+    S = Sprite(30, 30, salt=301)
+    _shadow(S, 15, 27, 12, 2)
+    steel = ramp5((156, 162, 170))
+    for y in range(8, 20):
+        for x in range(4, 26):
+            if (x + y) % 4 == 0 or (x - y) % 4 == 0:
+                S.px[(x, y)] = steel[3] if (x + y) % 2 else steel[1]
+    S.paint(rect(4, 7, 25, 8), steel, edge=True, reach=2)
+    S.paint(poly([(3, 18), (26, 18), (23, 22), (6, 22)]), steel, edge=True, reach=3)
+    S.paint(rect(24, 3, 26, 9), steel, edge=True, reach=2)
+    S.paint(rect(21, 2, 28, 3), ramp5((190, 60, 54)), edge=True, reach=2)
+    for wx in (7, 22):
+        S.paint(ellipse(wx, 25, 2, 1.8), ramp5((30, 30, 34)), edge=True, reach=2)
+    S.set(12, 12, (200, 190, 80)); S.set(16, 14, (200, 70, 60))
+    S.outline()
+    return S
+
+
+def street_sign() -> Sprite:
+    S = Sprite(20, 60, salt=302)
+    _shadow(S, 10, 57, 5, 1.6)
+    S.paint(rect(9, 14, 10, 56), ramp5((110, 116, 124)), edge=True, reach=2)
+    S.paint(poly([(2, 2), (18, 2), (18, 14), (2, 14)]), ramp5((46, 100, 66)), grain=.1, edge=True, reach=4)
+    for x in range(4, 17):
+        S.set(x, 5, (232, 236, 230)); S.set(x, 11, (232, 236, 230)) if x % 2 else None
+    for x in range(5, 15):
+        S.set(x, 8, (232, 236, 230)) if x % 3 else None
+    S.set(3, 3, (176, 190, 180))
+    S.outline()
+    return S
+
+
+def traffic_light() -> Sprite:
+    S = Sprite(20, 66, salt=303)
+    _shadow(S, 10, 63, 6, 1.8)
+    S.paint(rect(9, 24, 10, 62), ramp5((70, 74, 82)), edge=True, reach=2)
+    S.paint(rect(4, 3, 15, 25), ramp5((46, 48, 54)), edge=True, reach=5)
+    for y, c, on in ((7, (150, 40, 40), False), (13, (180, 150, 50), False), (19, (50, 130, 60), False)):
+        S.paint(ellipse(10, y, 3, 3), ramp5(mix(c, (0, 0, 0), .55)), edge=True, reach=2)
+    S.set(9, 6, (70, 20, 20))
+    S.outline()
+    return S
+
+
+def newsbox() -> Sprite:
+    S = Sprite(20, 28, salt=304)
+    _shadow(S, 10, 25, 8, 1.8)
+    S.paint(rect(3, 6, 16, 22), ramp5((190, 54, 50)), edge=True, reach=6)
+    S.paint(rect(5, 9, 14, 16), ramp5((26, 34, 48)), edge=True, reach=3)
+    for x in range(6, 14):
+        S.set(x, 11, (200, 200, 190)); S.set(x, 13, (160, 160, 150)) if x % 2 else None
+    S.paint(rect(4, 4, 15, 6), ramp5((150, 40, 38)), edge=True, reach=2)
+    S.paint(rect(6, 22, 8, 25), ramp5((60, 60, 66))); S.paint(rect(11, 22, 13, 25), ramp5((60, 60, 66)))
+    S.outline()
+    return S
+
+
+def sandbags() -> Sprite:
+    S = Sprite(40, 24, salt=305)
+    _shadow(S, 20, 21, 17, 2.4)
+    sand = ramp5((166, 146, 100))
+    rows = ((13, 6, (3, 16, 29)), (7, 6, (9, 22)))
+    for y, hh, xs in rows:
+        for x in xs:
+            S.paint(ellipse(x + 6, y + 3, 7, 3.6), sand, grain=.3, edge=True, reach=4)
+            S.set(x + 3, y + 3, sand[0]); S.set(x + 8, y + 2, sand[0])
+    S.outline()
+    return S
+
+
+def tires() -> Sprite:
+    S = Sprite(30, 26, salt=306)
+    _shadow(S, 15, 23, 12, 2)
+    for (cx, cy) in ((10, 17), (21, 17), (15, 10)):
+        S.paint(ellipse(cx, cy, 7, 5), ramp5((38, 38, 44)), grain=.2, edge=True, reach=4)
+        S.paint(ellipse(cx, cy, 3.2, 2.2), [(10, 10, 14), (20, 20, 26), (30, 30, 36), (60, 60, 68), (80, 80, 90)], reach=2)
+    S.outline()
+    return S
+
+
+def barrel_fire(frame: int) -> Sprite:
+    S = Sprite(24, 44, salt=307)
+    _shadow(S, 12, 40, 10, 2.6)
+    S.paint(poly([(3, 22), (21, 22), (22, 38), (2, 38)]), ramp5((112, 82, 62)), grain=.25, edge=True, reach=6)
+    for y in (26, 33):
+        for x in range(3, 22):
+            S.set(x, y, (52, 38, 34))
+    for (x, y) in ((6, 28), (14, 31), (9, 35), (17, 24)):
+        S.set(x, y, (150, 70, 40))
+    S.paint(ellipse(12, 22, 9, 3.2), ramp5((74, 64, 62)), edge=True, reach=3)
+    S.paint(ellipse(12, 22, 7, 2.2), [(30, 16, 12), (56, 22, 14), (110, 40, 16), (170, 70, 22), (210, 100, 30)], reach=2)
+    flames = [([(7, 21), (6, 13 - frame % 2), (10, 6 + frame % 3), (12, 14), (13, 21)], (255, 126, 30)),
+              ([(11, 21), (11, 11), (14, 2 + frame % 2 * 2), (17, 10), (18, 21)], (255, 150, 40)),
+              ([(10, 21), (12, 14), (14, 8 - frame % 2), (15, 15), (16, 21)], (255, 214, 96))]
+    for pts, col in flames:
+        for (x, y) in poly(pts):
+            S.set(x, y, col, True)
+    for i in range(4):
+        S.set(6 + (frame * 5 + i * 4) % 12, 1 + (i * 3 + frame * 2) % 7, (255, 200, 90), True)
+    S.meta["light"] = (12, 12)
+    S.outline()
+    return S
+
+
+
 # ------------------------------------------------------------------ indoor furniture
 def table(w: int, round_: bool = False, seed: int = 60) -> Sprite:
     S = Sprite(w * 32, 32, salt=seed)
@@ -513,6 +640,10 @@ def build() -> dict[str, Sprite]:
         "decor_plant_0": plant(0), "decor_plant_1": plant(1), "decor_shelf_0": shelf(0), "decor_shelf_1": shelf(1),
         "decor_armchair": armchair(), "decor_bed_0": bed(0), "decor_bed_1": bed(1),
     })
+    out.update({"decor_dumpster": dumpster(), "decor_cart": cart(), "decor_sign": street_sign(), "decor_traffic_light": traffic_light(),
+                "decor_newsbox": newsbox(), "decor_sandbags": sandbags(), "decor_tires": tires()})
+    for f in range(4):
+        out[f"decor_barrel_fire_{f}"] = barrel_fire(f)
     for i in range(4):
         out[f"decor_counter_{i}"] = counter(i)
     for i in range(3):
