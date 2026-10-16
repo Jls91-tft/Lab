@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import brute, characters, decor, structures, world
+from . import brute, characters, decor, palette, structures, world
 from .atlas import describe, pack
 
 REPO = Path(__file__).resolve().parents[3]
@@ -46,7 +46,7 @@ def build_images() -> dict[str, Image.Image]:
         if clash:
             raise ValueError(f"spritegen: duplicate sprite names {sorted(clash)}")
         images.update(part)
-    return images
+    return {n: palette.apply(im) for n, im in images.items()}
 
 
 def build_all() -> tuple[bytes, str]:

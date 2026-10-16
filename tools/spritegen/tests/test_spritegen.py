@@ -144,14 +144,25 @@ def test_atlas_json_matches_and_characters_have_a_foot_pivot():
     assert "pivot_y" not in by["player_downed"]
 
 
-def test_colour_budget():
-    """The world art has no fixed palette yet (D-021): this only stops it drifting into noise.
-    Quantising to 48-96 colours automatically was tried and ruins accents (yellow hard hat, green veins)."""
-    colours = set()
-    for im in images().values():
-        colours.update(c for c in im.getdata() if c[3] == 255)
-    print(f"spritegen uses {len(colours)} distinct colours")
-    assert len(colours) < 8000
+def test_every_opaque_pixel_is_in_the_palette():
+    """The world has a closed, hand-designed palette (D-021)."""
+    from spritegen.palette import PALETTE
+    allowed = set(PALETTE)
+    used = set()
+    for name, im in images().items():
+        for r, g, b, a in im.getdata():
+            if a == 255:
+                used.add((r, g, b))
+    assert used <= allowed, sorted(used - allowed)[:5]
+    print(f"spritegen uses {len(used)} of {len(allowed)} palette colours")
+    assert len(used) >= len(allowed) * 0.8, "palette colours nobody uses: trim the palette"
+
+
+def test_palette_has_no_duplicates_and_keeps_the_strain_vivid():
+    from spritegen.palette import FAMILIES, PALETTE
+    assert len(set(PALETTE)) == len(PALETTE)
+    vivid = [c for c in PALETTE if c[1] > 180 and c[0] < 220 and c[2] < 160 and c[1] > c[0] + 20]
+    assert len(vivid) >= 2, "the mutants' green must stay the loudest colour"
 
 
 # ------------------------------------------------------------------ construction pieces (D-020)
