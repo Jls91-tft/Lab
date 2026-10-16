@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import characters, decor, world
+from . import brute, characters, decor, world
 from .atlas import describe, pack
 
 REPO = Path(__file__).resolve().parents[3]
@@ -38,6 +38,7 @@ def build_images() -> dict[str, Image.Image]:
         world.block_images(),
         {n: s.image() for n, s in decor.build().items()},
         {n: s.image() for n, s in characters.build(zombie_ids()).items()},
+        {n: s.image() for n, s in brute.build().items()},
     ]
     for part in parts:
         clash = images.keys() & part.keys()

@@ -58,6 +58,9 @@ class Look:
     gown: bool = False
     extra_veins: int = 0
     drool: bool = False
+    lean: int = 0                     # forward hunch (runner)
+    belly: bool = False               # swollen belly (spitter)
+    prop: str = ""                    # iv (patient zero's drip stand)
     big_jaw: bool = False
     glow_eyes: Color = GLOW
     parts: dict = field(default_factory=dict)
@@ -202,6 +205,32 @@ def _pack(S: Sprite, look: Look, cx: int, sy: int, side: str) -> None:
         S.paint(rect(cx - 3, sy + 7, cx + 3, sy + 10), ramp5((60, 72, 50)), edge=True)
 
 
+def _iv(S: Sprite, x: int, bag_x: int, side: str = "front") -> None:
+    """Patient zero drags an IV stand: a thin pole, a bag with glowing fluid, a tube to the arm."""
+    steel = ramp5((176, 182, 190))
+    S.paint(rect(x, 4, x, 41), steel, reach=2)
+    S.paint(rect(x - 3, 41, x + 3, 42), steel, edge=True, reach=2)
+    for wx in (x - 3, x + 3):
+        S.paint(ellipse(wx, 44, 1.6, 1.4), ramp5((60, 60, 66)), edge=True, reach=2)
+    S.paint(rect(x - 3, 3, x + 3, 3), steel, reach=2)
+    S.paint(ellipse(bag_x, 8, 2.8, 3.6), ramp5((190, 226, 220)), edge=True, reach=3)
+    S.set(bag_x, 7, (240, 255, 220), True); S.set(bag_x, 9, GLOW_DIM, True); S.set(bag_x - 1, 8, GLOW_DIM, True)
+    for i in range(10):
+        S.set(bag_x + (1 if side == "front" else -1) * (i // 4), 12 + i * 2, (170, 220, 200))
+
+
+def _belly(S: Sprite, cx: int, sy: int, shirt, skin, side: str = "front") -> None:
+    if side == "front":
+        S.paint(ellipse(cx, sy + 11, 8.6, 5.6), skin, edge=True, reach=6)
+        S.paint(ellipse(cx, sy + 12.5, 8.2, 4.4), shirt, grain=.2, reach=6)
+        for x in range(cx - 7, cx + 8, 3):
+            S.set(x, sy + 9, shirt[1])
+        S.set(cx, sy + 10, GLOW_DIM, True)
+    else:
+        S.paint(ellipse(cx - 4.5, sy + 11, 5.4, 6), skin, edge=True, reach=6)
+        S.paint(ellipse(cx - 4.5, sy + 12, 5, 5), shirt, grain=.2, reach=6)
+
+
 # ------------------------------------------------------------------ front view
 def draw_front(look: Look, frame: int) -> Sprite:
     z = look.kind == "zombie"
@@ -212,12 +241,14 @@ def draw_front(look: Look, frame: int) -> Sprite:
     wd, th = pose.wd, pose.thick
     cl = 16
     cx = 16 + pose.sway
-    sy = 14 + pose.bob + (1 if z else 0)
+    sy = 14 + pose.bob + (1 if z else 0) + look.lean
     Lx, Rx = cx - 6 - wd, cx + 6 + wd
     syl, syr = sy + look.tilt, sy - (1 if look.tilt == 2 else 0)
     wy = sy + 13
     wl, wr = cx - 4 - (1 if wd > 0 else 0) - (wd // 3), cx + 4 + (1 if wd > 0 else 0) + (wd // 3)
     S.shadow = ellipse(cl, 44, 9 + wd * .6, 2.6)
+    if look.prop == "iv":
+        _iv(S, cx + 11, cx + 11, "front")
     _legs(S, look, pose, False, wy, pants, shoe, skin, rng)
     S.paint(poly([(cl - 4.5 - wd * .3, wy - 1), (cl + 4.5 + wd * .3, wy - 1), (cl + 5.5 + wd * .3, wy + 4), (cl - 5.5 - wd * .3, wy + 4)]), pants, grain=.1)
     if look.pack == "bag" or (look.kind == "human" and look.pack == "none"):
@@ -279,6 +310,8 @@ def draw_front(look: Look, frame: int) -> Sprite:
         for i, y in enumerate((sy + 5, sy + 7, sy + 9)):
             for x in range(cx + 2, cx + 6 - i % 2):
                 S.set(x, y, (214, 204, 178) if x % 2 else (168, 158, 134))
+    if look.belly:
+        _belly(S, cx, sy, shirt, skin, "front")
     if look.armor:
         _armor(S, look, pose, Lx, Rx, syl, syr, cx, sy, "front")
     # neck, head
@@ -433,12 +466,14 @@ def draw_back(look: Look, frame: int) -> Sprite:
     wd, th = pose.wd, pose.thick
     cl = 16
     cx = 16 + pose.sway
-    sy = 14 + pose.bob + (1 if z else 0)
+    sy = 14 + pose.bob + (1 if z else 0) + look.lean
     Lx, Rx = cx - 6 - wd, cx + 6 + wd
     syl, syr = sy + look.tilt, sy - (1 if look.tilt == 2 else 0)
     wy = sy + 13
     wl, wr = cx - 4 - (1 if wd > 0 else 0) - (wd // 3), cx + 4 + (1 if wd > 0 else 0) + (wd // 3)
     S.shadow = ellipse(cl, 44, 9 + wd * .6, 2.6)
+    if look.prop == "iv":
+        _iv(S, cx - 11, cx - 11, "back")
     _legs(S, look, pose, True, wy, pants, shoe, skin, rng)
     S.paint(poly([(cl - 4.5 - wd * .3, wy - 1), (cl + 4.5 + wd * .3, wy - 1), (cl + 5.5 + wd * .3, wy + 4), (cl - 5.5 - wd * .3, wy + 4)]), pants, grain=.1)
     for x0 in (cl - 4, cl + 1):                                           # back pockets
@@ -562,12 +597,14 @@ def draw_side(look: Look, frame: int) -> Sprite:
     dskin, dshirt, dpants = [mix(c, (20, 18, 40), .28) for c in skin], [mix(c, (20, 18, 40), .28) for c in shirt], [mix(c, (20, 18, 40), .28) for c in pants]
     wd, th = pose.wd, pose.thick
     cl = 16
-    lean = -1 if z else 0
-    cx = 16 + (pose.sway // 2 if z else 0)
-    sy = 14 + pose.bob + (1 if z else 0)
+    lean = (-1 - look.lean) if z else 0
+    cx = 16 + (pose.sway // 2 if z else 0) + (lean + 1 if z else 0)
+    sy = 14 + pose.bob + (1 if z else 0) + (look.lean // 2)
     wy = sy + 13
     half = 3.6 + wd * .55
     S.shadow = ellipse(cl, 44, 9 + wd * .5, 2.4)
+    if look.prop == "iv":
+        _iv(S, cl - 12, cl - 12, "side")
 
     def foot(side):
         p = pose.ph if side < 0 else pose.ph + math.pi
@@ -594,7 +631,7 @@ def draw_side(look: Look, frame: int) -> Sprite:
         swing = pose.swing * (-1 if near else 1)
         sc_, kc_, pc_ = (shirt, skin, pants) if near else (dshirt, dskin, dpants)
         shoulder = (cx + 1 + lean * .5, sy + 2.4)
-        reach = z and (look.pose in ("both", "scream", "run") or (look.pose == "one" and near))
+        reach = z and (look.pose in ("both", "scream") or (look.pose == "one" and near))
         if reach:
             elbow = (cx - 3.6 - (0 if near else 1), sy + 7 + (0 if near else -1))
             hand = (cx - 8 - (0 if near else 1), sy + 8.4 + (swing * .3))
@@ -659,6 +696,8 @@ def draw_side(look: Look, frame: int) -> Sprite:
             for i, y in enumerate((sy + 5, sy + 7, sy + 9)):
                 for x in range(int(cx - 3), int(cx - 1 + i % 2)):
                     S.set(x, y, BONE if x % 2 else (168, 158, 134))
+    if look.belly:
+        _belly(S, cx, sy, shirt, skin, "side")
     if look.armor:
         _armor(S, look, pose, 0, 0, sy + 1, sy + 1, cx, sy, "side")
         S.paint(poly([(cx - 3.4, sy + 2), (cx + 3, sy + 2), (cx + 2.6, sy + 9), (cx - 3.2, sy + 9)]), ramp5(METAL), grain=.15, edge=True)
@@ -747,11 +786,11 @@ def zombie_looks() -> dict[str, Look]:
     L["walker_v2"] = random_look(27, "thin", mut=None)
     L["walker_v3"] = random_look(41, "normal", mut="bone")
     L["runner"] = random_look(52, "thin", skin=(150, 162, 98), shirt=(116, 120, 124), pants=(74, 76, 84), hair_style="none", pose="run",
-                              mut="claw", torn_sleeve=True, stride=3.2, arm_swing=3.0, pattern="plain", limp=False, tilt=1)
+                              mut="claw", torn_sleeve=True, stride=3.2, arm_swing=3.0, pattern="plain", limp=False, tilt=1, lean=2)
     L["screamer"] = random_look(61, "thin", skin=(150, 128, 164), shirt=(64, 52, 76), pants=(52, 56, 48), hair=(30, 26, 26), hair_style="long",
                                 pose="scream", mut=None, big_jaw=True, pattern="plain", limp=False, tilt=0, head_off=0)
     L["spitter"] = random_look(73, "heavy", skin=(122, 164, 78), shirt=(150, 128, 66), pants=(96, 78, 62), hair_style="scruff", mut="sac",
-                               drool=True, pose="hang", pattern="plain", limp=False)
+                               drool=True, pose="hang", pattern="plain", limp=False, belly=True)
     L["armored"] = random_look(84, "heavy", skin=(116, 132, 112), shirt=(74, 76, 84), pants=(54, 58, 50), hair_style="none", mut=None,
                                armor=True, hat="helmet", pose="hang", pattern="plain", limp=False, glow_eyes=GLOW)
     L["sapper"] = random_look(95, "normal", skin=(138, 142, 112), shirt=(226, 130, 40), pants=(74, 76, 84), hair_style="none", mut=None,
@@ -760,7 +799,7 @@ def zombie_looks() -> dict[str, Look]:
                              pose="both", torn_sleeve=True, pattern="plain", limp=False, stride=1.6, arm_swing=1.0, tilt=2)
     L["patient_zero"] = random_look(117, "thin", skin=(196, 206, 200), shirt=(204, 216, 216), pants=(190, 200, 204), hair_style="none", mut=None,
                                     gown=True, extra_veins=2, pose="one", pattern="plain", limp=False, torn_sleeve=False,
-                                    glow_eyes=(230, 255, 190))
+                                    glow_eyes=(230, 255, 190), prop="iv")
     return L
 
 
@@ -778,14 +817,15 @@ def build(zombie_ids: list[str]) -> dict[str, Sprite]:
         raise ValueError(f"spritegen: zombies without a look: {missing}")
     out: dict[str, Sprite] = {}
 
-    def add(prefix: str, look: Look, double: bool = False) -> None:
+    def add(prefix: str, look: Look) -> None:
         for d in DIRS:
             for f in range(NFRAMES):
-                s = DRAWERS[d](look, f)
-                out[f"{prefix}_{d}_{f}"] = s.doubled() if double else s
+                out[f"{prefix}_{d}_{f}"] = DRAWERS[d](look, f)
 
     for name, look in looks.items():
-        add(f"zombie_{name}", look, double=(look.build == "brute"))
+        if name == "brute":
+            continue                       # La Mole is drawn natively at 64x96 in brute.py
+        add(f"zombie_{name}", look)
     for name, look in player_looks().items():
         add(name, look)
     out["player_downed"] = draw_downed(player_looks()["player"])

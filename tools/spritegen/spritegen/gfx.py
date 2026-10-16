@@ -111,16 +111,16 @@ class Sprite:
             if glow:
                 self.glow[(x, y)] = c
 
-    def paint(self, pts: Iterable[tuple[int, int]], base, grain: float = 0.0, edge: bool = False) -> None:
+    def paint(self, pts: Iterable[tuple[int, int]], base, grain: float = 0.0, edge: bool = False, reach: int = 8) -> None:
         ramp = base if isinstance(base, list) else ramp5(base)
         shape = {p for p in pts if self.inb(*p)}
         self.sid += 1
         for (x, y) in shape:
             dl = dr = du = dd = 1
-            while (x - dl, y) in shape and dl < 8: dl += 1
-            while (x + dr, y) in shape and dr < 8: dr += 1
-            while (x, y - du) in shape and du < 8: du += 1
-            while (x, y + dd) in shape and dd < 8: dd += 1
+            while (x - dl, y) in shape and dl < reach: dl += 1
+            while (x + dr, y) in shape and dr < reach: dr += 1
+            while (x, y - du) in shape and du < reach: du += 1
+            while (x, y + dd) in shape and dd < reach: dd += 1
             sc = ((dr - dl) / (dr + dl)) * .62 + ((dd - du) / (dd + du)) * .38
             t = int(round(2 + sc * 2.7))
             if dl == 1 and dr > 1: t = max(t, 3)
