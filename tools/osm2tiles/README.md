@@ -1,6 +1,6 @@
 # osm2tiles
 
-Convierte datos de OpenStreetMap en mapas de tiles para Cepa Cero (`cepacero.map` v1):
+Convierte datos de OpenStreetMap en mapas de tiles para Cepa Cero (`cepacero.map` v2):
 un JSON que leerá Unity y un PNG de previsualización. Independiente del motor. Solo depende de **Pillow**.
 
 ## Uso
@@ -46,13 +46,13 @@ bajo) y de las áreas que lo rodean (el recinto de un hospital). Gana la de mayo
 `medical > police > school > food/hardware > commercial > religious > office/industrial > garage > residential > generic`.
 **Nunca se guardan nombres ni marcas.**
 
-## Formato `cepacero.map` v1
+## Formato `cepacero.map` v2 (v1 más plantas, sótanos y tejado por edificio)
 Pensado para leerse con `JsonUtility` de Unity: sin diccionarios ni arrays anidados.
 
 ```jsonc
 {
   "format": "cepacero.map",
-  "version": 1,
+  "version": 2,
   "generator": "osm2tiles 0.1.0",
   "name": "delicias-test",
   "attribution": "© OpenStreetMap contributors, ODbL 1.0 — https://www.openstreetmap.org/copyright",
@@ -67,7 +67,8 @@ Pensado para leerse con `JsonUtility` de Unity: sin diccionarios ni arrays anida
     "ground": ["dirt", "asphalt", "sidewalk", "grass", "water", "floor", "rail"],
     "blocks": ["none", "building_wall", "tree", "door", "fence"],
     "building_kinds": ["generic", "residential", "commercial", "food", "hardware", "medical",
-                       "police", "school", "religious", "office", "industrial", "garage"]
+                       "police", "school", "religious", "office", "industrial", "garage"],
+    "roofs": ["tile", "sheet", "thatch", "flat", "glasshouse"]
   },
   "layers": {
     "ground": [0, 1, 2, ...],   // width*height ids, fila a fila: índice = y * width + x
@@ -75,13 +76,21 @@ Pensado para leerse con `JsonUtility` de Unity: sin diccionarios ni arrays anida
   },
   "buildings": [
     { "id": 1, "kind": "food", "bbox": [120, 40, 138, 61],    // min_x, min_y, max_x, max_y (incluidos)
-      "tiles": 342, "doors": [128, 40] }                       // plano: x0, y0, x1, y1, …
+      "tiles": 342, "doors": [128, 40],                        // plano: x0, y0, x1, y1, …
+      "levels": 2, "underground": 0, "roof": "tile" }          // v2: plantas con la baja (1..4), sótanos (0..3), tejado
   ]
 }
 ```
 
 **Reglas de compatibilidad:** los ids de las leyendas solo crecen añadiendo al final; nunca se
 reordenan. Un cambio incompatible sube `version`. El lector de Unity debe comprobar `format` y `version`.
+
+**Plantas, sótanos y tejado (v2).** `levels` sale de `building:levels` (se toma el primer número de "3;4", se
+limita a 1–4); si falta, depende del tipo de edificio (`rules.DEFAULT_LEVELS`: casas y apartamentos 3, oficinas 4,
+hospitales 3, comercios 2, resto 1). `underground` sale de `building:levels:underground` (0–3) y es 0 si OSM no lo dice.
+`roof` sale de `roof:material` (teja, chapa, paja, vidrio, hormigón), luego de `roof:shape=flat` y por último del
+tipo (residencial y religioso: teja; industrial y garaje: chapa; resto: plano). El lector de v1 sigue valiendo:
+sin esos campos un edificio es de una planta, sin sótano y sin tejado.
 
 ## Licencia de los datos (ODbL)
 Los datos de OpenStreetMap están bajo la [Open Database License 1.0](https://opendatacommons.org/licenses/odbl/1-0/).

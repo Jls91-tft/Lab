@@ -63,7 +63,7 @@ class _Builder:
 def synthetic_osm(tmp_path: Path) -> Path:
     b = _Builder()
     b.way([(-5, 50), (135, 50)], {"highway": "residential"})                # E-W street
-    b.rect(10, 65, 40, 95, {"building": "yes"})                            # A (north of street)
+    b.rect(10, 65, 40, 95, {"building": "yes", "building:levels": "2", "building:levels:underground": "1", "roof:material": "metal"})                            # A (north of street)
     b.rect(40, 65, 70, 95, {"building": "apartments"})                     # B shares a wall with A
     b.node(25, 80, {"shop": "supermarket", "name": "Brand X"})             # inside A
     b.rect(80, 10, 110, 40, {"building": "hospital"})                      # C (south of street)

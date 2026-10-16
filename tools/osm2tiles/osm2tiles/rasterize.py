@@ -34,6 +34,9 @@ class Building:
     bbox: list[int]          # [min_x, min_y, max_x, max_y], inclusive, row 0 = south
     tiles: int
     doors: list[int] = field(default_factory=list)  # flat [x0, y0, x1, y1, ...]
+    levels: int = 1          # storeys above ground, ground floor included (v2)
+    underground: int = 0     # basement levels (v2)
+    roof: str = "flat"       # one of rules.ROOFS (v2)
 
 
 @dataclass
@@ -344,6 +347,9 @@ def build_map(data: OsmData, proj: Projector) -> TileMap:
         flat_doors: list[int] = []
         for i in doors.get(b, []):
             flat_doors += [i % w, h - 1 - i // w]
-        buildings.append(Building(new_id, kinds[b], [min(xs), min(ys), max(xs), max(ys)], len(idx), flat_doors))
+        tags = building_tags[b]
+        buildings.append(Building(new_id, kinds[b], [min(xs), min(ys), max(xs), max(ys)], len(idx), flat_doors,
+                                  rules.building_levels(tags, kinds[b]), rules.building_underground(tags),
+                                  rules.building_roof(tags, kinds[b])))
 
     return TileMap(w, h, flip(gnd), flip(blk), buildings)

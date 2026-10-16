@@ -1,4 +1,4 @@
-"""Writers for `cepacero.map` v1 (JSON) and the PNG preview."""
+"""Writers for `cepacero.map` v2 (JSON; v1 plus storeys, basements and roofs per building) and the PNG preview."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from .geo import BBox
 from .rasterize import TileMap
 
 FORMAT = "cepacero.map"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 ATTRIBUTION = "© OpenStreetMap contributors, ODbL 1.0 — https://www.openstreetmap.org/copyright"
 ATTRIBUTION_PLAIN = "(c) OpenStreetMap contributors, ODbL 1.0 - openstreetmap.org/copyright"
 
@@ -33,7 +33,7 @@ def to_document(tm: TileMap, name: str, bbox: BBox, meters_per_tile: float, osm_
         "width": tm.width,
         "height": tm.height,
         "origin": "bottom-left",
-        "legend": {"ground": rules.GROUND, "blocks": rules.BLOCKS, "building_kinds": rules.BUILDING_KINDS},
+        "legend": {"ground": rules.GROUND, "blocks": rules.BLOCKS, "building_kinds": rules.BUILDING_KINDS, "roofs": rules.ROOFS},
         "layers": {"ground": tm.ground, "blocks": tm.blocks},
         "buildings": [asdict(b) for b in tm.buildings],
     }

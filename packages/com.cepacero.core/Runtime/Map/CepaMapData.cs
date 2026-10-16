@@ -7,7 +7,7 @@ using System;
 
 namespace CepaCero.Map
 {
-    /// <summary>Raw `cepacero.map` v1 document, as written by tools/osm2tiles.</summary>
+    /// <summary>Raw `cepacero.map` document (v1, or v2 with storeys per building), as written by tools/osm2tiles.</summary>
     [Serializable]
     public sealed class CepaMapData
     {
@@ -41,6 +41,7 @@ namespace CepaCero.Map
         public string[] ground;
         public string[] blocks;
         public string[] building_kinds;
+        public string[] roofs;
     }
 
     [Serializable]
@@ -58,5 +59,14 @@ namespace CepaCero.Map
         public int[] bbox;
         public int tiles;
         public int[] doors;
+
+        /// <summary>v2: storeys above ground, ground floor included (missing or 0 in v1: one).</summary>
+        public int levels;
+
+        /// <summary>v2: basement levels.</summary>
+        public int underground;
+
+        /// <summary>v2: tile, sheet, thatch, flat or glasshouse (empty in v1).</summary>
+        public string roof;
     }
 }

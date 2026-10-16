@@ -13,7 +13,8 @@ namespace CepaCero.Map
     public static class MapImporter
     {
         public const string Format = "cepacero.map";
-        public const int SupportedVersion = 1;
+        public const int SupportedVersion = 2;
+        public const int OldestVersion = 1;
 
         private static readonly Dictionary<string, GroundType> GroundByName = new Dictionary<string, GroundType>(StringComparer.Ordinal)
         {
@@ -71,8 +72,11 @@ namespace CepaCero.Map
             // The map is the shared starting point every peer loads: not a delta to send.
             blocks.DrainChanges(new List<BlockChange>());
 
-            return new MapImportResult(data.name ?? "", data.attribution ?? "", data.meters_per_tile, blocks, ground,
-                ReadBuildings(data, warnings), warnings);
+            List<BuildingInfo> buildings = ReadBuildings(data, warnings);
+            BuildingFloors.Generate(blocks, ground, buildings, warnings);
+            blocks.DrainChanges(new List<BlockChange>());
+
+            return new MapImportResult(data.name ?? "", data.attribution ?? "", data.meters_per_tile, blocks, ground, buildings, warnings);
         }
 
         private static void Validate(CepaMapData data)
@@ -85,9 +89,9 @@ namespace CepaCero.Map
             {
                 throw new FormatException($"Not a {Format} document (format='{data.format}').");
             }
-            if (data.version != SupportedVersion)
+            if (data.version < OldestVersion || data.version > SupportedVersion)
             {
-                throw new FormatException($"Unsupported {Format} version {data.version}; this build reads v{SupportedVersion}.");
+                throw new FormatException($"Unsupported {Format} version {data.version}; this build reads v{OldestVersion} to v{SupportedVersion}.");
             }
             if (data.width <= 0 || data.height <= 0 || data.width > ushort.MaxValue || data.height > ushort.MaxValue)
             {
@@ -174,7 +178,7 @@ namespace CepaCero.Map
                     doors.Add(new Int2(d[k], d[k + 1]));
                 }
                 list.Add(new BuildingInfo(b.id, b.kind ?? "generic", new Int2(b.bbox[0], b.bbox[1]),
-                    new Int2(b.bbox[2], b.bbox[3]), b.tiles, doors));
+                    new Int2(b.bbox[2], b.bbox[3]), b.tiles, doors, b.levels, b.underground, b.roof));
             }
             return list;
         }

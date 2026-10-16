@@ -1,6 +1,6 @@
 """OSM tag → tile classification rules.
 
-Ids are part of the `cepacero.map` v1 format: append new entries at the end,
+Ids are part of the `cepacero.map` format (v1 and v2): append new entries at the end,
 never reorder (Unity maps ids to tiles by index).
 """
 
@@ -121,3 +121,56 @@ def better_kind(current: str, candidate: str | None) -> str:
     if candidate and KIND_PRIORITY[candidate] > KIND_PRIORITY[current]:
         return candidate
     return current
+
+
+# ---- Storeys and roofs (cepacero.map v2, D-022 phase H) --------------------
+MAX_LEVELS = 4          # ground floor + 3 above: what the game's levels allow
+MAX_UNDERGROUND = 3
+ROOFS = ["tile", "sheet", "thatch", "flat", "glasshouse"]  # same ids as docs/construccion.md
+
+# Storeys when OSM does not say (building:levels is missing on many buildings): by kind.
+DEFAULT_LEVELS = {
+    "generic": 1, "residential": 3, "commercial": 2, "food": 1, "hardware": 1, "medical": 3,
+    "police": 2, "school": 2, "religious": 1, "office": 4, "industrial": 1, "garage": 1,
+}
+
+
+def _first_int(value: str | None) -> int | None:
+    """'3', '3;4', '2.5' → 3, 3, 2. Anything else → None."""
+    if not value:
+        return None
+    try:
+        return int(float(value.split(";")[0].strip().replace(",", ".")))
+    except ValueError:
+        return None
+
+
+def building_levels(tags: dict[str, str], kind: str) -> int:
+    """Storeys above ground, ground floor included (1..MAX_LEVELS)."""
+    levels = _first_int(tags.get("building:levels"))
+    if levels is None:
+        levels = DEFAULT_LEVELS.get(kind, 1)
+    return max(1, min(MAX_LEVELS, levels))
+
+
+def building_underground(tags: dict[str, str]) -> int:
+    """Basement levels (0..MAX_UNDERGROUND); only when OSM says so."""
+    return max(0, min(MAX_UNDERGROUND, _first_int(tags.get("building:levels:underground")) or 0))
+
+
+_ROOF_BY_MATERIAL = {
+    "roof_tiles": "tile", "tiles": "tile", "tile": "tile", "clay": "tile", "slate": "tile",
+    "metal": "sheet", "metal_sheet": "sheet", "zinc": "sheet", "tin": "sheet", "copper": "sheet", "steel": "sheet",
+    "thatch": "thatch", "reed": "thatch", "straw": "thatch",
+    "glass": "glasshouse", "concrete": "flat", "tar_paper": "flat", "gravel": "flat", "asphalt": "flat",
+}
+_ROOF_BY_KIND = {"residential": "tile", "religious": "tile", "industrial": "sheet", "garage": "sheet"}
+
+
+def building_roof(tags: dict[str, str], kind: str) -> str:
+    material = _ROOF_BY_MATERIAL.get(tags.get("roof:material", ""))
+    if material:
+        return material
+    if tags.get("roof:shape") == "flat":
+        return "flat"
+    return _ROOF_BY_KIND.get(kind, "flat")

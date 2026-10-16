@@ -91,7 +91,7 @@ namespace CepaCero.Tests.Map
             var registry = BlockRegistry.CreateDefault();
 
             CepaMapData wrongVersion = Fixtures.LoadMap("synthetic.map.json");
-            wrongVersion.version = 2;
+            wrongVersion.version = 3;
             Assert.Throws<FormatException>(() => MapImporter.Import(wrongVersion, registry));
 
             CepaMapData truncated = Fixtures.LoadMap("synthetic.map.json");
