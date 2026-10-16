@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CepaCero.Building;
 using CepaCero.World;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -108,6 +109,19 @@ namespace CepaCero.Unity.Prototype
                         _blockMap.SetTile(new Vector3Int(c.X, c.Y + 1, 0), BlockTile(c.X, c.Y + 1));
                     }
                 }
+                else if (c.Layer == BuildLayer.Roof)
+                {
+                    for (int dy = -3; dy <= 3; dy++)                  // a roof's shape depends on the roof around it
+                    {
+                        for (int dx = -3; dx <= 3; dx++)
+                        {
+                            if (_blocks.InBounds(c.X + dx, c.Y + dy))
+                            {
+                                Paint(_roofMap, c.X + dx, c.Y + dy, BuildLayer.Roof);
+                            }
+                        }
+                    }
+                }
                 else
                 {
                     PaintExtraLayers(c.X, c.Y);
@@ -175,7 +189,16 @@ namespace CepaCero.Unity.Prototype
         private void Paint(Tilemap map, int x, int y, BuildLayer layer)
         {
             BlockType type = _blocks.GetBlock(x, y, _level, layer);
-            map.SetTile(new Vector3Int(x, y, 0), type.IsAir ? null : TileFor(SpriteOf(type), _blocks.GetVariant(x, y, _level, layer)));
+            Sprite sprite = type.IsAir ? null : layer == BuildLayer.Roof ? RoofSprite(type, x, y) : SpriteOf(type);
+            map.SetTile(new Vector3Int(x, y, 0), type.IsAir ? null : TileFor(sprite, _blocks.GetVariant(x, y, _level, layer)));
+        }
+
+        /// <summary>The roof sprite for its place in the roof (slope, corner, ridge, flat) when the atlas has it, else the flat stand-in.</summary>
+        private Sprite RoofSprite(BlockType type, int x, int y)
+        {
+            RoofShape shape = RoofShapes.At((px, py) => _blocks.InBounds(px, py) && !_blocks.GetBlock(px, py, _level, BuildLayer.Roof).IsAir, x, y);
+            string name = $"roof_{type.Build.MaterialId}_{RoofShapes.SpriteSuffix(shape)}";
+            return _art.TryGet(name, out Sprite sprite) ? sprite : SpriteOf(type);
         }
 
         private bool IsWallLike(int x, int y)
