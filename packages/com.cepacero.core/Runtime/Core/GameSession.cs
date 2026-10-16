@@ -368,7 +368,7 @@ namespace CepaCero.Core
                 float noise = PlayerMotor.Step(ref state, _inputs[p], _dt, Blocks, Ground, _playerSettings,
                     SurvivalRules.StaminaRegenFactor(state, Settings));
                 _players[p] = state;
-                Zombies.EmitNoise(state.Position, state.Level != 0 ? noise * 0.5f : noise);                    // muffled by the floors
+                Zombies.EmitNoise(state.Position, noise, state.Level);                    // floors muffle it (ZombieSimulation.AdjacentLevelNoise)
                 Fall(p);
             }
         }
@@ -474,7 +474,7 @@ namespace CepaCero.Core
                     }
                     if (Rules.LastNoise > 0f)
                     {
-                        Zombies.EmitNoise(_players[p].Position, Rules.LastNoise);
+                        Zombies.EmitNoise(_players[p].Position, Rules.LastNoise, _players[p].Level);
                         if (Rules.LastNoise >= LoudNoise && Clock.Phase == DayPhase.Day)
                         {
                             _loudActions++;

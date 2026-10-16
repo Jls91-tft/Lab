@@ -63,6 +63,7 @@ namespace CepaCero.AI
         {
             public Float2 Position;
             public float Radius;
+            public sbyte Level;
         }
 
         private readonly BlockWorld _blocks;
@@ -302,13 +303,16 @@ namespace CepaCero.AI
         /// A sound at <paramref name="position"/> heard up to <paramref name="radius"/>
         /// tiles plus each zombie's own hearing (docs/bestiario.md). Processed next tick.
         /// </summary>
-        public void EmitNoise(Float2 position, float radius)
+        public void EmitNoise(Float2 position, float radius, int level = 0)
         {
             if (radius > 0f)
             {
-                _noises.Add(new Noise { Position = position, Radius = radius });
+                _noises.Add(new Noise { Position = position, Radius = radius, Level = (sbyte)level });
             }
         }
+
+        /// <summary>Share of a noise's radius that reaches the level above or below (D-022). Two levels away, nothing. Hiding underground must not be free.</summary>
+        public float AdjacentLevelNoise { get; set; } = 0.7f;
 
         /// <summary>Applies damage of a type ("fire", "ballistic"...). Returns true if the zombie died.</summary>
         public bool Damage(int slot, int amount, string damageType)
@@ -413,7 +417,12 @@ namespace CepaCero.AI
                     {
                         continue;
                     }
-                    float reach = noise.Radius + _catalog[_type[i]].detect_hearing;
+                    int apart = Math.Abs(_level[i] - noise.Level);
+                    if (apart > 1)
+                    {
+                        continue;
+                    }
+                    float reach = (apart == 0 ? noise.Radius : noise.Radius * AdjacentLevelNoise) + _catalog[_type[i]].detect_hearing;
                     if ((_pos[i] - noise.Position).LengthSquared <= reach * reach)
                     {
                         MakeAware(i);

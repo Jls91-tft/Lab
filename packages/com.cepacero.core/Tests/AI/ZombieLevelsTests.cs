@@ -237,5 +237,53 @@ namespace CepaCero.Tests.AI
             RunUntil(sim, players, levels, () => sim.GetLevel(z) == -1);
             Assert.That(sim.GetLevel(z), Is.EqualTo(-1), "the person below is closer");
         }
+
+        // ------------------------------------------------------------------ noise (phase G3)
+        private bool Alerted(ZombieSimulation sim, int z) => sim.GetState(z) != ZombieState.Unaware && sim.GetState(z) != ZombieState.Wandering;
+
+        [Test]
+        public void ANoiseWakesZombiesOnItsOwnLevelAndMuffledOnTheNextOneOnly()
+        {
+            Cave(5, 9, 5, -1);
+            Cave(5, 9, 5, -2);
+            _map.Blocks.SetBlock(5, 5, -1, BuildLayer.Structure, Id("pit"));
+            ZombieSimulation sim = Sim();
+            float hearing = _catalog[_walker].detect_hearing;
+            float radius = 6f;
+            float muffled = radius * sim.AdjacentLevelNoise + hearing;
+            Assert.That(sim.AdjacentLevelNoise, Is.GreaterThan(0.5f).And.LessThan(1f));
+
+            int same = sim.Spawn(_walker, new Float2(5.5f, 5.5f + radius * 0.9f), aware: false);
+            int near = sim.Spawn(_walker, new Float2(5.5f, 5.5f), aware: false, level: -1);
+            int far = sim.Spawn(_walker, new Float2(8.5f, 5.5f), aware: false, level: -2);
+            int grounded = sim.Spawn(_walker, new Float2(25.5f, 25.5f), aware: false);
+            Assert.That(near, Is.GreaterThanOrEqualTo(0));
+            Assert.That(far, Is.GreaterThanOrEqualTo(0));
+            _ = muffled;
+
+            // a noise on the street at (5.5, 5.5): the street one hears it, the one below hears it muffled, the one two levels down does not
+            sim.EmitNoise(new Float2(5.5f, 5.5f), radius, 0);
+            sim.Tick(Dt, new List<Float2>(), new List<int>());
+            Assert.That(Alerted(sim, same), Is.True);
+            Assert.That(Alerted(sim, near), Is.True, "right underneath");
+            Assert.That(Alerted(sim, far), Is.False, "two levels apart");
+            Assert.That(Alerted(sim, grounded), Is.False, "too far away");
+        }
+
+        [Test]
+        public void MuffledNoiseReachesLessFarThanTheSameNoiseOnYourLevel()
+        {
+            Cave(5, 30, 5, -1);
+            ZombieSimulation sim = Sim();
+            float hearing = _catalog[_walker].detect_hearing;
+            float distance = (6f + hearing + 6f * 0.7f + hearing) / 2f;       // inside the full radius, outside the muffled one
+            int onSameLevel = sim.Spawn(_walker, new Float2(5.5f + distance, 25.5f), aware: false);
+            int below = sim.Spawn(_walker, new Float2(5.5f + distance, 5.5f), aware: false, level: -1);
+            sim.EmitNoise(new Float2(5.5f, 25.5f), 6f, 0);
+            sim.EmitNoise(new Float2(5.5f, 5.5f), 6f, 0);
+            sim.Tick(Dt, new List<Float2>(), new List<int>());
+            Assert.That(Alerted(sim, onSameLevel), Is.True);
+            Assert.That(Alerted(sim, below), Is.False, "the floor swallows part of it");
+        }
     }
 }

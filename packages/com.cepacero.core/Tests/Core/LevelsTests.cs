@@ -376,6 +376,22 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void DiggingUndergroundWakesTheZombiesAbove()
+        {
+            var (s, map, p) = Underground();
+            Equip(s, p, "shovel");
+            int z = s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(7.5f, 5.5f), aware: false);
+            Assert.That(s.Zombies.GetState(z), Is.EqualTo(CepaCero.AI.ZombieState.Unaware));
+            Do(s, p, PlayerIntent.Dig(6, 5, -1));
+            Assert.That(s.Rules.LastNoise, Is.GreaterThan(0f));
+            for (int t = 0; t < 4 && s.Zombies.GetState(z) == CepaCero.AI.ZombieState.Unaware; t++)
+            {
+                s.Step();
+            }
+            Assert.That(s.Zombies.GetState(z), Is.Not.EqualTo(CepaCero.AI.ZombieState.Unaware), "the noise carried through the ground");
+        }
+
+        [Test]
         public void TheLevelTravelsToClientsAndSurvivesASave()
         {
             var (s, map, p) = Underground();

@@ -25,7 +25,7 @@ Estado: **aceptada con ajustes (Javier, 16/10/2026)**. Ajustes: la fosa y la tra
 | --- | --- | --- |
 | G1 ✔ | Nivel en la simulación y la red, línea de visión y golpes por nivel (hecho: protocolo v5, 9 B por zombi, solo se envían los del nivel del espectador) | un zombi no golpea a quien está en otro nivel; la instantánea lleva el nivel |
 | G2 ✔ | `FlowField` con siembra y un campo por nivel con portales (hecho: escaleras en los dos sentidos, caída por fosa y trampilla abierta, trampilla cerrada aún no es camino) | un zombi baja por una fosa hasta un jugador; sube por unas escaleras |
-| G3 | Ruido con nivel y cavar atrae | cavar a 6 casillas bajo la calle hace que un zombi vaya a la fosa |
+| G3 ✔ | Ruido con nivel y cavar atrae (hecho: al nivel contiguo llega el **70 %** del radio, no la mitad, para que esconderse bajo tierra no sea fácil; a dos niveles no llega) | cavar a 6 casillas bajo la calle hace que un zombi vaya a la fosa |
 | G4 | Trampilla cerrada como cuello de botella; caída de zombis | zombis rompen la trampilla; el suelo roto los deja caer con daño |
 | G5 | `simbench` multinivel y ajuste | el coste de tick está dentro del presupuesto |
 
