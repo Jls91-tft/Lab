@@ -649,6 +649,248 @@ def glass_floor(variant: int) -> Image.Image:
     return _finish_glass(sp, panes)
 
 
+# ------------------------------------------------------------------ pillars, arches, gates, big windows
+def _shade(c: Color, k: float) -> Color:
+    return mix(c, (255, 244, 220), k) if k > 0 else mix(c, (14, 12, 34), -k)
+
+
+def pillar_top(m: str) -> Image.Image:
+    sp = Sprite(S, S, salt=420)
+    sp.shadow = {(x, y) for x in range(10, 25) for y in range(22, 25)}
+    for (x, y) in rect(9, 9, 22, 22):
+        c = cap(m, x, y) if m != "glass" else (190, 224, 238)
+        edge = x in (9, 22) or y in (9, 22)
+        sp.px[(x, y)] = _shade(c, .25 if (x == 10 or y == 10) else -.3 if (x == 21 or y == 21) else 0) if not edge else c
+    sp.outline()
+    return sp.image()
+
+
+def pillar_face(m: str) -> Image.Image:
+    sp = Sprite(S, S, salt=421)
+    sp.shadow = {(x, 30) for x in range(7, 25)}
+    for y in range(2, 31):
+        for x in range(9, 23):
+            if y < 9:
+                c = _shade(cap(m, x, y * 2), .22 if y < 4 else -.05 * (y - 4))
+            else:
+                c = face(m, x, y - 9)
+                c = _shade(c, .22 if x == 9 else -.35 if x >= 21 else -.12 if x >= 18 else 0)
+            sp.px[(x, y)] = c
+    for x in range(8, 24):
+        sp.px[(x, 9)] = _shade(face(m, x, 0), -.4)
+    for x in range(8, 24):
+        sp.px[(x, 30)] = (12, 10, 20)
+    sp.outline()
+    return sp.image()
+
+
+def arch_face(m: str) -> Image.Image:
+    t = wall_face(m, 3)
+    for y in range(CAP_ROWS - 1, S):
+        for x in range(5, 27):
+            dx = abs(x - 15.5)
+            top = 12 - math.sqrt(max(0, 10.5 ** 2 - dx ** 2)) * .55 if dx <= 10.5 else 99
+            if y >= top + 2:
+                depth = (y - top) / 22
+                t.put(x, y, mix((60, 52, 60), (20, 18, 26), min(1, depth)))
+    for x in range(5, 27):                                                                           # keystone ring
+        dx = abs(x - 15.5)
+        if dx <= 10.5:
+            y = int(12 - math.sqrt(max(0, 10.5 ** 2 - dx ** 2)) * .55) + 1
+            if 0 <= y < S:
+                t.put(x, y, mix(face(m, x, y), (255, 240, 210), .3)); t.put(x, y + 1, (30, 26, 34))
+    return t.image()
+
+
+def gate(m: str, open_: bool) -> tuple[Image.Image, Image.Image]:
+    """A double door two tiles wide: returns the left and right halves."""
+    wide = Image.new("RGBA", (64, S))
+    left, right = wall_face(m, 2).image(), wall_face(m, 1).image()
+    wide.paste(left, (0, 0)); wide.paste(right, (32, 0))
+    t = Tile((0, 0, 0), 64)
+    for y in range(S):
+        for x in range(64):
+            t.g[y][x] = wide.getpixel((x, y))[:3]
+    frame = (58, 40, 28) if m in ("wood", "brick", "pallet", "log", "adobe", "drywall", "sandbag") else (60, 64, 72)
+    for y in range(7, S):
+        for x in range(5, 59):
+            if x in (5, 58) or y == 7:
+                t.put(x, y, frame)
+            elif open_:
+                t.put(x, y, (26, 22, 28) if y < 16 else mix((46, 40, 44), (20, 18, 24), (y - 16) / 24))
+            else:
+                t.put(x, y, mix(face(m, x, y), (60, 64, 74), .38))
+    if open_:
+        for y in range(8, S):
+            for x in list(range(6, 12)) + list(range(52, 58)):
+                t.put(x, y, mix(face(m, x, y), (20, 18, 40), .12 * (min(abs(x - 6), abs(x - 57)) + 1)))
+    else:
+        for y in (11, 25):
+            for x in range(6, 58):
+                t.put(x, y, mix(t.get(x, y), (30, 30, 36), .7))
+        for y in range(8, S):
+            t.put(31, y, (20, 16, 20)); t.put(32, y, (20, 16, 20))
+        for (x, y) in ((28, 19), (29, 19), (34, 19), (35, 19)):
+            t.put(x, y, (214, 190, 110))
+    img = t.image()
+    return img.crop((0, 0, 32, S)), img.crop((32, 0, 64, S))
+
+
+def bigwindow(m: str) -> tuple[Image.Image, Image.Image]:
+    wide = Image.new("RGBA", (64, S))
+    wide.paste(wall_face(m, 2).image(), (0, 0)); wide.paste(wall_face(m, 1).image(), (32, 0))
+    t = Tile((0, 0, 0), 64)
+    for y in range(S):
+        for x in range(64):
+            t.g[y][x] = wide.getpixel((x, y))[:3]
+    for y in range(11, 25):
+        for x in range(6, 58):
+            edge = x in (6, 57) or y in (11, 24)
+            if edge:
+                t.put(x, y, (50, 36, 28) if m in ("wood", "brick", "pallet", "log", "adobe", "drywall", "sandbag") else (58, 62, 70))
+            elif m in ("scrap", "container", "steel"):
+                t.put(x, y, (14, 16, 22) if (x + y) % 4 else (88, 94, 102))
+            else:
+                g = mix((38, 52, 78), (14, 18, 30), (y - 12) / 12)
+                if ((x - 7) + (y - 12)) % 17 in (3, 4) and (y - 12) < 10:
+                    g = mix(g, (190, 214, 230), .55)
+                t.put(x, y, g)
+    for y in range(12, 24):
+        t.put(31, y, (60, 44, 34)); t.put(32, y, (110, 84, 60))
+    for x in range(5, 59):
+        t.put(x, 25, (210, 204, 190)); t.put(x, 26, (60, 54, 52))
+    img = t.image()
+    return img.crop((0, 0, 32, S)), img.crop((32, 0, 64, S))
+
+
+# ------------------------------------------------------------------ roofs (visual; they fade away when you walk in)
+ROOFS = ("tile", "sheet", "thatch", "flat", "glasshouse")
+ROOF_SHAPES = ("flat", "ridge_h", "ridge_v", "slope_n", "slope_e", "slope_s", "slope_w", "corner_ne", "corner_nw", "corner_se", "corner_sw")
+
+
+def roof_tex(r: str, x: int, y: int) -> Color:
+    if r == "tile":
+        row, k = y // 6, y % 6
+        off = 4 if row % 2 else 0
+        xx = (x + off) % 8
+        base = mix((178, 88, 58), (255, 200, 160) if hnoise(row, (x + off) // 8, 3) < .5 else (60, 24, 20), hnoise(row, (x + off) // 8, 4) * .14)
+        c = (base[0] + _n(x, y, 501, 8), base[1] + _n(x, y, 501, 8) // 2, base[2] + _n(x, y, 501, 8) // 2)
+        edge = 5 - int(abs(xx - 3.5) / 3.5 * 2.2)                                  # each tile ends in a curve
+        if k == 0: c = _shade(c, .2)
+        if k > edge: c = _shade(c, -.42)
+        elif k == edge: c = _shade(c, -.16)
+        if xx in (0, 7) and k < edge: c = _shade(c, -.14)
+        return c
+    if r == "sheet":
+        rib = x % 6
+        base = (96, 112, 128)
+        c = _shade(base, .2 if rib in (1, 2) else -.18 if rib in (4, 5) else 0)
+        c = (c[0] + _n(x // 6, y, 503, 10), c[1] + _n(x // 6, y, 503, 10), c[2] + _n(x // 6, y, 503, 10))
+        if y % 16 in (0, 1): c = (60, 68, 80)
+        if hnoise(x // 2, y, 505) < .04: c = (150, 90, 52)
+        return c
+    if r == "thatch":
+        n = _n(x // 2, y, 507, 18)
+        c = (186 + n, 154 + n * 3 // 4, 84 + n // 2)
+        if (y + x // 3) % 5 == 0: c = _shade(c, -.28)
+        if hnoise(x, y, 509) < .06: c = (222, 196, 120)
+        return c
+    if r == "flat":
+        n = _n(x, y, 511, 12)
+        c = (86 + n, 88 + n, 94 + n)
+        if hnoise(x, y, 513) < .1: c = (132, 130, 128)
+        if x % 16 == 0 or y % 16 == 0: c = (56, 58, 64)
+        return c
+    return (190, 224, 238)
+
+
+def roof_piece(r: str, shape: str) -> Image.Image:
+    sp = Sprite(S, S, salt=520)
+    glass_ = r == "glasshouse"
+    panes: set = set()
+    for y in range(S):
+        for x in range(S):
+            k = 0.0
+            if shape == "ridge_h":
+                k = .16 if y < 14 else -.22 if y > 17 else .4
+            elif shape == "ridge_v":
+                k = .16 if x < 14 else -.22 if x > 17 else .4
+            elif shape.startswith("slope"):
+                k = {"n": .14, "w": .06, "s": -.2, "e": -.15}[shape[-1]]
+            elif shape.startswith("corner"):
+                v, h = shape[-2], shape[-1]
+                diag = (x + y < 31) if (v, h) in (("n", "e"), ("s", "w")) else (x < y)
+                if (v, h) == ("n", "e"): k = .14 if x + y < 31 else -.15
+                elif (v, h) == ("s", "w"): k = -.2 if x + y < 31 else .06
+                elif (v, h) == ("n", "w"): k = .14 if x > y else .06
+                else: k = -.2 if x > y else -.15
+            if glass_:
+                panes.add((x, y))
+            else:
+                sp.px[(x, y)] = _shade(roof_tex(r, x, y), k)
+    if glass_:
+        for k in range(S):
+            for pos in (0, 15, 16, 31):
+                sp.px[(k, pos)] = GLASS_FRAME[3 if pos in (0, 15) else 1]; sp.px[(pos, k)] = GLASS_FRAME[3 if pos in (0, 15) else 1]
+        _glass_streaks(sp, 2, 2, 29, 29, 7)
+        return _finish_glass(sp, panes)
+    return sp.image()
+
+
+# ------------------------------------------------------------------ stairs (one tile, going up in the given direction)
+STAIR_MATERIALS = ("wood", "log", "stone", "concrete", "brick", "steel")
+
+
+def stairs(m: str, d: str) -> Image.Image:
+    sp = Sprite(S, S, salt=540)
+    n = 6
+    side = _shade(face(m, 3, 3), -.15)
+    for i in range(n):
+        if d in ("n", "s"):
+            rows = range(S)
+            band = (S - 2) // n
+            y0 = 1 + i * band if d == "s" else S - 1 - (i + 1) * band
+            tread, riser = 3, band - 3
+            lift = i if d == "n" else n - 1 - i
+            for y in range(y0, y0 + band):
+                for x in range(3, 29):
+                    is_tread = (y - y0) < tread if d == "n" else (y - y0) >= band - tread
+                    c = cap(m, x, y) if is_tread else face(m, x, y)
+                    c = _shade(c, .06 * lift + (.2 if is_tread and ((y - y0) == 0 if d == "n" else (y - y0) == band - tread) else -.4 if not is_tread else 0))
+                    if not is_tread and (y - y0 == band - 1 if d == "n" else y == y0):
+                        c = (20, 16, 24)
+                    sp.px[(x, y)] = c
+        else:
+            band = (S - 2) // n
+            x0 = 1 + i * band if d == "w" else S - 1 - (i + 1) * band
+            tread, riser = 3, band - 3
+            lift = n - 1 - i if d == "w" else i
+            for x in range(x0, x0 + band):
+                for y in range(3, 29):
+                    is_tread = (x - x0) >= band - tread if d == "w" else (x - x0) < tread
+                    c = cap(m, x, y) if is_tread else face(m, x, y)
+                    c = _shade(c, .06 * lift + (.2 if is_tread else -.4))
+                    if not is_tread and (x == x0 if d == "w" else x == x0 + band - 1):
+                        c = (20, 16, 24)
+                    sp.px[(x, y)] = c
+    if d in ("n", "s"):
+        for y in range(1, S - 1):
+            for x in (1, 2, 29, 30):
+                sp.px[(x, y)] = _shade(side, .25 if x in (1,) else -.1)
+    else:
+        for x in range(1, S - 1):
+            for y in (1, 2, 29, 30):
+                sp.px[(x, y)] = _shade(side, .25 if y == 1 else -.1)
+    chev = {"n": ((16, 9), (15, 10), (17, 10), (14, 11), (18, 11)), "s": ((14, 20), (18, 20), (15, 21), (17, 21), (16, 22)),
+            "e": ((19, 14), (19, 18), (20, 15), (20, 17), (21, 16)), "w": ((12, 14), (12, 18), (11, 15), (11, 17), (10, 16))}[d]
+    for (x, y) in chev:                                                    # an arrow: which way is up
+        sp.px[(x, y)] = (252, 246, 214)
+        sp.px[(x + (1 if d == "e" else -1 if d == "w" else 0), y + (1 if d == "s" else -1 if d == "n" else 0))] = (28, 22, 30) if False else sp.px.get((x, y), (0, 0, 0))
+    sp.shadow = set()
+    sp.outline()
+    return sp.image()
+
+
 # ------------------------------------------------------------------ objects with a function
 def campfire(frame: int) -> Sprite:
     sp = Sprite(32, 40, salt=130 + frame)
@@ -748,6 +990,9 @@ def build() -> dict[str, Image.Image]:
             out["window_glass"] = glass_window()
             for v in range(2):
                 out[f"floor_glass_{v}"] = glass_floor(v)
+            out["pillar_glass_top"], out["pillar_glass_face"] = pillar_top("glass"), pillar_face("glass")
+            for part, im in zip(("left", "right"), bigwindow("scrap" if False else "steel")):
+                out[f"bigwindow_glass_{part}"] = im
             continue
         for mask in range(16):
             out[f"wall_{m}_top_{mask}"] = wall_top(m, mask)
@@ -760,6 +1005,19 @@ def build() -> dict[str, Image.Image]:
         out[f"window_{m}"] = window_face(m)
         for v in range(2):
             out[f"floor_{m}_{v}"] = floor(m, v)
+        out[f"pillar_{m}_top"], out[f"pillar_{m}_face"] = pillar_top(m), pillar_face(m)
+        out[f"arch_{m}"] = arch_face(m)
+        for state in (False, True):
+            for part, im in zip(("left", "right"), gate(m, state)):
+                out[f"gate_{m}_{'open' if state else 'closed'}_{part}"] = im
+        for part, im in zip(("left", "right"), bigwindow(m)):
+            out[f"bigwindow_{m}_{part}"] = im
+    for r in ROOFS:
+        for shape in ROOF_SHAPES:
+            out[f"roof_{r}_{shape}"] = roof_piece(r, shape)
+    for m in STAIR_MATERIALS:
+        for d in ("n", "e", "s", "w"):
+            out[f"stairs_{m}_{d}"] = stairs(m, d)
     out["overlay_barricade"] = barricade_overlay()
     for level in (1, 2):
         out[f"overlay_crack_{level}"] = crack_overlay(level)

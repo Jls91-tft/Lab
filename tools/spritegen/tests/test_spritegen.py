@@ -226,3 +226,31 @@ def test_animated_extras_exist_and_move():
     for prefix in ("anim_water", "decor_barrel_fire", "obj_campfire"):
         frames = [images()[f"{prefix}_{f}"].tobytes() for f in range(4)]
         assert len(set(frames)) == 4, prefix
+
+
+def test_pillars_arches_gates_roofs_and_stairs_exist():
+    names = images().keys()
+    for m in structures.MATERIALS:
+        assert f"pillar_{m}_top" in names and f"pillar_{m}_face" in names, m
+        for part in ("left", "right"):
+            assert f"bigwindow_{m}_{part}" in names, m
+        if m != "glass":
+            assert f"arch_{m}" in names, m
+            for state in ("closed", "open"):
+                for part in ("left", "right"):
+                    assert f"gate_{m}_{state}_{part}" in names, (m, state, part)
+    for roof in structures.ROOFS:
+        for shape in structures.ROOF_SHAPES:
+            assert f"roof_{roof}_{shape}" in names
+    for m in structures.STAIR_MATERIALS:
+        for d in "nesw":
+            assert f"stairs_{m}_{d}" in names
+        assert len({images()[f"stairs_{m}_{d}"].tobytes() for d in "nesw"}) == 4
+
+
+def test_roof_shapes_are_lit_differently():
+    for roof in structures.ROOFS:
+        if roof == "glasshouse":
+            continue
+        shapes = {images()[f"roof_{roof}_{s}"].tobytes() for s in structures.ROOF_SHAPES}
+        assert len(shapes) == len(structures.ROOF_SHAPES), roof

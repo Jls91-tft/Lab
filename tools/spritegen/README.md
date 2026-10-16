@@ -62,6 +62,12 @@ según los vecinos que sean del mismo muro.
 | `window_<m>` | Ventana en fachada (punto débil). Se barrica con `overlay_barricade` encima |
 | `lowbarricade_<m>_<0-3>` · `fence_<m>_<0-3>` | Barricada baja y valla; máscara E=1, O=2 para los extremos |
 | `floor_<m>_<0-1>` | Suelo: tarima, chapa, adoquín, hormigón |
+| `pillar_<m>_top` · `pillar_<m>_face` | Pilar: visto desde arriba y de frente |
+| `arch_<m>` | Arco o vano sin hoja, en fachada |
+| `gate_<m>_<closed\|open>_<left\|right>` | Portón doble de 2 casillas (dos mitades) |
+| `bigwindow_<m>_<left\|right>` | Ventanal de 2 casillas (dos mitades) |
+| `roof_<tile\|sheet\|thatch\|flat\|glasshouse>_<forma>` | Tejado (teja, chapa, paja, plano, cristal) con 11 formas: `flat`, `ridge_h`, `ridge_v`, `slope_n/e/s/w`, `corner_ne/nw/se/sw` |
+| `stairs_<m>_<n\|e\|s\|w>` | Escalera de una casilla (madera, tronco, piedra, hormigón, ladrillo, acero); la flecha marca hacia dónde sube |
 | `overlay_crack_<1-2>` · `overlay_barricade` | Se dibujan encima de cualquier pieza (daño en niveles, barricada) |
 | `obj_campfire_<0-3>` (animada, con luz) · `obj_lantern` · `obj_rain_barrel` · `obj_barbed_wire` · `obj_sofa` | Objetos con función o decorativos |
 

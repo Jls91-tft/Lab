@@ -119,6 +119,10 @@ El fantasma se mantiene como ya está hecho: verde si se puede, rojo con el moti
 ## 5. Qué no entra todavía
 Derrumbes en cadena, fuego que se propaga por la madera, electricidad y generadores, plantas por debajo del suelo (sótanos) y pintura por patrones.
 
+> **Hecho en arte (16/10/2026, sin esperar al OK de arquitectura):** `tools/spritegen` ya dibuja los **14 materiales** (muro con uniones, puerta, ventana, barricada,
+> valla y suelo), **pilares, arcos, portones y ventanales de 2 casillas, escaleras, 5 tejados con 11 formas** y los objetos de D-020 (~700 sprites).
+> Falta: pintura (versión en grises), tejados para mapas con plantas y la integración en el juego.
+
 ## 6. Orden de trabajo propuesto (entrega valor pronto)
 | Fase | Qué | Tamaño |
 | --- | --- | --- |
