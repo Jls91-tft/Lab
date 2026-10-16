@@ -25,6 +25,12 @@ antigua como **Sustituida por D-XXX**.
 
 ---
 
+## D-022 · 16/10/2026 · Construcción avanzada: pisos reales, 14+ materiales, pintura y planos
+- **Estado:** Propuesta (Javier eligió las opciones el 16/10/2026; falta su OK al plan y al orden de `docs/propuesta-construccion-avanzada.md` §6). Amplía D-020.
+- **Decisión de Javier:** pisos reales (2-3 plantas), 14 o más materiales con pintura, interfaz de solo teclas estilo Minecraft y planos (copiar, pegar y guardar). Quiere que se puedan hacer "auténticas locuras" de casas y que elegir material y pieza sea cómodo.
+- **Propuesta:** materiales y piezas como **datos** que se combinan; tres selectores independientes (pieza en la hotbar, material con Q/E, color con [ ]); un catálogo con Tab para llenar la hotbar; cuentagotas, deshacer y planos. Las plantas se hacen **por fases**, después de que la construcción rica funcione en una planta.
+- **Riesgo:** las plantas tocan núcleo, red, guardado, mapa y Unity a la vez; es lo más caro del proyecto. Por eso el orden entrega valor antes (fases A-E) y deja lo vertical para después (F-H).
+
 ## D-021 · 16/10/2026 · Arte del mundo a 32 px con `tools/spritegen` (sustituye en parte a D-018 y D-019)
 - **Estado:** Aceptada (OK de Javier el 16/10/2026: "quedamos en 32 y construye la herramienta", tras ver las pruebas de 32 px y elegir pulir a 32 antes que subir a 48). **Sustituye** el tile de 16 px de D-018 y el arte de mundo y personajes de D-019 (Kenney) para lo que `spritegen` cubre.
 - **Decisión:**
