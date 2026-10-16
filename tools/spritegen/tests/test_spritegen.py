@@ -289,3 +289,41 @@ def test_a_cave_floor_is_darker_than_the_earth_wall_next_to_it():
         px = list(images()[name].convert("RGB").getdata())
         return sum(sum(c) for c in px) / (len(px) * 3)
     assert lum("floor_earth_0") < lum("wall_earth_top_15")
+
+
+# ------------------------------------------------------------------ data ↔ art (D-022)
+SPRITES_FOR_SHAPE = {
+    "wall": ("wall_{m}_top_15", "wall_{m}_face_3"), "halfwall": ("lowbarricade_{m}_0",), "pillar": ("pillar_{m}_top", "pillar_{m}_face"),
+    "arch": ("arch_{m}",), "door": ("door_{m}_closed", "door_{m}_open"), "gate": ("gate_{m}_closed_left", "gate_{m}_closed_right"),
+    "window": ("window_{m}",), "bigwindow": ("bigwindow_{m}_left", "bigwindow_{m}_right"), "fence": ("fence_{m}_0",),
+    "floor": ("floor_{m}_0",), "stairs": ("stairs_{m}_n", "stairs_{m}_e", "stairs_{m}_s", "stairs_{m}_w"), "hatch": ("hatch_{m}_closed", "hatch_{m}_open"),
+}
+
+
+def _construction():
+    path = REPO / "data" / "generated" / "construction.json"
+    if not path.exists():
+        pytest.skip("construction.json not generated")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def test_every_construction_block_has_its_art():
+    c = _construction()
+    names = images().keys()
+    missing = []
+    for b in c["blocks"]:
+        if b["material"] in {m["id"] for m in c["materials"]}:
+            for pattern in SPRITES_FOR_SHAPE[b["shape"]]:
+                if pattern.format(m=b["material"]) not in names:
+                    missing.append((b["key"], pattern.format(m=b["material"])))
+    assert not missing, missing[:8]
+
+
+def test_roofs_and_diggable_ground_have_art():
+    c = _construction()
+    names = images().keys()
+    for r in c["roofs"]:
+        for shape in structures.ROOF_SHAPES:
+            assert f"roof_{r['id']}_{shape}" in names, r["id"]
+    for n in c["naturals"]:
+        assert f"wall_{n['id']}_top_15" in names and f"floor_{n['id']}_0" in names, n["id"]
