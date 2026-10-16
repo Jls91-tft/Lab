@@ -16,7 +16,7 @@ antigua como **Sustituida por D-XXX**.
 | Tema | Notas |
 | --- | --- |
 | ~~Tamaño de tile en píxeles~~ | Cerrado: 32 px (D-021, antes 16 px en D-018). Los metros por tile, en D-008 |
-| Resolución base | Propuesta 960×540 con escalado entero (D-021); la de D-018, 640×360, era para 16 px |
+| Resolución base | **Decidida: 960×540** con escalado entero (D-021, OK de Javier 16/10/2026); la de D-018, 640×360, era para 16 px |
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
 | ~~Paleta del mundo~~ | Cerrada: 81 colores diseñados a mano para el mundo a 32 px (D-021). Iconos e interfaz siguen con los 32 de D-018 |
 | Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
@@ -42,7 +42,7 @@ antigua como **Sustituida por D-XXX**.
   - El mundo pasa a **32 px por casilla** (personajes de 32×48, La Mole de 64×96). Lo genera `tools/spritegen/` por código (Python + Pillow, determinista, con tests), con **los mismos nombres de sprite** que el atlas de `tools/artgen`, `ppu: 32` y un pivote en los pies de los personajes.
   - Cubre: suelos, los 12 bloques de hoy, decoración (coches, árboles, mobiliario…), marcas del suelo, jugadores (propio y compañero, caído) y los 8 zombis del bestiario en 3 vistas (la cuarta es espejo) y 4 fotogramas, con variantes de caminante.
   - `tools/artgen` **sigue** para iconos de objetos, interfaz y cursor (16 px): son otra cuadrícula y no se mezclan con el mundo.
-  - **Resolución base:** con 32 px, 640×360 solo muestra 11 casillas de alto. Se propone **960×540** (×2 a 1080p, unas 17 casillas), pendiente de OK al integrarlo en Unity.
+  - **Resolución base:** con 32 px, 640×360 solo muestra 11 casillas de alto. **Decidido 960×540** (×2 a 1080p, unas 17 casillas); `PrototypeArt.BaseHeight` pasa de 360 a 540 al cablear el atlas de 32 px.
 - **Consecuencias (trabajo en Unity, aún no hecho):** `PrototypeArt` debe cargar un segundo atlas para el mundo y usar su `ppu`; el pivote de los personajes pasa a los pies (`pivot_y` del JSON); la cámara de píxel perfecto pasa de 360 a la altura base nueva; las piezas de Kenney dejan de usarse para el mundo.
 - **Motivo:** el arte de 16 px "se veía plano y sin personalidad". A 32 px hay sitio para anatomía, sombreado de 5 tonos, ropa y heridas, mutaciones visibles y siluetas propias por tipo de zombi.
 - **Paleta:** cerrada y diseñada a mano, **81 colores** (`tools/spritegen/spritegen/palette.py`); cada píxel del atlas pasa a su color más cercano y un test lo comprueba. Cuantizar automáticamente estropeaba los acentos.

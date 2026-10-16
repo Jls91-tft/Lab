@@ -20,7 +20,7 @@ Construcción avanzada completa (fases A-H): 14 materiales y pintura, capas y ni
 6. Zombis: caen por fosas, bajan y suben por escaleras, aporrean trampillas cerradas.
 
 ## Trabajo de Unity pendiente (por orden)
-- Cargar el atlas de 32 px (`Art32`, `ppu` 32, pivote en los pies con `pivot_y`) y fijar la resolución base (propuesta 960×540, pendiente de OK de Javier). Sustituir `PrototypePlaceholders` por los sprites de `spritegen` (muros con uniones, mapas de máscaras `wall_<m>_top_N`, cristal con alfa, tejados, escaleras, subsuelo).
+- Cargar el atlas de 32 px (`Art32`, `ppu` 32, pivote en los pies con `pivot_y`) y pasar la resolución base a **960×540** (decidida; `PrototypeArt.BaseHeight` 360 → 540). Sustituir `PrototypePlaceholders` por los sprites de `spritegen` (muros con uniones, mapas de máscaras `wall_<m>_top_N`, cristal con alfa, tejados, escaleras, subsuelo).
 - Cámara con corte de niveles (hoy solo se ve el nivel propio, los demás más oscuros).
 - Menú del ajuste de coste de construcción (`GameSettings.BuildCost`: normal, barato, gratis) y del libro de piezas.
 - Inventario/mochila de 27 huecos en la interfaz (hoy el HUD dibuja la barra de 9).
