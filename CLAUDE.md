@@ -19,7 +19,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 **Tomadas** (motivos en `docs/decisiones.md`):
 - Unity 6000.3.26f1 (LTS) + C#, plantilla 2D URP (D-016). Proyecto Unity en la subcarpeta `CepaCero/`.
 - Paquetes de Unity alineados con el editor: collab-proxy 2.13.6 e Input System 1.20.0 (D-017).
-- Arte: tile 16 px, base 640×360, 4 direcciones (D-018). El mundo sale de las piezas CC0 de Kenney en `art/vendor/kenney/` (fuera de LFS), transformadas por `tools/artgen/` con un filtro propio; personajes, zombis, iconos e interfaz se dibujan por código; la decoración se coloca con `DecorPlanner` (solo visual) (D-019). Todo va al atlas `CepaCero/Assets/Resources/Cepa/Art/`: no editar esos PNG a mano.
+- Arte: tile 16 px, base 640×360, 4 direcciones (D-018). El mundo sale de las piezas CC0 de Kenney en `art/vendor/kenney/` (fuera de LFS), transformadas por `tools/artgen/` con un filtro propio; personajes, zombis, iconos e interfaz se dibujan por código; la decoración se coloca con `DecorPlanner` (solo visual) (D-019). Todo va al atlas `CepaCero/Assets/Resources/Cepa/Art/`: no editar esos PNG a mano. **D-021 (16/10)** pasa el mundo a 32 px con `tools/spritegen/` (mismos nombres de sprite, `ppu` 32, atlas en `Art32/`); falta integrarlo en Unity y fijar la resolución base (propuesta 960×540). `artgen` sigue para iconos e interfaz.
 - Construcción (D-020, detalle en `docs/propuesta-construccion.md`): tres capas por casilla (suelo, estructura, objeto), ventanas y barricadas sobre los edificios reales, cama como reaparición, techos solo visuales. Orden: modo construcción → capas → ventanas/barricadas → objetos con función y luz → autotiling, techos y grietas.
 - Cooperativo anfitrión + Steam P2P, sin servidores propios. **Autoridad del anfitrión.**
 - Git + Git LFS para binarios. Textos fuera del código (ES + EN).
@@ -81,6 +81,8 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity; `tests/CepaCero.Unity.CompileCheck` compila el paquete de Unity contra firmas imitadas de su API (si usas una API de Unity nueva, añade su firma a `UnityApiStubs.cs`).
 - `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
 - `tools/datagen/`: `python -m datagen` regenera `data/generated/` (bestiario, objetos, recetas, botín, diario y `loc/strings.csv`) desde `docs/`. Traducciones en `docs/traducciones/<idioma>.csv`.
+- `tools/artgen/`: iconos, interfaz y cursor a 16 px (D-018) y el atlas actual del juego (`python -m artgen`).
+- `tools/spritegen/`: arte del mundo a 32 px por código (D-021): suelos, bloques, decoración, jugadores y zombis. `python -m spritegen --preview`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
 
 ## docs/

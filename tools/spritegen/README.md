@@ -1,0 +1,48 @@
+# spritegen · arte del mundo a 32 px
+
+Genera por código (Python + Pillow, sin dependencias nuevas) el arte del mundo a **32 px por casilla** (D-021):
+suelos, bloques, decoración, marcas del suelo, jugadores y los zombis del bestiario, en **4 direcciones**
+(abajo, arriba e izquierda; la derecha es la izquierda espejada) y **4 fotogramas** de caminar.
+
+Es determinista: la misma ejecución da los mismos píxeles. Nada se dibuja a mano ni se descarga.
+
+```bash
+cd tools/spritegen
+python -m venv .venv && source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python -m spritegen --preview     # escribe el atlas en CepaCero/Assets/Resources/Cepa/Art32/ y una vista previa ×3
+python -m spritegen --out /ruta   # otra carpeta
+python -m spritegen --check       # falla si el atlas commiteado está desfasado (pasa si aún no hay ninguno)
+pytest -q
+```
+
+## Salida
+- `atlas.png`: todos los sprites (1024 px de ancho).
+- `atlas.json`: formato `cepacero.atlas` v1, **igual que el de `tools/artgen`** (rectángulos con origen abajo a la izquierda),
+  con `ppu: 32`. Los personajes llevan además `pivot_x`/`pivot_y` para que los pies queden en la posición de la entidad.
+- `tools/spritegen/out/preview.png`: vista previa ×3 (no se commitea).
+
+## Nombres (los mismos que usa el juego con el atlas de 16 px)
+| Prefijo | Contenido | Tamaño |
+| --- | --- | --- |
+| `ground_<tipo>_<0-2>` | Suelo de `GroundType`: dirt, asphalt, sidewalk, grass, water, floor, rail | 32×32 |
+| `block_<clave>` | Bloques de `BlockRegistry`, más `block_building_wall_face` (fachada) | 32×32 |
+| `decor_*` | Decoración que se alza: coches (`_h`/`_v`), árboles, farolas, muebles… | según pieza |
+| `decal_*` | Marcas planas (sangre, manchas, basura, cristales, alfombras ×3 casillas) | 32×32 · 96×32 |
+| `player_<dir>_<0-3>`, `player_other_…`, `player_downed` | Jugador propio, compañero y caído | 32×48 · 32×32 |
+| `zombie_<id>_<dir>_<0-3>` | Un juego por zombi del bestiario (La Mole, 64×96: dos casillas) | 32×48 |
+| `zombie_walker_v1…v3_…` | Variantes del caminante para dar variedad a la horda (el juego puede elegir una por zombi) | 32×48 |
+
+Fotogramas 0 y 2: de pie con pasos a ras; 1 y 3: paso. `<dir>` es `down`, `up` o `left`.
+
+## Lo que NO hace (todavía)
+- **Iconos de objetos, interfaz y cursor**: siguen en `tools/artgen` (16 px). Son otra cuadrícula de píxeles y no se mezclan con el mundo.
+- **Paleta cerrada del mundo**: el arte usa rampas de 5 tonos y ruido, unos 3300 colores distintos. Cuantizar automáticamente a 48-96
+  colores estropea los acentos (casco amarillo, venas verdes), así que la paleta hay que diseñarla (pendiente en `docs/decisiones.md`).
+- **Bloques de D-020** (capas, ventanas, barricadas): solo están los 12 bloques de hoy.
+- **La Mole** está dibujada a 32×48 y ampliada ×2 (sus píxeles son el doble de grandes). Rehacerla a 64×96 nativos es trabajo futuro.
+
+## Cómo se añade algo
+- Un zombi nuevo en `docs/bestiario.md`: el generador falla hasta que tenga su `Look` en `characters.zombie_looks()`.
+- Una pieza de decoración: función en `decor.py` y entrada en `decor.build()`.
+- Cambiar la apariencia de un tipo: sus parámetros están en `zombie_looks()`; el dibujo, en `draw_front/back/side`.

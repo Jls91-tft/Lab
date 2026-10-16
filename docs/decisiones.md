@@ -15,15 +15,26 @@ antigua como **Sustituida por D-XXX**.
 ## Pendientes de decidir
 | Tema | Notas |
 | --- | --- |
-| ~~Tamaño de tile en píxeles~~ | Cerrado: 16 px (D-018). Los metros por tile, en D-008 |
-| ~~Resolución base~~ | Cerrado: 640×360 con escalado entero (D-018) |
+| ~~Tamaño de tile en píxeles~~ | Cerrado: 32 px (D-021, antes 16 px en D-018). Los metros por tile, en D-008 |
+| Resolución base | Propuesta 960×540 con escalado entero (D-021); la de D-018, 640×360, era para 16 px |
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
-| ~~Paleta~~ | Cerrado: paleta propia de 32 colores, generada por código (D-018) |
+| Paleta del mundo | Iconos e interfaz: 32 colores (D-018). El mundo a 32 px no tiene paleta cerrada todavía (D-021) |
 | Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
 ---
+
+## D-021 · 16/10/2026 · Arte del mundo a 32 px con `tools/spritegen` (sustituye en parte a D-018 y D-019)
+- **Estado:** Aceptada (OK de Javier el 16/10/2026: "quedamos en 32 y construye la herramienta", tras ver las pruebas de 32 px y elegir pulir a 32 antes que subir a 48). **Sustituye** el tile de 16 px de D-018 y el arte de mundo y personajes de D-019 (Kenney) para lo que `spritegen` cubre.
+- **Decisión:**
+  - El mundo pasa a **32 px por casilla** (personajes de 32×48, La Mole de 64×96). Lo genera `tools/spritegen/` por código (Python + Pillow, determinista, con tests), con **los mismos nombres de sprite** que el atlas de `tools/artgen`, `ppu: 32` y un pivote en los pies de los personajes.
+  - Cubre: suelos, los 12 bloques de hoy, decoración (coches, árboles, mobiliario…), marcas del suelo, jugadores (propio y compañero, caído) y los 8 zombis del bestiario en 3 vistas (la cuarta es espejo) y 4 fotogramas, con variantes de caminante.
+  - `tools/artgen` **sigue** para iconos de objetos, interfaz y cursor (16 px): son otra cuadrícula y no se mezclan con el mundo.
+  - **Resolución base:** con 32 px, 640×360 solo muestra 11 casillas de alto. Se propone **960×540** (×2 a 1080p, unas 17 casillas), pendiente de OK al integrarlo en Unity.
+- **Consecuencias (trabajo en Unity, aún no hecho):** `PrototypeArt` debe cargar un segundo atlas para el mundo y usar su `ppu`; el pivote de los personajes pasa a los pies (`pivot_y` del JSON); la cámara de píxel perfecto pasa de 360 a la altura base nueva; las piezas de Kenney dejan de usarse para el mundo.
+- **Motivo:** el arte de 16 px "se veía plano y sin personalidad". A 32 px hay sitio para anatomía, sombreado de 5 tonos, ropa y heridas, mutaciones visibles y siluetas propias por tipo de zombi.
+- **Límites conocidos:** no hay paleta cerrada del mundo (unos 3300 colores; cuantizar automáticamente a 48-96 estropea los acentos); La Mole es un 32×48 ampliado ×2; faltan los bloques de D-020. Steam pide declarar el uso de IA: este arte lo escribe una IA, así que conviene revisar la norma vigente de Valve antes de publicar.
 
 ## D-020 · 16/10/2026 · Construcción: tres capas, ventanas y barricadas, modo construcción
 - **Estado:** Aceptada (OK de Javier el 16/10/2026, respondiendo a las preguntas de `docs/propuesta-construccion.md`).
