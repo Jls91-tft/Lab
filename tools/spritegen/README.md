@@ -35,10 +35,16 @@ pytest -q
 
 Fotogramas 0 y 2: de pie con pasos a ras; 1 y 3: paso. `<dir>` es `down`, `up` o `left`.
 
+## Paleta
+Todo el atlas usa una **paleta cerrada de 81 colores, diseñada a mano** (`palette.py`): rampas por familia (grises fríos, piedra cálida,
+maderas, ladrillo, pieles, verdes, azules, agua, morados, naranjas, sangre, hueso, olivas) y, aparte, los únicos verdes vivos, los de la cepa.
+El dibujo usa rampas de 5 tonos y ruido; al final cada píxel opaco pasa a su color más cercano. Un test comprueba que no se cuela ningún
+otro color y que no sobra ninguno. Para cambiar el ambiente de todo el juego basta con tocar la paleta. (Extraerla automáticamente
+no sirve: estropea los acentos.)
+
 ## Lo que NO hace (todavía)
 - **Iconos de objetos, interfaz y cursor**: siguen en `tools/artgen` (16 px). Son otra cuadrícula de píxeles y no se mezclan con el mundo.
-- **Paleta cerrada del mundo**: el arte usa rampas de 5 tonos y ruido, unos 3300 colores distintos. Cuantizar automáticamente a 48-96
-  colores estropea los acentos (casco amarillo, venas verdes), así que la paleta hay que diseñarla (pendiente en `docs/decisiones.md`).
+
 
 ## Piezas de construcción (D-020)
 `structures.py`: 4 materiales (**wood, scrap, brick, concrete**) × pieza. Los muros **se unen solos**: el juego elige el sprite

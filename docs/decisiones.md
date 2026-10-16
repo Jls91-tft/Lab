@@ -18,7 +18,7 @@ antigua como **Sustituida por D-XXX**.
 | ~~Tamaño de tile en píxeles~~ | Cerrado: 32 px (D-021, antes 16 px en D-018). Los metros por tile, en D-008 |
 | Resolución base | Propuesta 960×540 con escalado entero (D-021); la de D-018, 640×360, era para 16 px |
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
-| Paleta del mundo | Iconos e interfaz: 32 colores (D-018). El mundo a 32 px no tiene paleta cerrada todavía (D-021) |
+| ~~Paleta del mundo~~ | Cerrada: 81 colores diseñados a mano para el mundo a 32 px (D-021). Iconos e interfaz siguen con los 32 de D-018 |
 | Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
@@ -34,7 +34,8 @@ antigua como **Sustituida por D-XXX**.
   - **Resolución base:** con 32 px, 640×360 solo muestra 11 casillas de alto. Se propone **960×540** (×2 a 1080p, unas 17 casillas), pendiente de OK al integrarlo en Unity.
 - **Consecuencias (trabajo en Unity, aún no hecho):** `PrototypeArt` debe cargar un segundo atlas para el mundo y usar su `ppu`; el pivote de los personajes pasa a los pies (`pivot_y` del JSON); la cámara de píxel perfecto pasa de 360 a la altura base nueva; las piezas de Kenney dejan de usarse para el mundo.
 - **Motivo:** el arte de 16 px "se veía plano y sin personalidad". A 32 px hay sitio para anatomía, sombreado de 5 tonos, ropa y heridas, mutaciones visibles y siluetas propias por tipo de zombi.
-- **Límites conocidos:** no hay paleta cerrada del mundo (unos 3300 colores; cuantizar automáticamente a 48-96 estropea los acentos); las piezas de construcción de D-020 (4 materiales × muro con uniones automáticas, puerta, ventana, barricada baja, valla y suelo, más grietas y objetos) ya están dibujadas pero falta integrarlas en Unity. Steam pide declarar el uso de IA: este arte lo escribe una IA, así que conviene revisar la norma vigente de Valve antes de publicar.
+- **Paleta:** cerrada y diseñada a mano, **81 colores** (`tools/spritegen/spritegen/palette.py`); cada píxel del atlas pasa a su color más cercano y un test lo comprueba. Cuantizar automáticamente estropeaba los acentos.
+- **Límites conocidos:** las piezas de construcción de D-020 (4 materiales × muro con uniones automáticas, puerta, ventana, barricada baja, valla y suelo, más grietas y objetos) ya están dibujadas pero falta integrarlas en Unity. Steam pide declarar el uso de IA: este arte lo escribe una IA, así que conviene revisar la norma vigente de Valve antes de publicar.
 
 ## D-020 · 16/10/2026 · Construcción: tres capas, ventanas y barricadas, modo construcción
 - **Estado:** Aceptada (OK de Javier el 16/10/2026, respondiendo a las preguntas de `docs/propuesta-construccion.md`).
