@@ -201,15 +201,55 @@ namespace CepaCero.Tests.AI
             Assert.That(sim2.GetLevel(down), Is.Zero, "and down again");
         }
 
+        private int TicksToFallThrough(string hatch)
+        {
+            var rows = new string[32];
+            for (int r = 0; r < rows.Length; r++)
+            {
+                rows[r] = new string('.', 32);
+            }
+            _map = new AsciiMap(BlockRegistry.CreateDefault(Fixtures.Construction()), rows);
+            _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Floor, Id(hatch));
+            Cave(10, 16, 5, -1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
+            return RunUntil(sim, new List<Float2> { new Float2(15.5f, 5.5f) }, new List<int> { -1 }, () => sim.GetLevel(z) == -1, 120f);
+        }
+
         [Test]
-        public void AClosedTrapdoorIsNotAWayDownYet()
+        public void AClosedTrapdoorIsBashedOpenAndTheMaterialSetsHowLongThatTakes()
+        {
+            int wood = TicksToFallThrough("hatch_wood");
+            Assert.That(wood, Is.LessThan(2400), "a wooden trapdoor gives way");
+            int steel = TicksToFallThrough("hatch_steel");
+            Assert.That(steel, Is.GreaterThan(wood * 2), "steel holds much longer (or for ever)");
+        }
+
+        [Test]
+        public void AShutTrapdoorLeavesAnOpenOneBehindIt()
         {
             _map.Blocks.SetBlock(10, 5, 0, BuildLayer.Floor, Id("hatch_wood"));
             Cave(10, 16, 5, -1);
             ZombieSimulation sim = Sim();
             int z = sim.Spawn(_walker, new Float2(5.5f, 5.5f));
-            Run(sim, new List<Float2> { new Float2(15.5f, 5.5f) }, new List<int> { -1 }, 20f);
+            RunUntil(sim, new List<Float2> { new Float2(15.5f, 5.5f) }, new List<int> { -1 }, () => sim.GetLevel(z) == -1, 120f);
+            Assert.That(_map.Blocks.GetBlock(10, 5, 0, BuildLayer.Floor).Key, Is.EqualTo("hatch_wood_open"));
+        }
+
+        [Test]
+        public void AZombieUpstairsFallsWhenItsFloorIsTakenAway()
+        {
+            FloorRun(10, 12, 5, 1);
+            ZombieSimulation sim = Sim();
+            int z = sim.Spawn(_walker, new Float2(11.5f, 5.5f), aware: false, level: 1);
+            int full = sim.GetHealth(z);
+            Assert.That(z, Is.GreaterThanOrEqualTo(0));
+            sim.Tick(Dt, new List<Float2>(), new List<int>());
+            Assert.That(sim.GetLevel(z), Is.EqualTo(1), "held up by the floor");
+            _map.Blocks.SetBlock(11, 5, 1, BuildLayer.Floor, BlockRegistry.AirId);
+            sim.Tick(Dt, new List<Float2>(), new List<int>());
             Assert.That(sim.GetLevel(z), Is.Zero);
+            Assert.That(sim.GetHealth(z), Is.LessThan(full));
         }
 
         [Test]

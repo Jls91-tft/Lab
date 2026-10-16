@@ -481,6 +481,14 @@ namespace CepaCero.AI
         {
             byte type = _type[i];
             ZombieDefinition def = _catalog[type];
+            if (_level[i] > 0)
+            {
+                FallIfUnsupported(i);
+                if (!_alive[i])
+                {
+                    return;
+                }
+            }
             _cooldown[i] -= dt;
             if (_portalCooldown[i] > 0f)
             {
@@ -604,17 +612,68 @@ namespace CepaCero.AI
 
         // ------------------------------------------------------------- levels (D-022 phase G2)
 
+        /// <summary>
+        /// Hits a closed trapdoor under the zombie. When it gives way it is left open, which is a way down. Returns true while it is still shut.
+        /// </summary>
+        private bool BashTrapdoor(int i, Int2 cell)
+        {
+            int level = _level[i];
+            BlockType hatch = _blocks.GetBlock(cell.X, cell.Y, level, BuildLayer.Floor);
+            if (hatch.Build == null || hatch.Build.Shape != "hatch" || hatch.Build.IsOpenVariant)
+            {
+                return false;                                       // somebody opened it, or it is gone
+            }
+            _state[i] = ZombieState.AttackingBlock;
+            if (_cooldown[i] > 0f)
+            {
+                return true;
+            }
+            ZombieDefinition def = _catalog[_type[i]];
+            int damage = ZombieCatalog.StructureDamage(def, hatch.Material);
+            _cooldown[i] = Math.Max(0.1f, def.attack_interval);
+            if (damage > 0 && _blocks.Damage(cell.X, cell.Y, level, BuildLayer.Floor, damage) == DamageResult.Destroyed)
+            {
+                _blocks.SetBlock(cell.X, cell.Y, level, BuildLayer.Floor, hatch.ToggleTo);       // burst open
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>Upper cells with nothing under them drop whoever stands there: a broken floor, a removed trapdoor.</summary>
+        private void FallIfUnsupported(int i)
+        {
+            Int2 cell = _pos[i].Tile;
+            int fallen = 0;
+            while (_blocks.InBounds(cell.X, cell.Y) && LevelRules.ShouldFall(_blocks, cell.X, cell.Y, _level[i]))
+            {
+                _level[i]--;
+                fallen++;
+            }
+            if (fallen > 0)
+            {
+                _stun[i] = 0.6f;
+                _portalCooldown[i] = 1.5f;
+                Damage(i, FallDamage * fallen, "fall");
+            }
+        }
+
         private struct Portal
         {
             public int ToLevel;
             public Int2 Landing;
             public int Cost;
             public bool IsFall;
+
+            /// <summary>A closed trapdoor: it has to be broken open before the way down exists.</summary>
+            public bool NeedsBreak;
         }
 
         private const int StairsCost = 20;
         private const int FallCost = 60;
         private const float PortalReach = 0.35f;
+
+        /// <summary>Levels with a flow field built in the last search (profiling).</summary>
+        public int BuiltLevelCount => _builtLevels.Count;
 
         /// <summary>Health a zombie loses per level it falls (a player loses 15; zombies take a bit less).</summary>
         public int FallDamage { get; set; } = 10;
@@ -654,6 +713,10 @@ namespace CepaCero.AI
                 _pos[i] = _pos[i] + (centre - _pos[i]).Normalized * Math.Min(0.1f, (centre - _pos[i]).Length);   // step onto the middle of it
                 _state[i] = ZombieState.Chasing;
                 return true;
+            }
+            if (portal.NeedsBreak && BashTrapdoor(i, cell))
+            {
+                return true;                                        // still shut: keep hammering on it
             }
             _level[i] = (sbyte)portal.ToLevel;
             _pos[i] = new Float2(portal.Landing.X + 0.5f, portal.Landing.Y + 0.5f);
@@ -1084,15 +1147,17 @@ namespace CepaCero.AI
                 high = Math.Max(high, level);
                 signature = unchecked(signature * 397 ^ (tile.X * 7919 + tile.Y * 104729 + level));
             }
+            int levelMask = 0;                                          // which levels have zombies, not which zombie is where: crossing a stairwell must not rebuild
             for (int i = 0; i < Capacity; i++)
             {
                 if (_alive[i])
                 {
                     low = Math.Min(low, _level[i]);
                     high = Math.Max(high, _level[i]);
-                    signature = unchecked(signature * 31 ^ (_level[i] + 17));
+                    levelMask |= 1 << (_level[i] - _blocks.MinLevel);
                 }
             }
+            signature = unchecked(signature * 31 + levelMask);
             bool stale = signature != _signature;
             if (!stale || _time - _lastRebuild < FlowRebuildInterval)
             {
@@ -1227,15 +1292,25 @@ namespace CepaCero.AI
                 foreach (int index in _blocks.ConnectorCells(level))                   // pits and open trapdoors: fall
                 {
                     int x = index % width, y = index / width;
-                    if (_blocks.ConnectorAt(x, y, level, out BlockType piece) == LevelRules.Down && !(piece.Build.Shape == "hatch" && !piece.Build.IsOpenVariant))
+                    if (_blocks.ConnectorAt(x, y, level, out BlockType piece) != LevelRules.Down)
+                    {
+                        continue;
+                    }
+                    bool closed = piece.Build.Shape == "hatch" && !piece.Build.IsOpenVariant;
+                    if (!closed)
                     {
                         AddPortal(level, neighbour, x, y, other, FallCost, true, portals);
+                    }
+                    else if (_policy.CanBreak(piece.Material) && piece.ToggleTo != 0)
+                    {
+                        int breaking = _policy.BreakBaseCost + (int)(_blocks.GetHealth(x, y, level, BuildLayer.Floor) * _policy.BreakCostPerHealth);
+                        AddPortal(level, neighbour, x, y, other, FallCost + breaking, true, portals, needsBreak: true);   // bash it open, then fall
                     }
                 }
             }
         }
 
-        private void AddPortal(int level, int to, int x, int y, FlowField other, int extra, bool fall, Dictionary<int, Portal> portals)
+        private void AddPortal(int level, int to, int x, int y, FlowField other, int extra, bool fall, Dictionary<int, Portal> portals, bool needsBreak = false)
         {
             int distance = other.GetDistance(x, y);
             if (distance == FlowField.Unreachable || _blocks.IsSolidAt(x, y, to) || _blocks.IsSolidAt(x, y, level))
@@ -1248,7 +1323,7 @@ namespace CepaCero.AI
             {
                 return;
             }
-            portals[key] = new Portal { ToLevel = to, Landing = new Int2(x, y), Cost = cost, IsFall = fall };
+            portals[key] = new Portal { ToLevel = to, Landing = new Int2(x, y), Cost = cost, IsFall = fall, NeedsBreak = needsBreak };
             _seeds.Add(new FlowSeed(new Int2(x, y), cost));
         }
 

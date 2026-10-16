@@ -26,8 +26,8 @@ Estado: **aceptada con ajustes (Javier, 16/10/2026)**. Ajustes: la fosa y la tra
 | G1 ✔ | Nivel en la simulación y la red, línea de visión y golpes por nivel (hecho: protocolo v5, 9 B por zombi, solo se envían los del nivel del espectador) | un zombi no golpea a quien está en otro nivel; la instantánea lleva el nivel |
 | G2 ✔ | `FlowField` con siembra y un campo por nivel con portales (hecho: escaleras en los dos sentidos, caída por fosa y trampilla abierta, trampilla cerrada aún no es camino) | un zombi baja por una fosa hasta un jugador; sube por unas escaleras |
 | G3 ✔ | Ruido con nivel y cavar atrae (hecho: al nivel contiguo llega el **70 %** del radio, no la mitad, para que esconderse bajo tierra no sea fácil; a dos niveles no llega) | cavar a 6 casillas bajo la calle hace que un zombi vaya a la fosa |
-| G4 | Trampilla cerrada como cuello de botella; caída de zombis | zombis rompen la trampilla; el suelo roto los deja caer con daño |
-| G5 | `simbench` multinivel y ajuste | el coste de tick está dentro del presupuesto |
+| G4 ✔ | Trampilla cerrada como cuello de botella; caída de zombis (hecho: la aporrean según material —madera cede, acero aguanta mucho más— y queda abierta; los zombis de plantas altas caen si les quitan el suelo) | zombis rompen la trampilla; el suelo roto los deja caer con daño |
+| G5 ✔ | `simbench` multinivel y ajuste (hecho: `--levels`) | el coste de tick está dentro del presupuesto |
 
 ## 4. Decisiones que necesito de Javier
 1. **¿Los zombis usan escaleras y fosas?** Recomiendo **sí**: si no, una fosa en el patio es un búnker perfecto sin esfuerzo.
@@ -40,3 +40,11 @@ Estado: **aceptada con ajustes (Javier, 16/10/2026)**. Ajustes: la fosa y la tra
 - Rendimiento del campo por nivel en mapas grandes: por eso es perezoso y acotado por `FlowMaxDistance`.
 - Un bunker sin ninguna salida a la calle deja de ser peligroso. Lo asumimos: para eso están los conectores.
 - `StructureRevision` hoy mira solo el nivel 0; hará falta una por nivel para saber qué campo reconstruir.
+
+## 6. Medición (G5, `simbench --levels`, 60 s, 3 jugadores en niveles 0 / −1 / +1, mapa sintético de 375×335)
+| Zombis | Solo calle: media / p95 | Multinivel: media / p95 | Campos | Memoria gestionada |
+| --- | --- | --- | --- | --- |
+| 100 | 0,32 / 0,45 ms | 0,26 / 0,34 ms | 3 | 9,9 MB |
+| 300 | 0,51 / 0,79 ms | 0,43 / 0,97 ms | 3 | 9,9 MB |
+
+Presupuesto del tick: 50 ms; el p95 queda por debajo del 2 % en los dos casos. Una primera versión reconstruía los campos cada vez que un zombi cruzaba una escalera (p95 de 1,8 y 4,2 ms); ahora la firma solo mira qué niveles tienen zombis. En un mapa de 1000×1000 cada campo de nivel pesa unos 24 MB (seis tablas de enteros por casilla), no los 100 MB que estimé al principio; con 3 niveles son ~72 MB. Los campos se crean al vuelo y se conservan; si hiciera falta se liberan los que lleven un rato sin usarse.

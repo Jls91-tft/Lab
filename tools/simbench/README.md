@@ -40,3 +40,5 @@ Los tiempos son de .NET 8 (JIT); en Unity con IL2CPP deberían ser parecidos y c
 Lo que se aprendió al hacerla:
 1. El flow field de mapa completo (~50 ms) producía tirones: ahora la búsqueda está acotada a ~80 tiles y calcula costes de forma perezosa (~1 ms).
 2. Cada golpe a un muro forzaba un recálculo: ahora solo cuentan los cambios de tipo de bloque (`StructureRevision`).
+
+`--levels` añade un pozo con un túnel bajo el fuerte y unas escaleras a una planta, con un jugador y zombis en cada nivel (D-022, fase G). Muestra los zombis por nivel, los campos construidos y la memoria.
