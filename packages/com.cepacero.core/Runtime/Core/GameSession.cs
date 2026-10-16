@@ -81,6 +81,10 @@ namespace CepaCero.Core
             Director = new HordeDirector(settings);
             Zombies = new ZombieSimulation(blocks, ground, data.Zombies, zombieCapacity, seed: settings.Seed ^ 0x5A5AUL);
             Rules = new HostIntentRules(blocks, ground, Zombies, playerSettings, MaxPlayers) { FriendlyFire = settings.FriendlyFire };
+            if (data.Construction?.rules != null)
+            {
+                Rules.WrongToolFactor = data.Construction.rules.wrong_tool_factor;
+            }
             _rng = new DeterministicRandom(settings.Seed);
             _dt = 1f / settings.TickRate;
             _chestId = blocks.Registry.TryGet("chest", out BlockType chest) ? chest.Id : ushort.MaxValue;
@@ -92,7 +96,13 @@ namespace CepaCero.Core
                 Containers = new ContainerStore(data.Items);
                 ItemRules = new HostItemRules(blocks, playerSettings, data.Items, Recipes, data.Loot, Containers, GroundItems, _rng, settings);
                 Rules.Inventories = _inventories;
-                Rules.CanAffordBlock = (p, type) => Recipes.TryPayForBlock(_inventories[p], blocks.Registry[type].Key);
+                Rules.CanAffordBlock = (p, type) =>
+                {
+                    BlockType bt = blocks.Registry[type];
+                    return bt.Build != null && bt.Build.Cost.Count > 0
+                        ? TryPay(_inventories[p], bt.Build.Cost)                  // pieces of the construction data (D-022)
+                        : Recipes.TryPayForBlock(_inventories[p], bt.Key);
+                };
                 if (buildings != null && data.Loot != null)
                 {
                     Containers.PlaceInBuildings(buildings, blocks, ground, data.Loot, _rng);
@@ -103,6 +113,24 @@ namespace CepaCero.Core
                 Diary = new TeamDiary(data.Diary);
             }
             blocks.TypeChanged += OnBlockTypeChanged;
+        }
+
+        /// <summary>Checks and pays a cost from an inventory in one go: nothing is taken if any item is missing.</summary>
+        private bool TryPay(Inventory inventory, IReadOnlyList<BlockCostItem> cost)
+        {
+            ItemCatalog items = Data.Items;
+            foreach (BlockCostItem c in cost)
+            {
+                if (!items.TryGetIndex(c.Item, out ushort index) || inventory.Count(index) < c.Count)
+                {
+                    return false;
+                }
+            }
+            foreach (BlockCostItem c in cost)
+            {
+                inventory.Remove(items.IndexOf(c.Item), c.Count);
+            }
+            return true;
         }
 
         public GameSettings Settings { get; }

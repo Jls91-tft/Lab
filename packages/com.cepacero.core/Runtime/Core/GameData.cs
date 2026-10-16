@@ -1,5 +1,6 @@
 using System;
 using CepaCero.AI;
+using CepaCero.Building;
 using CepaCero.Items;
 using CepaCero.Lore;
 
@@ -9,8 +10,9 @@ namespace CepaCero.Core
     public sealed class GameData
     {
         public GameData(ZombieCatalog zombies, ItemCatalog items = null, RecipesData recipes = null, LootData loot = null,
-            DiaryData diary = null)
+            DiaryData diary = null, ConstructionData construction = null)
         {
+            Construction = construction;
             Zombies = zombies ?? throw new ArgumentNullException(nameof(zombies));
             Items = items;
             RecipesData = recipes;
@@ -34,6 +36,9 @@ namespace CepaCero.Core
 
         /// <summary>Raw diary entries (null: no diary). Each match builds its own <see cref="TeamDiary"/>.</summary>
         public DiaryData Diary { get; }
+
+        /// <summary>Materials, shapes and costs of construction (D-022); null: only the legacy blocks.</summary>
+        public ConstructionData Construction { get; }
 
         public bool HasItems => Items != null;
     }

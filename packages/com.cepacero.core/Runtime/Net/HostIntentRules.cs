@@ -33,7 +33,11 @@ namespace CepaCero.Net
     /// </summary>
     public sealed class HostIntentRules
     {
+        /// <summary>Share of the damage a tool does to a material it is not meant for (D-022).</summary>
+        public float WrongToolFactor { get; set; } = 0.25f;
+
         private const float BodyRadius = 0.4f;
+        private const float DefaultHitNoise = 5f;
         private const float RayStep = 0.1f;
 
         private readonly BlockWorld _blocks;
@@ -57,6 +61,14 @@ namespace CepaCero.Net
                 if (blocks.Registry.TryGet(key, out BlockType type))
                 {
                     _placeable.Add(type.Id);
+                }
+            }
+            for (ushort id = 0; id < blocks.Registry.Count; id++)                          // pieces from the construction data (D-022)
+            {
+                BlockType t = blocks.Registry[id];
+                if (t.Build != null && !t.Build.IsOpenVariant && t.Build.Cost.Count > 0)
+                {
+                    _placeable.Add(t.Id);
                 }
             }
         }
@@ -194,6 +206,11 @@ namespace CepaCero.Net
             ItemDefinition tool = Equipped(playerIndex);
             int damage = tool != null && tool.tool_power > 0 ? tool.tool_power : _settings.BlockHitDamage;
             ushort type = _blocks.GetTypeId(intent.X, intent.Y);
+            BlockBuildInfo build = _blocks.Registry[type].Build;
+            if (build != null && build.Tool.Length > 0 && (tool == null || tool.tool_kind != build.Tool))
+            {
+                damage = Math.Max(1, (int)Math.Round(damage * WrongToolFactor, MidpointRounding.AwayFromZero));   // the wrong tool: much slower
+            }
             DamageResult hit = _blocks.Damage(intent.X, intent.Y, damage);
             if (hit == DamageResult.None)
             {
@@ -207,7 +224,7 @@ namespace CepaCero.Net
             {
                 InventoryOf(playerIndex).WearEquipped();
             }
-            LastNoise = 5f;
+            LastNoise = build != null && build.Noise > 0f ? build.Noise : DefaultHitNoise;
             return IntentResult.Ok;
         }
 

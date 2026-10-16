@@ -12,9 +12,14 @@ namespace CepaCero.Tests.TestSupport
     /// </summary>
     public sealed class AsciiMap
     {
-        public AsciiMap(params string[] rows)
+        public AsciiMap(params string[] rows) : this(null, rows)
         {
-            Registry = BlockRegistry.CreateDefault();
+        }
+
+        /// <summary>The same map with a custom registry (for example the one that includes the construction data).</summary>
+        public AsciiMap(BlockRegistry registry, params string[] rows)
+        {
+            Registry = registry ?? BlockRegistry.CreateDefault();
             int h = rows.Length;
             int w = rows[0].Length;
             Ground = new GroundLayer(w, h);

@@ -60,6 +60,16 @@ namespace CepaCero.Tests.TestSupport
             return new CepaCero.Core.GameData(Catalog(), items, RecipesData(), LootData(), DiaryData());
         }
 
+        public static CepaCero.Building.ConstructionData Construction() =>
+            FromJson<CepaCero.Building.ConstructionData>(File.ReadAllText(RepoFile("data/generated/construction.json")));
+
+        /// <summary>A full match that also knows the construction data (D-022): its registry has the 157 extra blocks.</summary>
+        public static CepaCero.Core.GameData GameDataWithConstruction()
+        {
+            ItemCatalog items = Items();
+            return new CepaCero.Core.GameData(Catalog(), items, RecipesData(), LootData(), DiaryData(), Construction());
+        }
+
         /// <summary>Parses JSON with the same rules Unity's JsonUtility uses (public fields, exact names).</summary>
         public static T FromJson<T>(string json)
         {

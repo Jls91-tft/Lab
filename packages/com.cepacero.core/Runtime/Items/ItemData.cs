@@ -26,6 +26,9 @@ namespace CepaCero.Items
         public int size;
         public int durability;
         public int tool_power;
+
+        /// <summary>axe, pickaxe, shovel or hammer: the tool that breaks each material properly (D-022). Empty for other items.</summary>
+        public string tool_kind;
         public int heal;
 
         /// <summary>Food and water bar points restored when used (D-015).</summary>

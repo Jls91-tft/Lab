@@ -4,8 +4,9 @@ namespace CepaCero.World
     public sealed class BlockType
     {
         public BlockType(ushort id, string key, ushort maxHealth, BlockMaterial material, bool isSolid,
-            bool isIndestructible = false, ushort toggleTo = 0, int contactDamage = 0, int contactWear = 0)
+            bool isIndestructible = false, ushort toggleTo = 0, int contactDamage = 0, int contactWear = 0, BlockBuildInfo build = null)
         {
+            Build = build;
             Id = id;
             Key = key;
             MaxHealth = maxHealth;
@@ -39,6 +40,9 @@ namespace CepaCero.World
 
         /// <summary>Health the block loses each time it hurts someone (traps wear out).</summary>
         public int ContactWear { get; }
+
+        /// <summary>Cost, tool, noise, size and layer from the construction data (D-022); null for the legacy blocks.</summary>
+        public BlockBuildInfo Build { get; }
 
         public bool IsTrap => ContactDamage > 0;
 
