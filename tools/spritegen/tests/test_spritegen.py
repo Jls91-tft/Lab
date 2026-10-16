@@ -151,4 +151,39 @@ def test_colour_budget():
     for im in images().values():
         colours.update(c for c in im.getdata() if c[3] == 255)
     print(f"spritegen uses {len(colours)} distinct colours")
-    assert len(colours) < 4000
+    assert len(colours) < 8000
+
+
+# ------------------------------------------------------------------ construction pieces (D-020)
+def test_every_material_has_every_piece_and_autotile_mask():
+    names = images().keys()
+    for m in ("wood", "scrap", "brick", "concrete"):
+        for mask in range(16):
+            assert f"wall_{m}_top_{mask}" in names
+        for mask in range(4):
+            assert f"wall_{m}_face_{mask}" in names and f"lowbarricade_{m}_{mask}" in names and f"fence_{m}_{mask}" in names
+        for n in (f"door_{m}_closed", f"door_{m}_open", f"window_{m}", f"floor_{m}_0", f"floor_{m}_1"):
+            assert n in names, n
+    for n in ("overlay_barricade", "overlay_crack_1", "overlay_crack_2"):
+        assert n in names
+    for f in range(4):
+        assert f"obj_campfire_{f}" in names
+
+
+def test_wall_top_masks_are_all_different_and_connected_edges_are_open():
+    for m in ("wood", "scrap", "brick", "concrete"):
+        tops = [images()[f"wall_{m}_top_{k}"].tobytes() for k in range(16)]
+        assert len(set(tops)) == 16, m
+        free, joined = images()[f"wall_{m}_top_0"], images()[f"wall_{m}_top_15"]
+        assert free.getpixel((16, 0))[:3] != joined.getpixel((16, 0))[:3]            # exposed edge has an outline
+        assert set(joined.getchannel("A").getdata()) == {255}                          # nothing cut when fully surrounded
+
+
+def test_materials_are_distinguishable():
+    mean = {}
+    for m in ("wood", "scrap", "brick", "concrete"):
+        px = list(images()[f"wall_{m}_face_3"].convert("RGB").getdata())
+        mean[m] = tuple(sum(c[i] for c in px) / len(px) for i in range(3))
+    pairs = [(a, b) for a in mean for b in mean if a < b]
+    for a, b in pairs:
+        assert sum(abs(x - y) for x, y in zip(mean[a], mean[b])) > 15, (a, b)

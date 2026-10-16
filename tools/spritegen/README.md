@@ -39,8 +39,21 @@ Fotogramas 0 y 2: de pie con pasos a ras; 1 y 3: paso. `<dir>` es `down`, `up` o
 - **Iconos de objetos, interfaz y cursor**: siguen en `tools/artgen` (16 px). Son otra cuadrícula de píxeles y no se mezclan con el mundo.
 - **Paleta cerrada del mundo**: el arte usa rampas de 5 tonos y ruido, unos 3300 colores distintos. Cuantizar automáticamente a 48-96
   colores estropea los acentos (casco amarillo, venas verdes), así que la paleta hay que diseñarla (pendiente en `docs/decisiones.md`).
-- **Bloques de D-020** (capas, ventanas, barricadas): solo están los 12 bloques de hoy.
-- **La Mole** está dibujada a 32×48 y ampliada ×2 (sus píxeles son el doble de grandes). Rehacerla a 64×96 nativos es trabajo futuro.
+
+## Piezas de construcción (D-020)
+`structures.py`: 4 materiales (**wood, scrap, brick, concrete**) × pieza. Los muros **se unen solos**: el juego elige el sprite
+según los vecinos que sean del mismo muro.
+
+| Nombre | Qué es |
+| --- | --- |
+| `wall_<m>_top_<0-15>` | Muro visto desde arriba (cuando hay otro muro al sur). Máscara de vecinos: N=1, E=2, S=4, O=8 |
+| `wall_<m>_face_<0-3>` | Fachada sur (cuando no hay muro debajo): remate + cara. Máscara: E=1, O=2 |
+| `door_<m>_closed` · `door_<m>_open` | Puerta en fachada |
+| `window_<m>` | Ventana en fachada (punto débil). Se barrica con `overlay_barricade` encima |
+| `lowbarricade_<m>_<0-3>` · `fence_<m>_<0-3>` | Barricada baja y valla; máscara E=1, O=2 para los extremos |
+| `floor_<m>_<0-1>` | Suelo: tarima, chapa, adoquín, hormigón |
+| `overlay_crack_<1-2>` · `overlay_barricade` | Se dibujan encima de cualquier pieza (daño en niveles, barricada) |
+| `obj_campfire_<0-3>` (animada, con luz) · `obj_lantern` · `obj_rain_barrel` · `obj_barbed_wire` · `obj_sofa` | Objetos con función o decorativos |
 
 ## Cómo se añade algo
 - Un zombi nuevo en `docs/bestiario.md`: el generador falla hasta que tenga su `Look` en `characters.zombie_looks()`.
