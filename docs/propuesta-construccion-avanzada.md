@@ -135,7 +135,7 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 | **E** | Planos: copiar, pegar, guardar | M | · **hecha** (formato `.cepaplan` de texto; copiar con Alt+arrastrar y Ctrl+C, pegar con Ctrl+V, guardar con Ctrl+S, cargar con Ctrl+L). Solo nivel 0 hasta la fase F
 | **F** | Niveles para el jugador: escaleras, suelo, caídas, **cavar**, cámara con corte de niveles | L | · **hecha** salvo la cámara con corte de niveles: escaleras, trampillas y fosas (Re Pág / Av Pág), caída con daño, pala y pico, subsuelo macizo por defecto. Los zombis aún no ven a quien está en otro nivel (fase G)
 | **G** | Zombis multinivel: flow field con portales, caída por huecos, percepción, ruido de cavar | L |
-| **H** | `osm2tiles` con `building:levels`, tejados, escaleras generadas y, más adelante, metro y alcantarillas | M | · **hecha** salvo metro y alcantarillas: `cepacero.map` v2 trae plantas, sótanos y tejado por edificio; al importar se generan las plantas altas (suelos, muros con ventanas, escalera de piedra, tejado) y los sótanos (excavados bajo la huella, con su escalera)
+| **H** | `osm2tiles` con `building:levels`, tejados, escaleras generadas y, más adelante, metro y alcantarillas | M | · **hecha** salvo el metro (necesita las líneas `railway=subway` de OSM; las alcantarillas se generan sin datos): `cepacero.map` v2 trae plantas, sótanos y tejado por edificio; al importar se generan las plantas altas (suelos, muros con ventanas, escalera de piedra, tejado) y los sótanos (excavados bajo la huella, con su escalera)
 
 Con A-E la gente ya construye casas ricas con 14 materiales y pintura en una planta; F-H añaden la verticalidad y el subsuelo. Se puede parar en cualquier punto con el juego jugable.
 

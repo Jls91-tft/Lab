@@ -21,10 +21,11 @@ Construcción avanzada completa (fases A-H): 14 materiales y pintura, capas y ni
 
 ## Trabajo de Unity pendiente (por orden)
 - Cargar el atlas de 32 px (`Art32`, `ppu` 32, pivote en los pies con `pivot_y`) y pasar la resolución base a **960×540** (decidida; `PrototypeArt.BaseHeight` 360 → 540). Sustituir `PrototypePlaceholders` por los sprites de `spritegen` (muros con uniones, mapas de máscaras `wall_<m>_top_N`, cristal con alfa, tejados, escaleras, subsuelo).
-- Cámara con corte de niveles (hoy solo se ve el nivel propio, los demás más oscuros).
-- Menú del ajuste de coste de construcción (`GameSettings.BuildCost`: normal, barato, gratis) y del libro de piezas.
+- Libro de piezas (consulta) y un menú de verdad para el coste de construcción (hoy es F6 en el prototipo).
 - Inventario/mochila de 27 huecos en la interfaz (hoy el HUD dibuja la barra de 9).
-- Metro y alcantarillas (fase H, sin hacer) y zombis propios de plantas y sótanos de edificios.
+- Metro (necesita `railway=subway` en osm2tiles); zombis propios de las plantas altas (los de sótanos y alcantarillas ya se colocan al empezar).
+
+Novedades de última hora para probar: techos que se desvanecen al entrar, nivel de abajo visible por los huecos desde una planta alta, alcantarillas bajo las calles largas (bocas de acero, bajar con Re Pág tras abrirla con clic derecho) y F6 para el coste.
 
 ## Prompt para pegar en la sesión local
 > Estás en el proyecto Cepa Cero. Haz `git fetch` y `git checkout claude/lucid-mayer-vdw0gl`. Lee `CLAUDE.md` y `docs/traspaso-sesion-local.md`. Haz, en este orden: (1) abre Unity, deja que genere los `.meta` y commitéalos; (2) regenera y sube con LFS los atlas de artgen y spritegen; (3) pasa `scripts/check.sh` entero y el Test Runner de Unity (267 tests) y dime qué falla; (4) haz el recorrido de prueba y pásame los errores de consola. No empieces trabajo nuevo sin proponerlo antes.

@@ -245,6 +245,7 @@ namespace CepaCero.Unity.Prototype
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
             _world.SetLevel(MyState.Level);
+            _world.SetInside(_world.HasRoofOver(MyState.Position.Tile.X, MyState.Position.Tile.Y));
             _entities.ViewLevel = MyState.Level;
             _decor.SetVisible(MyState.Level == 0);
             _builder.SetHand(MyInventory.EquippedDefinition);
@@ -745,6 +746,12 @@ namespace CepaCero.Unity.Prototype
 
         private void HandleMetaKeys()
         {
+            if (_input.CycleCost)
+            {
+                // The host's setting, read by every client through the match options; in this prototype both share it.
+                _settings.BuildCost = (BuildCostMode)(((int)_settings.BuildCost + 1) % 3);
+                Say("Coste de construir: " + (_settings.BuildCost == BuildCostMode.Normal ? "normal" : _settings.BuildCost == BuildCostMode.Cheap ? "barato (la mitad)" : "gratis (creativo)"));
+            }
             if (_input.Save)
             {
                 var writer = new ByteWriter(64 * 1024);

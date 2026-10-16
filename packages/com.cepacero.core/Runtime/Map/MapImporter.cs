@@ -74,6 +74,7 @@ namespace CepaCero.Map
 
             List<BuildingInfo> buildings = ReadBuildings(data, warnings);
             BuildingFloors.Generate(blocks, ground, buildings, warnings);
+            SewerNetwork.Generate(blocks, ground);
             blocks.DrainChanges(new List<BlockChange>());
 
             return new MapImportResult(data.name ?? "", data.attribution ?? "", data.meters_per_tile, blocks, ground, buildings, warnings);

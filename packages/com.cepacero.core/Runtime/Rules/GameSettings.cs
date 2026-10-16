@@ -53,6 +53,12 @@ namespace CepaCero.Rules
         /// <summary>No map zombie starts closer than this (tiles) to a player.</summary>
         public float MapZombiesSafeRadius = 25f;
 
+        /// <summary>Zombies placed in the sewers and basements at start, per 1000 dug-out cells (D-022).</summary>
+        public float UndergroundZombiesPer1000Cells = 4f;
+
+        /// <summary>Upper bound for those.</summary>
+        public int UndergroundZombiesMax = 40;
+
         // ---- Options decided in D-012 -------------------------------------
         /// <summary>Players can hurt each other.</summary>
         public bool FriendlyFire = false;

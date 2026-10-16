@@ -314,7 +314,54 @@ namespace CepaCero.Core
                     placed++;
                 }
             }
+            return placed + PopulateUnderground(walker);
+        }
+
+        /// <summary>Sewers and basements are not empty: a few unaware zombies wait in the dug-out cells of the levels below the street.</summary>
+        private int PopulateUnderground(byte walker)
+        {
+            var cells = new List<Int2>();
+            for (int level = -1; level >= Blocks.MinLevel; level--)
+            {
+                foreach (int index in UndergroundCells(level))
+                {
+                    cells.Add(new Int2(index % Blocks.Width, index / Blocks.Width));
+                }
+            }
+            int wanted = Math.Min(Settings.UndergroundZombiesMax, (int)(cells.Count / 1000f * Settings.UndergroundZombiesPer1000Cells));
+            int placed = 0;
+            for (int attempt = 0; placed < wanted && attempt < wanted * 20 && cells.Count > 0; attempt++)
+            {
+                Int2 c = cells[_rng.Range(0, cells.Count)];
+                int level = -1;
+                for (int l = -1; l >= Blocks.MinLevel; l--)
+                {
+                    if (!Blocks.IsSolidAt(c.X, c.Y, l) && Blocks.GetTypeId(c.X, c.Y, l, BuildLayer.Floor) != BlockRegistry.AirId)
+                    {
+                        level = l;
+                        break;
+                    }
+                }
+                if (Zombies.Spawn(walker, new Float2(c.X + 0.5f, c.Y + 0.5f), Math.Max(1, _players.Count), aware: false, level: level) >= 0)
+                {
+                    placed++;
+                }
+            }
             return placed;
+        }
+
+        private IEnumerable<int> UndergroundCells(int level)
+        {
+            for (int y = 0; y < Blocks.Height; y++)
+            {
+                for (int x = 0; x < Blocks.Width; x++)
+                {
+                    if (Blocks.GetTypeId(x, y, level, BuildLayer.Floor) != BlockRegistry.AirId && !Blocks.IsSolidAt(x, y, level))
+                    {
+                        yield return y * Blocks.Width + x;
+                    }
+                }
+            }
         }
 
         private bool IsSpawnable(int x, int y) =>

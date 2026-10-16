@@ -30,7 +30,7 @@ namespace CepaCero.Unity.Prototype
             "Planos: Alt + arrastrar elige · Ctrl+C copia · Ctrl+V pega (R gira, clic confirma) · Ctrl+S guarda · Ctrl+L carga el siguiente",
             "Niveles: Re Pág sube y Av Pág baja por escaleras, trampillas o fosas · pala y pico: clic cava (lateral bajo tierra, o hacia abajo en suelo libre)",
             "Clic der. abre puertas y contenedores · T coger del contenedor · G recoger del suelo · V equipar 1.º de la mochila",
-            "C hacer vendas · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · H ocultar esta ayuda",
+            "C hacer vendas · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · F6 coste de construir (normal, barato, gratis) · H ocultar esta ayuda",
             "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. Lo lejano espera en cola a que te acerques.",
         };
 
