@@ -128,7 +128,7 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 ## 7. Orden de trabajo (aprobado)
 | Fase | Qué | Tamaño |
 | --- | --- | --- |
-| **A** | Datos de materiales y formas (`docs/construccion.md` → datagen → `BlockRegistry`); `spritegen` con los 14 materiales y el subsuelo | M |
+| **A** | Datos de materiales y formas (`docs/construccion.md` → datagen → `BlockRegistry`); `spritegen` con los 14 materiales y el subsuelo | M · **hecha** (falta conectarla en Unity) |
 | **B** | Núcleo: capas (D-020) + color + rotación + **nivel (Z) en el modelo** sin gameplay aún | L |
 | **C** | Red v3 y guardado v6 con migración | M |
 | **D** | Construir con la mano: hotbar de 9, clic por objeto (arma, herramienta, material), forma con Q/E, color, sustituir, cuentagotas, habitación, deshacer, libro de piezas (**ya usable en una planta**) | L |

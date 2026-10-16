@@ -80,7 +80,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - **`scripts/check.sh`** (`--fast` sin estrés): todo lo que no necesita Unity. Pasarlo antes de cada commit.
 - `tests/`: `dotnet test tests/CepaCero.Core.Tests/CepaCero.Core.Tests.csproj` compila el núcleo como lo haría Unity; `tests/CepaCero.Unity.CompileCheck` compila el paquete de Unity contra firmas imitadas de su API (si usas una API de Unity nueva, añade su firma a `UnityApiStubs.cs`).
 - `tools/osm2tiles/`: `python -m osm2tiles --zone delicias-test`. Formato y licencia ODbL en su `README.md`.
-- `tools/datagen/`: `python -m datagen` regenera `data/generated/` (bestiario, objetos, recetas, botín, diario y `loc/strings.csv`) desde `docs/`. Traducciones en `docs/traducciones/<idioma>.csv`.
+- `tools/datagen/`: `python -m datagen` regenera `data/generated/` (bestiario, objetos, recetas, botín, construcción, diario y `loc/strings.csv`) desde `docs/`. Traducciones en `docs/traducciones/<idioma>.csv`.
 - `tools/artgen/`: iconos, interfaz y cursor a 16 px (D-018) y el atlas actual del juego (`python -m artgen`).
 - `tools/spritegen/`: arte del mundo a 32 px por código (D-021): suelos, bloques, decoración, jugadores y zombis. `python -m spritegen --preview`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
@@ -99,4 +99,5 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 | `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
 | `docs/propuesta-hambre-sed.md` | Propuesta de hambre y sed (decidida en D-015: dura, configurable) |
 | `docs/propuesta-construccion.md`, `docs/propuesta-construccion-avanzada.md` | Construcción: D-020 (capas, ventanas, barricadas) y D-022 (pisos, 14+ materiales, pintura, planos; propuesta) |
+| `docs/construccion.md` | Materiales, formas, tejados y tierra/roca como datos; de ahí salen los 157 bloques de construcción (D-022) |
 | `docs/objetos.md`, `docs/recetas.md`, `docs/botin.md` | Datos de objetos, recetas y tablas de botín (YAML → `data/generated/`) |
