@@ -48,7 +48,10 @@ no sirve: estropea los acentos.)
 
 
 ## Piezas de construcción (D-020)
-`structures.py`: 4 materiales (**wood, scrap, brick, concrete**) × pieza. Los muros **se unen solos**: el juego elige el sprite
+`structures.py`: **14 materiales** × pieza: `pallet` (palé), `drywall` (pladur), `wood` (tablón), `log` (tronco), `sandbag` (sacos de arena),
+`scrap` (chatarra), `adobe`, `container` (contenedor), `brick` (ladrillo), `stone` (piedra), `concrete` (hormigón), `rebar` (hormigón armado),
+`steel` (acero) y `glass` (cristal, **translúcido**: alpha 78 en los paneles para ver el suelo y dejar pasar la luz). El juego decide qué piezas
+admite cada material (los sacos de arena, por ejemplo, solo en piezas bajas). Los muros **se unen solos**: el juego elige el sprite
 según los vecinos que sean del mismo muro.
 
 | Nombre | Qué es |

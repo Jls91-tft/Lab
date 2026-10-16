@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from spritegen import characters, decor, world
+from spritegen import characters, decor, structures, world
 from spritegen.__main__ import REPO, build_all, build_images, zombie_ids
 from spritegen.atlas import PPU, pack
 
@@ -168,7 +168,7 @@ def test_palette_has_no_duplicates_and_keeps_the_strain_vivid():
 # ------------------------------------------------------------------ construction pieces (D-020)
 def test_every_material_has_every_piece_and_autotile_mask():
     names = images().keys()
-    for m in ("wood", "scrap", "brick", "concrete"):
+    for m in structures.MATERIALS:
         for mask in range(16):
             assert f"wall_{m}_top_{mask}" in names
         for mask in range(4):
@@ -182,22 +182,34 @@ def test_every_material_has_every_piece_and_autotile_mask():
 
 
 def test_wall_top_masks_are_all_different_and_connected_edges_are_open():
-    for m in ("wood", "scrap", "brick", "concrete"):
+    for m in structures.MATERIALS:
         tops = [images()[f"wall_{m}_top_{k}"].tobytes() for k in range(16)]
         assert len(set(tops)) == 16, m
         free, joined = images()[f"wall_{m}_top_0"], images()[f"wall_{m}_top_15"]
-        assert free.getpixel((16, 0))[:3] != joined.getpixel((16, 0))[:3]            # exposed edge has an outline
-        assert set(joined.getchannel("A").getdata()) == {255}                          # nothing cut when fully surrounded
+        assert free.getpixel((16, 0)) != joined.getpixel((16, 0)), m          # an exposed edge looks different
+        if m != "glass":
+            assert set(joined.getchannel("A").getdata()) == {255}             # nothing cut when fully surrounded
 
 
-def test_materials_are_distinguishable():
-    mean = {}
-    for m in ("wood", "scrap", "brick", "concrete"):
-        px = list(images()[f"wall_{m}_face_3"].convert("RGB").getdata())
-        mean[m] = tuple(sum(c[i] for c in px) / len(px) for i in range(3))
-    pairs = [(a, b) for a in mean for b in mean if a < b]
-    for a, b in pairs:
-        assert sum(abs(x - y) for x, y in zip(mean[a], mean[b])) > 15, (a, b)
+def test_glass_is_see_through_and_everything_else_is_not():
+    for name, im in images().items():
+        alpha = set(im.getchannel("A").getdata())
+        solid_piece = name.startswith(("window_", "floor_")) or ("_face_" in name and name.startswith("wall_"))
+        if "glass" in name and name.split("_")[0] in ("wall", "door", "window", "floor", "lowbarricade", "fence"):
+            assert 78 in alpha, name
+        elif solid_piece:
+            assert alpha == {255}, name
+
+
+def test_fourteen_materials_look_different():
+    faces = {m: images()[f"wall_{m}_face_3"].convert("RGB") for m in structures.MATERIALS}
+    assert len(faces) >= 14
+    names = list(faces)
+    for i, a in enumerate(names):
+        for b in names[i + 1:]:
+            pa, pb = list(faces[a].getdata()), list(faces[b].getdata())
+            diff = sum(abs(x[k] - y[k]) for x, y in zip(pa, pb) for k in range(3)) / (len(pa) * 3)
+            assert diff > 12, (a, b, diff)
 
 
 # ------------------------------------------------------------------ polish

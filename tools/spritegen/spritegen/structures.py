@@ -13,7 +13,11 @@ from PIL import Image
 
 from .gfx import Color, Sprite, Tile, ellipse, hnoise, mix, poly, ramp5, rect
 
-MATERIALS = ("wood", "scrap", "brick", "concrete")
+MATERIALS = ("pallet", "drywall", "wood", "log", "sandbag", "scrap", "adobe", "container", "brick", "stone",
+             "concrete", "rebar", "steel", "glass")
+# how the thin pieces (fence) are drawn: rails, mesh or a low wall
+FENCE_STYLE = {"pallet": "rails", "wood": "rails", "log": "rails", "drywall": "wall", "sandbag": "wall", "scrap": "mesh", "adobe": "wall",
+               "container": "mesh", "brick": "wall", "stone": "wall", "concrete": "wall", "rebar": "wall", "steel": "mesh", "glass": "glass"}
 S = 32
 CAP_ROWS = 8                    # the lit top strip of a facade
 
@@ -59,6 +63,95 @@ def face(m: str, x: int, y: int) -> Color:
         if y % 4 == 2: c = mix(c, (20, 10, 20), .28)
         if y % 4 == 3 or (x + off) % 16 == 15: c = (102, 104, 108) if (x + y) % 5 else (88, 90, 96)
         return c
+    if m == "pallet":
+        row = y // 8
+        slat = y % 8
+        n = _n(x // 2, y, 201 + row, 12)
+        base = mix((176, 142, 96), (255, 235, 190) if hnoise(row, 3, 7) < .5 else (80, 56, 34), hnoise(row, 4, 7) * .16)
+        c = (base[0] + n, base[1] + n * 3 // 4, base[2] + n // 2)
+        if slat in (6, 7): c = (34, 24, 20)                                   # gap between slats
+        if slat == 0: c = mix(c, (255, 240, 200), .2)
+        if x % 16 in (1, 14) and slat in (2, 3): c = (96, 96, 104)            # nails
+        if hnoise(x // 5, y, 203) < .05 and slat < 6: c = mix(c, (60, 36, 20), .5)
+        return c
+    if m == "drywall":
+        n = _n(x, y, 211, 8)
+        c = (206 + n, 200 + n, 188 + n)
+        if x % 16 == 0 or y % 24 == 0: c = (150, 146, 136)
+        elif x % 16 == 1 or y % 24 == 1: c = (232, 228, 216)
+        if (x % 16, y % 24) in ((3, 4), (12, 4), (3, 18), (12, 18)): c = (150, 150, 156)       # screws
+        if hnoise(x // 3, y // 3, 213) < .05: c = mix(c, (150, 130, 100), .5)                   # scuffs
+        return c
+    if m == "log":
+        row = y // 8
+        k = y % 8
+        n = _n(x // 2, y, 221 + row, 12)
+        base = mix((112, 78, 50), (255, 220, 170) if hnoise(row, 5, 9) < .5 else (30, 16, 10), hnoise(row, 6, 9) * .12)
+        tone = (-34, -10, 14, 22, 14, 0, -18, -44)[k]                           # rounded: lit on top, dark below
+        c = (base[0] + tone + n, base[1] + tone * 3 // 4 + n * 3 // 4, base[2] + tone // 2 + n // 2)
+        if (x + row * 5) % 32 in (0, 31): c = (60, 38, 24)                      # notch where logs cross
+        if hnoise(x // 4, y, 223) < .08 and 1 < k < 6: c = mix(c, (60, 36, 22), .5)
+        return c
+    if m == "sandbag":
+        row = y // 6
+        off = 8 if row % 2 else 0
+        bx = (x + off) // 16
+        k = y % 6
+        n = _n(x, y, 231, 10)
+        base = mix((180, 156, 108), (255, 240, 200) if hnoise(bx, row, 11) < .5 else (80, 60, 36), hnoise(bx, row, 12) * .12)
+        c = (base[0] + n, base[1] + n * 3 // 4, base[2] + n // 2)
+        if k == 0: c = mix(c, (255, 244, 210), .25)
+        if k == 5 or (x + off) % 16 in (0, 15): c = (92, 76, 52)
+        if k == 2 and (x + off) % 16 in (3, 7, 11): c = (120, 98, 66)           # stitching
+        return c
+    if m == "adobe":
+        n = _n(x // 2, y // 2, 241, 16)
+        c = (186 + n, 140 + n * 3 // 4, 96 + n // 2)
+        if hnoise(x // 4, y // 4, 243) < .18: c = mix(c, (150, 100, 66), .35)
+        if y % 16 == 0 or (x + (8 if (y // 16) % 2 else 0)) % 16 == 0: c = mix(c, (110, 76, 50), .35)
+        if hnoise(x, y, 245) < .03: c = (226, 196, 120)                          # straw
+        return c
+    if m == "container":
+        rib = x % 4
+        base = (150, 62, 44)
+        c = mix(base, (255, 210, 190) if rib in (1, 2) else (30, 8, 10), .16 if rib in (1, 2) else .22)
+        c = (c[0] + _n(x // 4, y, 251, 10), c[1] + _n(x // 4, y, 251, 10), c[2] + _n(x // 4, y, 251, 10))
+        if y % 24 in (0, 1): c = (74, 78, 86)                                    # frame rails
+        if x % 32 in (0, 31): c = (60, 62, 70)
+        if hnoise(x // 2, y // 3, 253) < .1 and y > 4: c = mix(c, (110, 60, 40), .55)
+        if 9 <= y % 24 <= 14 and x % 8 in (2, 3, 5): c = mix(c, (236, 236, 226), .8)      # stencil
+        return c
+    if m == "stone":
+        row = y // 10
+        off = (row * 7) % 18
+        w_ = 14 + (row % 3) * 3
+        bx = (x + off) // w_
+        base = mix((124, 120, 112), (220, 216, 200) if hnoise(bx, row, 13) < .5 else (30, 30, 36), hnoise(bx, row, 14) * .2)
+        n = _n(x, y, 261, 14)
+        c = (base[0] + n, base[1] + n, base[2] + n)
+        if y % 10 == 0 or (x + off) % w_ == 0: c = (66, 64, 62)
+        elif y % 10 == 1 or (x + off) % w_ == 1: c = mix(c, (255, 250, 230), .25)
+        if hnoise(x // 2, y // 2, 263) < .05 and y % 10 > 5: c = (84, 104, 70)       # moss
+        return c
+    if m == "rebar":
+        n = _n(x, y, 271, 12)
+        c = (118 + n, 118 + n, 116 + n)
+        if y % 16 == 0 or x % 16 == 0: c = (66, 66, 68)
+        elif y % 16 == 1 or x % 16 == 1: c = (150, 150, 146)
+        if (x % 16, y % 16) in ((2, 2), (13, 2), (2, 13), (13, 13)): c = (210, 120, 60)    # rusty bar ends
+        if x % 8 == 4 and hnoise(x, y // 4, 273) < .5: c = mix(c, (176, 96, 52), .45)         # rust stains
+        return c
+    if m == "steel":
+        n = _n(x // 4, y, 281, 8)
+        c = (150 + n, 160 + n, 172 + n)
+        if y % 16 == 0 or x % 16 == 0: c = (60, 68, 82)
+        elif y % 16 == 1 or x % 16 == 1: c = (206, 216, 228)
+        elif y % 16 == 15 or x % 16 == 15: c = (96, 106, 120)
+        if (x % 16, y % 16) in ((3, 3), (12, 3), (3, 12), (12, 12)): c = (220, 226, 236) if (x + y) % 2 else (70, 78, 92)    # bolts
+        if y % 32 in (7, 8) and x % 32 < 12: c = (226, 190, 60) if (x // 3) % 2 else (40, 40, 44)                            # hazard strip
+        return c
+    if m == "glass":
+        return (150, 196, 214)
     # concrete
     row = y // 8
     off = 8 if row % 2 else 0
@@ -92,6 +185,55 @@ def cap(m: str, x: int, y: int) -> Color:
         c = (col[0] + n, col[1] + n // 2, col[2] + n // 2)
         if y % 4 == 3 or (x + off) % 8 == 7: c = (112, 112, 116)
         return c
+    if m == "pallet":
+        n = _n(x, y // 2, 291, 12)
+        c = (170 + n, 136 + n * 3 // 4, 92 + n // 2)
+        if x % 8 in (6, 7): c = (34, 24, 20)
+        return c
+    if m == "drywall":
+        n = _n(x, y, 293, 8)
+        c = (208 + n, 202 + n, 190 + n)
+        if x % 16 == 0: c = (150, 146, 136)
+        return c
+    if m == "log":
+        n = _n(x, y // 3, 295, 14)
+        c = (120 + n, 84 + n * 3 // 4, 54 + n // 2)
+        if y % 8 in (0, 7): c = (64, 42, 28)
+        if hnoise(x // 3, y, 297) < .08: c = (90, 62, 40)
+        return c
+    if m == "sandbag":
+        n = _n(x, y, 299, 10)
+        c = (176 + n, 152 + n * 3 // 4, 104 + n // 2)
+        if x % 12 in (0, 11) or y % 10 in (0, 9): c = (96, 80, 56)
+        return c
+    if m == "adobe":
+        n = _n(x // 2, y // 2, 301, 14)
+        c = (190 + n, 144 + n * 3 // 4, 100 + n // 2)
+        if hnoise(x, y, 303) < .03: c = (226, 196, 120)
+        return c
+    if m == "container":
+        n = _n(x // 4, y, 305, 8)
+        c = (156 + n, 68 + n // 2, 48 + n // 2) if x % 4 in (1, 2) else (118 + n, 46 + n // 2, 34 + n // 2)
+        return c
+    if m == "stone":
+        n = _n(x, y, 307, 14)
+        c = (138 + n, 134 + n, 126 + n)
+        if x % 16 == 0 or y % 20 == 0: c = (84, 82, 78)
+        return c
+    if m == "rebar":
+        n = _n(x, y, 309, 10)
+        c = (112 + n, 112 + n, 110 + n)
+        if x % 16 in (7, 8) or y % 16 in (7, 8): c = (136, 136, 132)
+        if x % 16 == 0 or y % 16 == 0: c = (70, 70, 72)
+        return c
+    if m == "steel":
+        n = _n(x, y, 311, 8)
+        c = (156 + n, 166 + n, 178 + n)
+        if (x + y * 2) % 12 in (0, 1): c = (206, 216, 228)
+        if x % 16 == 0 or y % 16 == 0: c = (66, 74, 88)
+        return c
+    if m == "glass":
+        return (190, 224, 238)
     n = _n(x, y, 61, 14)
     c = (146 + n, 144 + n, 138 + n)
     if x % 16 == 0 or y % 16 == 0: c = (110, 108, 104)
@@ -155,7 +297,7 @@ def wall_face(m: str, mask: int, overlay=None) -> Tile:
 # ------------------------------------------------------------------ doors and windows
 def door_face(m: str, open_: bool) -> Image.Image:
     t = wall_face(m, 3)
-    frame = (58, 40, 28) if m in ("wood", "brick") else (60, 64, 72)
+    frame = (58, 40, 28) if m in ("wood", "brick", "pallet", "log", "adobe", "drywall", "sandbag") else (60, 64, 72)
     for y in range(7, S):
         for x in range(5, 27):
             edge = x in (5, 26) or y == 7
@@ -171,7 +313,7 @@ def door_face(m: str, open_: bool) -> Image.Image:
                 elif m == "brick":
                     c = mix((122, 88, 60), (40, 24, 12), ((x // 5) % 2) * .12)
                 else:
-                    c = mix(face("concrete", x, y), (76, 82, 92), .6)
+                    c = mix(face(m, x, y), (60, 64, 74), .38)
                 t.put(x, y, c)
     if not open_:
         for y in (11, 25):
@@ -183,7 +325,7 @@ def door_face(m: str, open_: bool) -> Image.Image:
     else:
         for y in range(8, S):                                                      # the leaf swung inwards: a sliver on the left
             for x in range(6, 10):
-                t.put(x, y, mix(face("wood" if m != "scrap" else "scrap", x, y), (20, 18, 40), .15 * (x - 6)))
+                t.put(x, y, mix(face(m, x, y), (20, 18, 40), .15 * (x - 6)))
         for y in range(S - 7, S):
             for x in range(10, 26):
                 t.put(x, y, mix(t.get(x, y), (90, 80, 70), .25))                     # threshold
@@ -263,31 +405,31 @@ def low_barricade(m: str, mask: int) -> Image.Image:
 
 def fence(m: str, mask: int) -> Image.Image:
     sp = Sprite(S, S, salt=120)
-    post = ramp5({"wood": (136, 96, 60), "scrap": (124, 130, 136), "brick": (130, 72, 60), "concrete": (150, 148, 142)}[m])
+    style = FENCE_STYLE[m]
+    post = ramp5(face(m, 3, 3))
     xs = []
     if not mask & 2: xs.append(0)
     if not mask & 1: xs.append(S - 3)
     if not xs or mask == 3:
         xs = [14]
-    for x0 in xs:
-        sp.paint(rect(x0, 5, x0 + 2, 30), post, grain=.2, edge=True, reach=3)
-    for x in range(0 if mask & 2 else 3, S if mask & 1 else S - 3):
-        if m == "wood":
+    x_from, x_to = (0 if mask & 2 else 3), (S if mask & 1 else S - 3)
+    if style != "wall":
+        for x0 in xs:
+            sp.paint(rect(x0, 5, x0 + 2, 30), post, grain=.2, edge=True, reach=3)
+    for x in range(x_from, x_to):
+        if style == "rails":
             for y in (10, 21):
-                sp.px[(x, y)] = (150, 106, 66) if x % 8 else (110, 78, 48); sp.px[(x, y + 1)] = (96, 66, 40)
-        elif m == "scrap":
+                sp.px[(x, y)] = mix(face(m, x, y), (255, 240, 200), .12); sp.px[(x, y + 1)] = mix(face(m, x, y), (20, 18, 40), .4)
+        elif style == "mesh":
             for y in range(8, 28):
                 if (x + y) % 5 == 0 or (x - y) % 5 == 0:
                     sp.px[(x, y)] = (150, 156, 164) if (x + y) % 2 else (108, 114, 122)
-        elif m == "brick":
-            for y in range(18, 29):
-                sp.px[(x, y)] = face("brick", x, y - 18)
-        else:
+        elif style == "wall":
             for y in range(16, 29):
-                sp.px[(x, y)] = face("concrete", x, y - 16)
-    if m in ("wood", "scrap"):
-        for x in range(0 if mask & 2 else 3, S if mask & 1 else S - 3):
-            sp.px[(x, 6)] = (176, 182, 190) if m == "scrap" else (150, 106, 66)
+                sp.px[(x, y)] = face(m, x, y - 16)
+    if style in ("rails", "mesh"):
+        for x in range(x_from, x_to):
+            sp.px[(x, 6)] = (176, 182, 190) if style == "mesh" else mix(face(m, x, 6), (255, 240, 200), .15)
     sp.shadow = {(x, 30) for x in range(2, 30)}
     sp.outline()
     return sp.image()
@@ -307,6 +449,28 @@ def floor(m: str, variant: int) -> Image.Image:
                 if y % 8 == 0: c = mix(c, (255, 226, 176), .18)
                 if y % 8 == 7: c = (86, 62, 42)
                 if x == (row * 11 + o * 3) % 32: c = (86, 62, 42)
+            elif m == "pallet":
+                n = _n(x // 3, y, 331 + o, 12)
+                c = (172 + n, 138 + n * 3 // 4, 94 + n // 2)
+                if y % 8 in (6, 7): c = (40, 28, 22)
+                if x % 16 in (2, 13) and y % 8 == 3: c = (96, 96, 104)
+            elif m == "drywall":
+                cell = ((x // 8) + (y // 8)) % 2
+                n = _n(x, y, 333 + o, 6)
+                c = ((226 if cell else 196) + n, (222 if cell else 192) + n, (210 if cell else 182) + n)
+                if x % 8 == 0 or y % 8 == 0: c = (150, 146, 136)
+            elif m == "log":
+                row = y // 8
+                n = _n(x // 3, y, 335 + o, 12)
+                c = (96 + n, 66 + n * 3 // 4, 42 + n // 2)
+                if y % 8 == 0: c = mix(c, (255, 226, 176), .15)
+                if y % 8 == 7: c = (50, 32, 22)
+                if x == (row * 13 + o * 5) % 32: c = (50, 32, 22)
+            elif m == "sandbag":
+                n = _n(x, y, 337 + o, 14)
+                c = (194 + n, 170 + n * 3 // 4, 122 + n // 2)
+                if hnoise(x // 2, y // 2, 339 + o) < .12: c = (170, 146, 100)
+                if hnoise(x, y, 341 + o) < .02: c = (120, 110, 100)
             elif m == "scrap":
                 n = _n(x, y, 75 + o, 10)
                 c = (112 + n, 118 + n, 124 + n)
@@ -314,20 +478,46 @@ def floor(m: str, variant: int) -> Image.Image:
                     c = mix(c, (255, 255, 255), .08)
                 d = (x % 8, y % 8)
                 if d in ((1, 1), (6, 6)): c = (196, 200, 208)
-                if (x + y * 2) % 16 in (0, 1) and (x // 8 + y // 8) % 2: c = (150, 156, 164)      # diamond-plate ribs
+                if (x + y * 2) % 16 in (0, 1) and (x // 8 + y // 8) % 2: c = (150, 156, 164)
                 if x % 16 == 0 or y % 16 == 0: c = (60, 64, 72)
-            elif m == "brick":                                               # basket-weave pavers, greyer than the walls
+            elif m == "adobe":
+                n = _n(x // 2, y // 2, 343 + o, 18)
+                c = (176 + n, 128 + n * 3 // 4, 86 + n // 2)
+                if hnoise(x // 5, y // 5, 345 + o) < .2: c = mix(c, (140, 96, 62), .4)
+                if hnoise(x, y, 347 + o) < .02: c = (226, 196, 120)
+            elif m == "container":
+                n = _n(x // 4, y, 349 + o, 8)
+                c = (120 + n, 124 + n, 130 + n) if x % 4 in (1, 2) else (88 + n, 92 + n, 100 + n)
+                if y % 16 == 0: c = (56, 60, 68)
+            elif m == "brick":
                 bx, by = x // 8, y // 8
                 horizontal = (bx + by) % 2 == 0
-                px_, py_ = (x % 8, y % 4) if horizontal else (x % 4, y % 8)
-                cell = ((x % 8) // 1, (y % 4) // 1) if horizontal else ((x % 4), (y % 8))
                 col = mix((128, 96, 84), (255, 230, 210) if hnoise(bx * 2 + (y // 4 if horizontal else x // 4), by, 77 + o) < .5 else (30, 20, 20),
                           hnoise(bx * 3 + (y // 4 if horizontal else x // 4), by + 1, 78 + o) * .16)
                 n = _n(x, y, 79 + o, 10)
                 c = (col[0] + n, col[1] + n // 2, col[2] + n // 2)
                 if (horizontal and (y % 4 == 3 or x % 8 == 7)) or (not horizontal and (x % 4 == 3 or y % 8 == 7)):
                     c = (74, 62, 58)
-            else:
+            elif m == "stone":
+                bx, by = (x + (by_ := y // 11) * 6) // 12, y // 11
+                base = mix((128, 124, 116), (220, 216, 200) if hnoise(bx, by, 351 + o) < .5 else (30, 30, 36), hnoise(bx, by, 353 + o) * .2)
+                n = _n(x, y, 355 + o, 12)
+                c = (base[0] + n, base[1] + n, base[2] + n)
+                if y % 11 == 0 or (x + by * 6) % 12 == 0: c = (72, 70, 66)
+                elif y % 11 == 1 or (x + by * 6) % 12 == 1: c = mix(c, (255, 250, 230), .2)
+            elif m == "rebar":
+                n = _n(x, y, 357 + o, 10)
+                c = (124 + n, 124 + n, 122 + n)
+                if x % 16 == 0 or y % 16 == 0: c = (74, 74, 76)
+                elif x % 16 == 1 or y % 16 == 1: c = (156, 156, 152)
+                if (x % 16, y % 16) == (8, 8): c = (176, 100, 56)
+            elif m == "steel":
+                n = _n(x, y, 359 + o, 8)
+                c = (140 + n, 150 + n, 162 + n)
+                if (x + y * 2) % 12 in (0, 1) and (x // 8 + y // 8) % 2: c = (206, 216, 228)
+                if (x - y * 2) % 12 in (0, 1) and (x // 8 + y // 8) % 2 == 0: c = (206, 216, 228)
+                if x % 16 == 0 or y % 16 == 0: c = (60, 68, 82)
+            else:                                                          # concrete (glass has its own)
                 n = _n(x, y, 81 + o, 14)
                 c = (150 + n, 148 + n, 142 + n)
                 if x % 16 == 0 or y % 16 == 0: c = (104, 102, 98)
@@ -335,6 +525,128 @@ def floor(m: str, variant: int) -> Image.Image:
                 if hnoise(x, y, 83 + o) < .015: c = (176, 174, 166)
             t.put(x, y, c)
     return t.image()
+
+
+# ------------------------------------------------------------------ glass: see-through pieces
+PANE = (176, 212, 230, 78)          # alpha 78: lets the ground and the light show through
+GLASS_FRAME = ramp5((150, 160, 172))
+
+
+def _glass_streaks(sp: Sprite, x0: int, y0: int, x1: int, y1: int, salt: int) -> None:
+    for k in range(0, (x1 - x0) + (y1 - y0), 11):
+        for d in range(5):
+            x, y = x0 + k - d, y0 + d
+            if x0 <= x <= x1 and y0 <= y <= y1:
+                sp.px[(x, y)] = (232, 246, 252)
+
+
+def _finish_glass(sp: Sprite, panes: set) -> Image.Image:
+    img = sp.image()
+    for (x, y) in panes:
+        if (x, y) not in sp.px:
+            img.putpixel((x, y), PANE)
+    return img
+
+
+def glass_top(mask: int) -> Image.Image:
+    sp = Sprite(S, S, salt=401)
+    panes = {(x, y) for x in range(S) for y in range(S)}
+    for k in range(S):
+        for pos in (0, 15, 16, 31):
+            for (x, y) in ((k, pos), (pos, k)):
+                sp.px[(x, y)] = GLASS_FRAME[3 if pos in (0, 15) else 1]
+    for side, bit in (("N", 1), ("E", 2), ("S", 4), ("W", 8)):
+        if not mask & bit:
+            for k in range(S):
+                x, y = {"N": (k, 0), "S": (k, S - 1), "W": (0, k), "E": (S - 1, k)}[side]
+                sp.px[(x, y)] = (12, 10, 20)
+    _glass_streaks(sp, 2, 2, 29, 29, 1)
+    return _finish_glass(sp, panes)
+
+
+def glass_face(mask: int) -> Image.Image:
+    sp = Sprite(S, S, salt=402)
+    panes = {(x, y) for x in range(CAP_ROWS, S) for y in range(S)}
+    for x in range(S):
+        for y in range(CAP_ROWS):
+            sp.px[(x, y)] = GLASS_FRAME[3] if y < 2 else GLASS_FRAME[2] if y < 6 else GLASS_FRAME[0]
+    panes = {(x, y) for x in range(S) for y in range(CAP_ROWS, S)}
+    for x in (0, 15, 16, 31):
+        for y in range(CAP_ROWS, S):
+            sp.px[(x, y)] = GLASS_FRAME[3] if x in (0, 15) else GLASS_FRAME[1]
+    for x in range(S):
+        sp.px[(x, S - 1)] = GLASS_FRAME[0]; sp.px[(x, CAP_ROWS)] = GLASS_FRAME[3]
+    _glass_streaks(sp, 2, CAP_ROWS + 2, 29, S - 3, 2)
+    return _finish_glass(sp, panes)
+
+
+def glass_door(open_: bool) -> Image.Image:
+    sp = Sprite(S, S, salt=403)
+    for x in range(S):
+        for y in range(CAP_ROWS):
+            sp.px[(x, y)] = GLASS_FRAME[3] if y < 2 else GLASS_FRAME[2] if y < 6 else GLASS_FRAME[0]
+    panes = {(x, y) for x in range(S) for y in range(CAP_ROWS, S)}
+    if not open_:
+        for y in range(7, S):
+            for x in (5, 26):
+                sp.px[(x, y)] = GLASS_FRAME[2]
+        for x in range(5, 27):
+            sp.px[(x, 7)] = GLASS_FRAME[2]
+        for y in range(19, 22):
+            sp.px[(22, y)] = (214, 190, 110)
+        _glass_streaks(sp, 7, 10, 24, 30, 3)
+    else:
+        for y in range(7, S):
+            for x in (5, 6, 7):
+                sp.px[(x, y)] = GLASS_FRAME[2]
+        for x in range(5, 27):
+            sp.px[(x, 7)] = GLASS_FRAME[2]
+    return _finish_glass(sp, panes)
+
+
+def glass_window() -> Image.Image:
+    sp = Sprite(S, S, salt=404)
+    for x in range(S):
+        for y in range(CAP_ROWS):
+            sp.px[(x, y)] = GLASS_FRAME[3] if y < 2 else GLASS_FRAME[2] if y < 6 else GLASS_FRAME[0]
+    for y in range(CAP_ROWS, S):
+        for x in range(S):
+            if x < 3 or x > 28 or y > S - 4:
+                sp.px[(x, y)] = GLASS_FRAME[2]
+    panes = {(x, y) for x in range(3, 29) for y in range(CAP_ROWS, S - 3)}
+    for y in range(CAP_ROWS, S - 3):
+        sp.px[(15, y)] = GLASS_FRAME[1]; sp.px[(16, y)] = GLASS_FRAME[3]
+    _glass_streaks(sp, 4, CAP_ROWS + 1, 27, S - 5, 4)
+    return _finish_glass(sp, panes)
+
+
+def glass_low(mask: int, fence_: bool) -> Image.Image:
+    sp = Sprite(S, S, salt=405)
+    top, bottom = (12, 28) if not fence_ else (8, 28)
+    for x in range(S):
+        sp.px[(x, top)] = GLASS_FRAME[3]; sp.px[(x, top + 1)] = GLASS_FRAME[2]
+        sp.px[(x, bottom)] = GLASS_FRAME[1]; sp.px[(x, bottom + 1)] = GLASS_FRAME[0]
+    xs = ([0] if not mask & 2 else []) + ([S - 3] if not mask & 1 else [])
+    for x0 in xs or [14]:
+        for y in range(top, bottom + 2):
+            for dx in range(3):
+                sp.px[(x0 + dx, y)] = GLASS_FRAME[2 if dx == 1 else 1]
+    panes = {(x, y) for x in range(S) for y in range(top + 2, bottom)}
+    _glass_streaks(sp, 3, top + 3, 28, bottom - 2, 5)
+    sp.shadow = {(x, 30) for x in range(2, 30)}
+    return _finish_glass(sp, panes)
+
+
+def glass_floor(variant: int) -> Image.Image:
+    sp = Sprite(S, S, salt=406 + variant)
+    panes = {(x, y) for x in range(S) for y in range(S)}
+    for k in range(S):
+        for pos in (0, 15, 16, 31):
+            sp.px[(k, pos)] = GLASS_FRAME[1]; sp.px[(pos, k)] = GLASS_FRAME[1]
+    for (x, y) in ((3, 3), (12, 3), (3, 12), (12, 12), (19, 3), (28, 3), (19, 12), (28, 12)):
+        sp.px[(x, y + variant * 16)] = GLASS_FRAME[4] if y + variant * 16 < S else GLASS_FRAME[4]
+    _glass_streaks(sp, 1, 1, 30, 30, 6 + variant)
+    return _finish_glass(sp, panes)
 
 
 # ------------------------------------------------------------------ objects with a function
@@ -425,6 +737,18 @@ def sofa() -> Sprite:
 def build() -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
     for m in MATERIALS:
+        if m == "glass":
+            for mask in range(16):
+                out[f"wall_glass_top_{mask}"] = glass_top(mask)
+            for mask in range(4):
+                out[f"wall_glass_face_{mask}"] = glass_face(mask)
+                out[f"lowbarricade_glass_{mask}"] = glass_low(mask, False)
+                out[f"fence_glass_{mask}"] = glass_low(mask, True)
+            out["door_glass_closed"], out["door_glass_open"] = glass_door(False), glass_door(True)
+            out["window_glass"] = glass_window()
+            for v in range(2):
+                out[f"floor_glass_{v}"] = glass_floor(v)
+            continue
         for mask in range(16):
             out[f"wall_{m}_top_{mask}"] = wall_top(m, mask)
         for mask in range(4):
