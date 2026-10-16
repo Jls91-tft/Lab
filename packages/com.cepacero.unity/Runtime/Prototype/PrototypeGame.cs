@@ -244,6 +244,9 @@ namespace CepaCero.Unity.Prototype
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
+            _world.SetLevel(MyState.Level);
+            _entities.ViewLevel = MyState.Level;
+            _decor.SetVisible(MyState.Level == 0);
             _builder.SetHand(MyInventory.EquippedDefinition);
             _builder.UpdatePreview(_input.MouseWorld.Tile, BuildContext());
             _buildView.Draw(_builder);
@@ -294,6 +297,7 @@ namespace CepaCero.Unity.Prototype
                 ZombiesShown = _zombiesShown,
                 ZombiesKilled = Remote ? -1 : _session.ZombiesKilled,
                 Me = MyState,
+                Level = MyState.Level,
                 MaxHealth = _playerSettings.MaxHealth,
                 MaxStamina = _playerSettings.MaxStamina,
                 ShowHelp = _input.ShowHelp,
@@ -342,7 +346,7 @@ namespace CepaCero.Unity.Prototype
 
         private PrototypeBuilder.Context BuildContext() => new PrototypeBuilder.Context(
             _viewBlocks, _viewGround, _playerSettings, MyState.Position,
-            Remote ? _client.Players : _session.Players, MyInventory, _settings.BuildCost);
+            Remote ? _client.Players : _session.Players, MyInventory, _settings.BuildCost, MyState.Level);
 
         /// <summary>"Muro de ladrillo · 3 Ladrillo", or "" when the hand builds nothing.</summary>
         private string BuildTitle()
@@ -442,6 +446,15 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Plans: Alt + drag selects, Ctrl+C copies, Ctrl+V pastes (R turns, click confirms), Ctrl+S saves, Ctrl+L loads the next saved one.</summary>
         private void HandlePlans(Int2 tile)
         {
+            if (MyState.Level != 0)
+            {
+                if (_input.CopyPlan || _input.PastePlan || (_input.Alt && _input.Attack))
+                {
+                    Say("Los planos solo funcionan en la calle (nivel 0)");
+                }
+                _builder.CancelPaste();
+                return;
+            }
             if (_input.SavePlan)
             {
                 SavePlan();
@@ -473,19 +486,22 @@ namespace CepaCero.Unity.Prototype
         private ClickTarget TargetAt(Int2 tile)
         {
             BlockWorld blocks = _viewBlocks;
+            int z = MyState.Level;
             if (!blocks.InBounds(tile.X, tile.Y))
             {
                 return default;
             }
-            BlockType structure = blocks.GetBlock(tile.X, tile.Y);
-            bool isContainer = Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile);
-            bool hasBlock = !structure.IsAir || !blocks.GetBlock(tile.X, tile.Y, 0, BuildLayer.Object).IsAir;
+            BlockType structure = blocks.GetBlock(tile.X, tile.Y, z, BuildLayer.Structure);
+            bool isContainer = z == 0 && (Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile));
+            bool hasBlock = !structure.IsAir || !blocks.GetBlock(tile.X, tile.Y, z, BuildLayer.Object).IsAir;
             bool mine = false;
             for (int l = 0; l < 4; l++)
             {
-                mine |= blocks.GetBlock(tile.X, tile.Y, 0, (BuildLayer)l).Build != null;
+                BlockType piece = blocks.GetBlock(tile.X, tile.Y, z, (BuildLayer)l);
+                mine |= piece.Build != null && piece.Build.Shape != "natural";
             }
-            return new ClickTarget(hasBlock, isContainer || structure.ToggleTo != 0, mine);
+            bool diggable = LevelRules.DigMode(blocks, _viewGround, tile.X, tile.Y, z) != LevelRules.NotDiggable;
+            return new ClickTarget(hasBlock, isContainer || structure.ToggleTo != 0, mine, diggable);
         }
 
         /// <summary>Middle click: copy shape, colour and rotation of the piece under the cursor and put its material in your hand.</summary>
@@ -493,12 +509,12 @@ namespace CepaCero.Unity.Prototype
         {
             foreach (BuildLayer layer in new[] { BuildLayer.Structure, BuildLayer.Object, BuildLayer.Floor, BuildLayer.Roof })
             {
-                BlockType type = _viewBlocks.GetBlock(tile.X, tile.Y, 0, layer);
-                if (type.IsAir || type.Build == null)
+                BlockType type = _viewBlocks.GetBlock(tile.X, tile.Y, MyState.Level, layer);
+                if (type.IsAir || type.Build == null || type.Build.Shape == "natural")
                 {
                     continue;
                 }
-                _builder.Cursor.Copy(type, _viewBlocks.GetVariant(tile.X, tile.Y, 0, layer));
+                _builder.Cursor.Copy(type, _viewBlocks.GetVariant(tile.X, tile.Y, MyState.Level, layer));
                 string item = _builder.Palette.ItemOf(type);
                 for (int h = 0; item != null && h < inv.HotbarSlots; h++)
                 {
@@ -604,7 +620,7 @@ namespace CepaCero.Unity.Prototype
             else
             {
                 HandAction action = HandResolver.Resolve(held, false, target, false);
-                bool continuous = action == HandAction.HitBlock || action == HandAction.Dismantle;
+                bool continuous = action == HandAction.HitBlock || action == HandAction.Dismantle || action == HandAction.Dig;
                 bool fire = _input.Attack || (continuous && _input.AttackHeld && Time.time >= _nextHoldAction);
                 if (fire && inBounds)
                 {
@@ -617,10 +633,13 @@ namespace CepaCero.Unity.Prototype
                             Send(PlayerIntent.Ranged(aim));
                             break;
                         case HandAction.HitBlock:
-                            Send(PlayerIntent.Hit(tile.X, tile.Y));
+                            Send(PlayerIntent.Hit(tile.X, tile.Y, me.Level));
                             break;
                         case HandAction.Dismantle:
-                            Send(PlayerIntent.Dismantle(tile.X, tile.Y));
+                            Send(PlayerIntent.Dismantle(tile.X, tile.Y, 0, me.Level));
+                            break;
+                        case HandAction.Dig:
+                            Send(PlayerIntent.Dig(tile.X, tile.Y, me.Level));
                             break;
                         case HandAction.UseItem:
                             Send(PlayerIntent.Use());
@@ -632,6 +651,10 @@ namespace CepaCero.Unity.Prototype
                 {
                     SendSecondary(held, false, target, tile);
                 }
+            }
+            if (_input.ClimbStep != 0)
+            {
+                Send(PlayerIntent.Climb(_input.ClimbStep > 0));
             }
             if (_input.Pick && inBounds)
             {
@@ -687,10 +710,10 @@ namespace CepaCero.Unity.Prototype
             {
                 case HandAction.Interact:
                     bool isContainer = Remote ? ContainsCell(_client.ContainerCells, tile) : _session.Containers != null && _session.Containers.Has(tile);
-                    Send(isContainer ? PlayerIntent.Open(tile.X, tile.Y) : PlayerIntent.Door(tile.X, tile.Y));
+                    Send(isContainer ? PlayerIntent.Open(tile.X, tile.Y) : PlayerIntent.Door(tile.X, tile.Y, MyState.Level));
                     break;
                 case HandAction.Dismantle:
-                    Send(PlayerIntent.Dismantle(tile.X, tile.Y));
+                    Send(PlayerIntent.Dismantle(tile.X, tile.Y, 0, MyState.Level));
                     break;
             }
         }
@@ -749,6 +772,9 @@ namespace CepaCero.Unity.Prototype
             {
                 case SessionEventType.IntentResolved when e.Result != IntentResult.Ok && e.Result != IntentResult.TooSoon:
                     Say(ResultText(e.Result));
+                    break;
+                case SessionEventType.PlayerFell when e.Player == _me:
+                    Say($"¡Caes {e.Value} nivel{(e.Value > 1 ? "es" : "")}!");
                     break;
                 case SessionEventType.NightStarted:
                     Say($"¡Noche {e.Value}! Llega la horda");

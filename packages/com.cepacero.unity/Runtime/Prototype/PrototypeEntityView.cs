@@ -56,6 +56,12 @@ namespace CepaCero.Unity.Prototype
         private readonly List<SpriteRenderer> _containers = new List<SpriteRenderer>();
         private int _used;
 
+        private static readonly ItemPile[] NoPiles = new ItemPile[0];
+        private static readonly Int2[] NoCells = new Int2[0];
+
+        /// <summary>Level being shown (D-022): the street shows zombies, piles and containers; other levels only the players on them.</summary>
+        public int ViewLevel { get; set; }
+
         private struct Walk
         {
             public Float2 Last;
@@ -112,7 +118,7 @@ namespace CepaCero.Unity.Prototype
             float light = Mathf.Lerp(0.45f, 1f, ambient);
             ZombieSimulation zombies = session.Zombies;
             _used = 0;
-            for (int i = 0; i < zombies.Capacity; i++)
+            for (int i = 0; ViewLevel == 0 && i < zombies.Capacity; i++)
             {
                 if (zombies.IsAlive(i))
                 {
@@ -122,8 +128,8 @@ namespace CepaCero.Unity.Prototype
             int drawn = _used;
             Trim(_zombies, _used);
             DrawPlayers(session.Players, me, light);
-            DrawPiles(session.GroundItems.Piles, light);
-            DrawContainers(session.Containers != null ? session.Containers.Positions : null, light);
+            DrawPiles(ViewLevel == 0 ? session.GroundItems.Piles : NoPiles, light);
+            DrawContainers(ViewLevel == 0 && session.Containers != null ? session.Containers.Positions : NoCells, light);
             return drawn;
         }
 
@@ -132,7 +138,7 @@ namespace CepaCero.Unity.Prototype
         {
             float light = Mathf.Lerp(0.45f, 1f, ambient);
             _used = 0;
-            foreach (ushort id in client.Zombies.Ids)
+            foreach (ushort id in ViewLevel == 0 ? client.Zombies.Ids : new ushort[0])
             {
                 if (client.Zombies.TrySample(id, renderTime, out ZombieSnapshotEntry z) && z.Type < _catalog.Count)
                 {
@@ -142,8 +148,8 @@ namespace CepaCero.Unity.Prototype
             int drawn = _used;
             Trim(_zombies, _used);
             DrawPlayers(client.Players, client.MyPlayer, light);
-            DrawPiles(client.Piles, light);
-            DrawContainers(client.ContainerCells, light);
+            DrawPiles(ViewLevel == 0 ? client.Piles : NoPiles, light);
+            DrawContainers(ViewLevel == 0 ? client.ContainerCells : NoCells, light);
             return drawn;
         }
 
@@ -171,7 +177,7 @@ namespace CepaCero.Unity.Prototype
             for (int p = 0; p < players.Count; p++)
             {
                 PlayerState s = players[p];
-                if (s.IsDead)
+                if (s.IsDead || s.Level != ViewLevel)
                 {
                     continue;
                 }

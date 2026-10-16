@@ -26,6 +26,7 @@ namespace CepaCero.Unity.Prototype
             { "concrete", new Color32(165, 165, 160, 255) }, { "rebar", new Color32(110, 115, 120, 255) },
             { "steel", new Color32(95, 110, 130, 255) }, { "glass", new Color32(150, 210, 230, 255) },
             { "earth", new Color32(105, 75, 50, 255) }, { "rock", new Color32(80, 80, 90, 255) },
+            { "cave", new Color32(70, 52, 38, 255) }, { "pit", new Color32(30, 22, 18, 255) },
         };
 
         /// <summary>The 16 paint colours of <see cref="BlockVariant"/> (index 1..16; 0 is the natural colour).</summary>
@@ -84,8 +85,36 @@ namespace CepaCero.Unity.Prototype
             }
 
             bool open = type.Build != null && type.Build.IsOpenVariant;
+            if (material == "cave")
+            {
+                shape = "cave";
+            }
+            else if (material == "pit")
+            {
+                shape = "pit";
+            }
             switch (shape)
             {
+                case "cave":
+                    Fill(0, 0, 15, 15, baseColor);
+                    for (int i = 0; i < 12; i++)
+                    {
+                        Fill((i * 7) % 16, (i * 11) % 16, (i * 7) % 16, (i * 11) % 16, dark);
+                    }
+                    break;
+                case "pit":
+                    Fill(0, 0, 15, 15, new Color32(70, 52, 38, 255));
+                    for (int y = 2; y < 14; y++)
+                    {
+                        for (int x = 2; x < 14; x++)
+                        {
+                            if ((x - 7.5f) * (x - 7.5f) + (y - 7.5f) * (y - 7.5f) < 25f)
+                            {
+                                px[y * Size + x] = baseColor;
+                            }
+                        }
+                    }
+                    break;
                 case "halfwall":
                     Fill(0, 5, 15, 10, baseColor);
                     Fill(0, 5, 15, 5, dark);

@@ -28,6 +28,7 @@ namespace CepaCero.Unity.Prototype
             "Con un material: clic pone · arrastra línea · Mayús contorno · Ctrl habitación · clic der. quita · clic central copia",
             "Q/E forma · R girar · [ ] (o , .) color · Ctrl+Z deshacer · martillo: desmonta y devuelve la mitad",
             "Planos: Alt + arrastrar elige · Ctrl+C copia · Ctrl+V pega (R gira, clic confirma) · Ctrl+S guarda · Ctrl+L carga el siguiente",
+            "Niveles: Re Pág sube y Av Pág baja por escaleras, trampillas o fosas · pala y pico: clic cava (lateral bajo tierra, o hacia abajo en suelo libre)",
             "Clic der. abre puertas y contenedores · T coger del contenedor · G recoger del suelo · V equipar 1.º de la mochila",
             "C hacer vendas · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · H ocultar esta ayuda",
             "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. Lo lejano espera en cola a que te acerques.",
@@ -61,6 +62,10 @@ namespace CepaCero.Unity.Prototype
             Color previous = GUI.color;
             DrawVitals(m);
             DrawClock(m);
+            if (m.Level != 0)
+            {
+                Text(Width / 2f - 60f, 4f, 120f, 11f, m.Level > 0 ? $"Planta {m.Level}" : $"Subsuelo {-m.Level}", PrototypePalette.Yellow, _smallCenter);
+            }
             if (m.Inventory != null)
             {
                 DrawHotbar(m.Inventory);

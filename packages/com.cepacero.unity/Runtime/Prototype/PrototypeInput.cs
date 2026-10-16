@@ -41,6 +41,9 @@ namespace CepaCero.Unity.Prototype
         /// <summary>[ and ] (or , and .): previous and next paint colour.</summary>
         public int ColorStep;
 
+        /// <summary>Page Up / Page Down: go up or down through stairs, a trapdoor or a pit (+1, −1; summed per tick).</summary>
+        public int ClimbStep;
+
         /// <summary>R: turn the piece a quarter.</summary>
         public bool Rotate;
 
@@ -106,6 +109,7 @@ namespace CepaCero.Unity.Prototype
             ShapeStep += (kb.eKey.wasPressedThisFrame ? 1 : 0) - (kb.qKey.wasPressedThisFrame ? 1 : 0);
             ColorStep += (kb.rightBracketKey.wasPressedThisFrame || kb.periodKey.wasPressedThisFrame ? 1 : 0)
                 - (kb.leftBracketKey.wasPressedThisFrame || kb.commaKey.wasPressedThisFrame ? 1 : 0);
+            ClimbStep += (kb.pageUpKey.wasPressedThisFrame ? 1 : 0) - (kb.pageDownKey.wasPressedThisFrame ? 1 : 0);
             Undo |= Ctrl && kb.zKey.wasPressedThisFrame;
             Rotate |= !Ctrl && kb.rKey.wasPressedThisFrame;
             if (kb.hKey.wasPressedThisFrame)
@@ -142,7 +146,7 @@ namespace CepaCero.Unity.Prototype
         {
             Attack = Secondary = Pick = Take = PickUp = EquipFromBag = CraftBandage = Save = Load = false;
             Rotate = Undo = AttackReleased = Cancel = CopyPlan = PastePlan = SavePlan = LoadPlan = false;
-            ShapeStep = ColorStep = 0;
+            ShapeStep = ColorStep = ClimbStep = 0;
             Hotbar = -1;
             Scroll = 0;
         }

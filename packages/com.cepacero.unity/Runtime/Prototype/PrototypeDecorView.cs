@@ -45,6 +45,22 @@ namespace CepaCero.Unity.Prototype
 
         public int Count => _renderers.Count;
 
+        /// <summary>The street's decoration only exists on level 0.</summary>
+        public void SetVisible(bool visible)
+        {
+            if (_visible == visible)
+            {
+                return;
+            }
+            _visible = visible;
+            foreach (SpriteRenderer r in _renderers)
+            {
+                r.enabled = visible;
+            }
+        }
+
+        private bool _visible = true;
+
         /// <summary>Night tint, like the Tilemaps; only repaints when the light really changed.</summary>
         public void SetAmbient(float light)
         {

@@ -133,7 +133,7 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 | **C** | Red v3 y guardado con migración | M · **adelantada en B**: protocolo v3 (un mensaje por plano de chunk, deltas de 11 bytes, intención de 9) y guardado **v5** que aún lee v3/v4. Queda solo lo que añadan D-F |
 | **D** | Construir con la mano: hotbar de 9, clic por objeto (arma, herramienta, material), forma con Q/E, color, sustituir, cuentagotas, habitación, deshacer, libro de piezas (**ya usable en una planta**) | L | · **hecha en una planta** (núcleo probado; en Unity con piezas provisionales de color hasta cablear el atlas de 32 px). Falta: libro de piezas y techo en la habitación
 | **E** | Planos: copiar, pegar, guardar | M | · **hecha** (formato `.cepaplan` de texto; copiar con Alt+arrastrar y Ctrl+C, pegar con Ctrl+V, guardar con Ctrl+S, cargar con Ctrl+L). Solo nivel 0 hasta la fase F
-| **F** | Niveles para el jugador: escaleras, suelo, caídas, **cavar**, cámara con corte de niveles | L |
+| **F** | Niveles para el jugador: escaleras, suelo, caídas, **cavar**, cámara con corte de niveles | L | · **hecha** salvo la cámara con corte de niveles: escaleras, trampillas y fosas (Re Pág / Av Pág), caída con daño, pala y pico, subsuelo macizo por defecto. Los zombis aún no ven a quien está en otro nivel (fase G)
 | **G** | Zombis multinivel: flow field con portales, caída por huecos, percepción, ruido de cavar | L |
 | **H** | `osm2tiles` con `building:levels`, tejados, escaleras generadas y, más adelante, metro y alcantarillas | M |
 

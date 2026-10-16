@@ -98,6 +98,6 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 | `docs/setup-unity.md` | Instalación de Unity y del MCP |
 | `docs/propuesta-inventario.md` | Objetos, inventario, botín y crafteo (D-012) |
 | `docs/propuesta-hambre-sed.md` | Propuesta de hambre y sed (decidida en D-015: dura, configurable) |
-| `docs/propuesta-construccion.md`, `docs/propuesta-construccion-avanzada.md` | Construcción: D-020 (capas, ventanas, barricadas) y D-022 (pisos, 14+ materiales, pintura, planos; fases A, B, D y E hechas) |
+| `docs/propuesta-construccion.md`, `docs/propuesta-construccion-avanzada.md` | Construcción: D-020 (capas, ventanas, barricadas) y D-022 (pisos, 14+ materiales, pintura, planos; fases A, B, D, E y F hechas) |
 | `docs/construccion.md` | Materiales, formas, tejados y tierra/roca como datos; de ahí salen los 157 bloques de construcción (D-022) |
 | `docs/objetos.md`, `docs/recetas.md`, `docs/botin.md` | Datos de objetos, recetas y tablas de botín (YAML → `data/generated/`) |

@@ -8,7 +8,7 @@ namespace CepaCero.Unity.Prototype
     /// <summary>
     /// The map as two Tilemaps (ground below, blocks above) with the generated
     /// 16 px art (D-018). One world unit = one tile and tile (0,0) sits at the
-    /// origin. Only changed cells are repainted.
+    /// origin. Only changed cells are repainted; changing level repaints it all.
     /// </summary>
     public sealed class PrototypeWorldView
     {
@@ -38,21 +38,47 @@ namespace CepaCero.Unity.Prototype
             _objectMap = CreateLayer(grid.transform, "Objects", PrototypeDecorView.FlatOrder + 1);
             _roofMap = CreateLayer(grid.transform, "Roofs", PrototypeDecorView.FlatOrder + 2);   // translucent: see the house through it
 
-            int w = blocks.Width;
-            int h = blocks.Height;
+            _ground = ground;
+            RepaintAll();
+        }
+
+        private readonly GroundLayer _ground;
+        private int _level;
+        private float _ambient = 1f;
+
+        /// <summary>Shows another level (D-022): the street, a floor of a building (the street dimmed below it) or the ground underneath.</summary>
+        public void SetLevel(int level)
+        {
+            if (level == _level)
+            {
+                return;
+            }
+            _level = level;
+            _groundMap.gameObject.SetActive(level >= 0);
+            RepaintAll();
+            SetAmbient(_ambient);
+        }
+
+        private void RepaintAll()
+        {
+            int w = _blocks.Width;
+            int h = _blocks.Height;
             var groundTiles = new TileBase[w * h];
             var blockTiles = new TileBase[w * h];
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
                 {
-                    groundTiles[y * w + x] = TileFor(art.Ground(ground.Get(x, y), x, y));
+                    groundTiles[y * w + x] = TileFor(_art.Ground(_ground.Get(x, y), x, y));
                     blockTiles[y * w + x] = BlockTile(x, y);
                 }
             }
             var area = new BoundsInt(0, 0, 0, w, h, 1);
             _groundMap.SetTilesBlock(area, groundTiles);
             _blockMap.SetTilesBlock(area, blockTiles);
+            _floorMap.ClearAllTiles();
+            _objectMap.ClearAllTiles();
+            _roofMap.ClearAllTiles();
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
@@ -69,9 +95,9 @@ namespace CepaCero.Unity.Prototype
             _blocks.DrainChanges(_changes);
             foreach (BlockChange c in _changes)
             {
-                if (c.Z != 0)
+                if (c.Z != _level)
                 {
-                    continue;                                   // only the ground level is drawn until the levels view exists (phase F)
+                    continue;                                   // only the level being shown is drawn
                 }
                 if (c.Layer == BuildLayer.Structure)
                 {
@@ -92,9 +118,10 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Day/night: darkens everything with the ambient light (kept visible for debugging).</summary>
         public void SetAmbient(float light)
         {
-            float v = Mathf.Lerp(0.3f, 1f, light);
+            _ambient = light;
+            float v = Mathf.Lerp(0.3f, 1f, light) * (_level != 0 ? 0.75f : 1f);          // other levels read a little darker
             var tint = new Color(v, v, Mathf.Min(1f, v * 1.1f), 1f);
-            _groundMap.color = tint;
+            _groundMap.color = _level > 0 ? new Color(tint.r * 0.6f, tint.g * 0.6f, tint.b * 0.6f, 1f) : tint;
             _blockMap.color = tint;
             _floorMap.color = tint;
             _objectMap.color = tint;
@@ -107,6 +134,19 @@ namespace CepaCero.Unity.Prototype
         /// </summary>
         private TileBase BlockTile(int x, int y)
         {
+            if (_level != 0)
+            {
+                BlockType here = _blocks.GetBlock(x, y, _level, BuildLayer.Structure);
+                if (!here.IsAir)
+                {
+                    return TileFor(SpriteOf(here), _blocks.GetVariant(x, y, _level, BuildLayer.Structure));
+                }
+                if (_blocks.IsUndug(x, y, _level) && _blocks.Registry.TryGet(_level <= -3 ? "rock" : "earth", out BlockType soil))
+                {
+                    return TileFor(SpriteOf(soil));                 // untouched ground, solid until dug
+                }
+                return null;
+            }
             BlockType type = _blocks.GetBlock(x, y);
             if (type.Key == "building_wall" && !IsWallLike(x, y - 1))
             {
@@ -134,8 +174,8 @@ namespace CepaCero.Unity.Prototype
 
         private void Paint(Tilemap map, int x, int y, BuildLayer layer)
         {
-            BlockType type = _blocks.GetBlock(x, y, 0, layer);
-            map.SetTile(new Vector3Int(x, y, 0), type.IsAir ? null : TileFor(SpriteOf(type), _blocks.GetVariant(x, y, 0, layer)));
+            BlockType type = _blocks.GetBlock(x, y, _level, layer);
+            map.SetTile(new Vector3Int(x, y, 0), type.IsAir ? null : TileFor(SpriteOf(type), _blocks.GetVariant(x, y, _level, layer)));
         }
 
         private bool IsWallLike(int x, int y)

@@ -21,6 +21,9 @@ namespace CepaCero.Unity.Prototype
 
         public PlayerState Me;
 
+        /// <summary>Level of the player (0 = street).</summary>
+        public int Level;
+
         /// <summary>Bar maxima (PlayerSettings of the match).</summary>
         public int MaxHealth;
         public float MaxStamina;

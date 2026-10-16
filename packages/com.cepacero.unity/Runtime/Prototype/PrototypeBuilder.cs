@@ -141,6 +141,13 @@ namespace CepaCero.Unity.Prototype
             return plan.Pieces.Count;
         }
 
+        public void CancelPaste()
+        {
+            Pasting = false;
+            SelectStart = null;
+            _selection.Clear();
+        }
+
         public bool StartPaste()
         {
             Pasting = Clipboard != null && !Clipboard.IsEmpty;
@@ -302,7 +309,7 @@ namespace CepaCero.Unity.Prototype
                 {
                     return false;                       // gone for good (built over): drop it
                 }
-                intent = PlayerIntent.Place(p.Cell.X, p.Cell.Y, p.Type, p.Variant);
+                intent = PlayerIntent.Place(p.Cell.X, p.Cell.Y, p.Type, p.Variant, ctx.Level);
                 _nextSend = time + ctx.Settings.ActionCooldown + 0.02f;
                 return true;
             }
@@ -313,8 +320,9 @@ namespace CepaCero.Unity.Prototype
         public readonly struct Context
         {
             public Context(BlockWorld blocks, GroundLayer ground, PlayerSettings settings, Float2 me,
-                IReadOnlyList<PlayerState> players, Inventory inventory, BuildCostMode costMode)
+                IReadOnlyList<PlayerState> players, Inventory inventory, BuildCostMode costMode, int level = 0)
             {
+                Level = level;
                 Blocks = blocks;
                 Ground = ground;
                 Settings = settings;
@@ -331,6 +339,9 @@ namespace CepaCero.Unity.Prototype
             public IReadOnlyList<PlayerState> Players { get; }
             public Inventory Inventory { get; }
             public BuildCostMode CostMode { get; }
+
+            /// <summary>The level the player stands on: every placement is for it.</summary>
+            public int Level { get; }
         }
 
         public Verdict Check(Int2 cell, ushort typeId, byte variant, in Context ctx)
@@ -341,13 +352,13 @@ namespace CepaCero.Unity.Prototype
             }
             BlockType placing = ctx.Blocks.Registry[typeId];
             variant = BlockVariant.Sanitize(variant, placing);
-            ushort existing = ctx.Blocks.GetTypeId(cell.X, cell.Y, 0, placing.Layer);
+            ushort existing = ctx.Blocks.GetTypeId(cell.X, cell.Y, ctx.Level, placing.Layer);
             BlockType old = existing == BlockRegistry.AirId ? null : ctx.Blocks.Registry[existing];
-            if (old != null && (old.Build == null || (existing == typeId && ctx.Blocks.GetVariant(cell.X, cell.Y, 0, placing.Layer) == variant)))
+            if (old != null && (old.Build == null || (existing == typeId && ctx.Blocks.GetVariant(cell.X, cell.Y, ctx.Level, placing.Layer) == variant)))
             {
                 return Verdict.Occupied;
             }
-            if (!GroundLayer.IsBuildable(ctx.Ground.Get(cell.X, cell.Y)))
+            if ((ctx.Level == 0 && !GroundLayer.IsBuildable(ctx.Ground.Get(cell.X, cell.Y))) || !LevelRules.CanBuildAt(ctx.Blocks, cell.X, cell.Y, ctx.Level))
             {
                 return Verdict.NotBuildable;
             }
@@ -355,7 +366,7 @@ namespace CepaCero.Unity.Prototype
             {
                 foreach (PlayerState p in ctx.Players)
                 {
-                    if (!p.IsDead && TileCollision.CircleTouchesCell(p.Position, ctx.Settings.Radius, cell.X, cell.Y))
+                    if (!p.IsDead && p.Level == ctx.Level && TileCollision.CircleTouchesCell(p.Position, ctx.Settings.Radius, cell.X, cell.Y))
                     {
                         return Verdict.Occupied;
                     }

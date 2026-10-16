@@ -32,7 +32,7 @@ namespace UnityEngine
     public class Sprite : Object { public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu) => null; public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu, uint extrude, SpriteMeshType mesh) => null; }
     public class Shader : Object { public static Shader Find(string n) => null; }
     public class Material : Object { public Material(Shader s) {} }
-    public class Renderer : Component { public Material sharedMaterial; public int sortingOrder; }
+    public class Renderer : Component { public Material sharedMaterial; public int sortingOrder; public bool enabled; }
     public class SpriteRenderer : Renderer { public Sprite sprite; public Color color; public bool flipX; }
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
@@ -54,13 +54,13 @@ namespace UnityEngine.Tilemaps
 {
     public class TileBase : UnityEngine.ScriptableObject { }
     public class Tile : TileBase { public UnityEngine.Sprite sprite; public UnityEngine.Color color; }
-    public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} }
+    public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} public void ClearAllTiles() {} }
     public class TilemapRenderer : UnityEngine.Renderer { }
 }
 namespace UnityEngine.InputSystem
 {
     public class ButtonControl { public bool isPressed; public bool wasPressedThisFrame; public bool wasReleasedThisFrame; }
     public class Vector2Control { public UnityEngine.Vector2 ReadValue() => default; }
-    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, digit9Key, escapeKey, leftCtrlKey, rightCtrlKey, leftBracketKey, rightBracketKey, commaKey, periodKey, zKey, leftAltKey, rightAltKey, lKey; }
+    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, digit9Key, escapeKey, leftCtrlKey, rightCtrlKey, leftBracketKey, rightBracketKey, commaKey, periodKey, zKey, leftAltKey, rightAltKey, lKey, pageUpKey, pageDownKey; }
     public class Mouse { public static Mouse current; public ButtonControl leftButton, rightButton, middleButton; public Vector2Control position; public Vector2Control scroll; }
 }
