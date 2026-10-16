@@ -93,7 +93,8 @@ Las cifras son un primer reparto; se afinan con una prueba de noches en `simbenc
 
 > **Hecho en arte (16/10/2026):** `tools/spritegen` ya dibuja los **14 materiales** (muro con uniones, puerta, ventana, barricada, valla y suelo),
 > pilares, arcos, portones y ventanales de 2 casillas, escaleras, 5 tejados con 11 formas y los objetos de D-020 (~700 sprites).
-> Falta: subsuelo (tierra, roca, pozo, escala, vigas), pintura (versión en grises) e integración en el juego.
+> También el **subsuelo**: paredes de tierra y roca, suelos de cueva, pozos, escaleras de bajada, escalas, trampillas, vigas, marcas de excavación y antorchas.
+> Falta: pintura (versión en grises) e integración en el juego.
 
 ## 6. Cómo encaja en el código
 - **Datos, no código**: materiales, formas y costes se declaran en `docs/construccion.md` (YAML, como bestiario y objetos) y `tools/datagen` genera `data/generated/construccion.json`.

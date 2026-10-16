@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from spritegen import characters, decor, structures, world
+from spritegen import characters, decor, structures, underground, world
 from spritegen.__main__ import REPO, build_all, build_images, zombie_ids
 from spritegen.atlas import PPU, pack
 
@@ -254,3 +254,38 @@ def test_roof_shapes_are_lit_differently():
             continue
         shapes = {images()[f"roof_{roof}_{s}"].tobytes() for s in structures.ROOF_SHAPES}
         assert len(shapes) == len(structures.ROOF_SHAPES), roof
+
+
+# ------------------------------------------------------------------ underground (D-022)
+def test_underground_pieces_exist():
+    names = images().keys()
+    for m in underground.st.UNDERGROUND:
+        for mask in range(16):
+            assert f"wall_{m}_top_{mask}" in names
+        for mask in range(4):
+            assert f"wall_{m}_face_{mask}" in names
+        for v in range(2):
+            assert f"floor_{m}_{v}" in names
+    for m in ("wood", "stone", "concrete", "steel"):
+        for d in "nesw":
+            assert f"stairs_down_{m}_{d}" in names
+    for n in ("pit_0", "pit_1", "ladder_wood", "ladder_steel", "hatch_wood_closed", "hatch_wood_open", "hatch_steel_closed",
+              "hatch_steel_open", "beam_h", "beam_v", "beam_prop", "overlay_dig_1", "overlay_dig_2", "overlay_dig_3"):
+        assert n in names, n
+    assert len({images()[f"obj_torch_{f}"].tobytes() for f in range(4)}) == 4
+
+
+def test_earth_and_rock_look_different_from_each_other_and_from_the_surface():
+    mean = {}
+    for m in ("earth", "rock", "brick", "adobe"):
+        px = list(images()[f"wall_{m}_face_3"].convert("RGB").getdata())
+        mean[m] = tuple(sum(c[i] for c in px) / len(px) for i in range(3))
+    assert sum(abs(a - b) for a, b in zip(mean["earth"], mean["rock"])) > 30
+    assert sum(abs(a - b) for a, b in zip(mean["earth"], mean["adobe"])) > 15
+
+
+def test_a_cave_floor_is_darker_than_the_earth_wall_next_to_it():
+    def lum(name):
+        px = list(images()[name].convert("RGB").getdata())
+        return sum(sum(c) for c in px) / (len(px) * 3)
+    assert lum("floor_earth_0") < lum("wall_earth_top_15")

@@ -71,6 +71,21 @@ según los vecinos que sean del mismo muro.
 | `overlay_crack_<1-2>` · `overlay_barricade` | Se dibujan encima de cualquier pieza (daño en niveles, barricada) |
 | `obj_campfire_<0-3>` (animada, con luz) · `obj_lantern` · `obj_rain_barrel` · `obj_barbed_wire` · `obj_sofa` | Objetos con función o decorativos |
 
+## Subsuelo (D-022)
+`underground.py`: bajo tierra todo es tierra o roca maciza y el juego solo guarda lo excavado. Tierra y roca reutilizan el mecanismo de muros (los lados expuestos
+enseñan la pared cortada), así que una sala excavada queda bien con cualquier forma.
+
+| Nombre | Qué es |
+| --- | --- |
+| `wall_earth_top_<0-15>` · `wall_earth_face_<0-3>` · `wall_rock_…` | Tierra y roca maciza (pared sin construir) |
+| `floor_earth_<0-1>` · `floor_rock_<0-1>` | Suelo de cueva, más oscuro que la pared |
+| `pit_<0-1>` | Pozo o hueco en el suelo |
+| `stairs_down_<wood\|stone\|concrete\|steel>_<n\|e\|s\|w>` | Escalera que baja a la oscuridad |
+| `ladder_<wood\|steel>` · `hatch_<wood\|steel>_<closed\|open>` | Escala y trampilla |
+| `beam_h` · `beam_v` · `beam_prop` | Vigas y puntal para sostener techos de tierra |
+| `overlay_dig_<1-3>` | Progreso de excavación, se dibuja encima de la tierra |
+| `obj_torch_<0-3>` | Antorcha animada, con punto de luz |
+
 ## Cómo se añade algo
 - Un zombi nuevo en `docs/bestiario.md`: el generador falla hasta que tenga su `Look` en `characters.zombie_looks()`.
 - Una pieza de decoración: función en `decor.py` y entrada en `decor.build()`.

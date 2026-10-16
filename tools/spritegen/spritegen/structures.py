@@ -150,6 +150,24 @@ def face(m: str, x: int, y: int) -> Color:
         if (x % 16, y % 16) in ((3, 3), (12, 3), (3, 12), (12, 12)): c = (220, 226, 236) if (x + y) % 2 else (70, 78, 92)    # bolts
         if y % 32 in (7, 8) and x % 32 < 12: c = (226, 190, 60) if (x // 3) % 2 else (40, 40, 44)                            # hazard strip
         return c
+    if m == "earth":
+        band = y // 9
+        tone = ((92, 66, 46), (110, 80, 54), (84, 60, 42), (120, 92, 62))[int(hnoise(band, 1, 601) * 4)]
+        n = _n(x // 2, y // 2, 603 + band, 20)
+        c = (tone[0] + n, tone[1] + n * 3 // 4, tone[2] + n // 2)
+        if hnoise(x // 3, y // 3, 605) < .09: c = (130 + n // 2, 124 + n // 2, 116 + n // 2)          # pebbles
+        if hnoise(x, y, 607) < .025: c = (60, 40, 28)
+        if y % 9 == 0: c = mix(c, (30, 20, 16), .25)                                                 # strata
+        if hnoise(x, y // 5, 609) < .05 and y % 11 < 8: c = (150, 112, 70)                          # roots
+        return c
+    if m == "rock":
+        n = _n(x // 2, y // 2, 611, 22)
+        c = (82 + n, 82 + n, 90 + n)
+        if hnoise(x // 6, y // 5, 613) < .22: c = (66 + n, 66 + n, 76 + n)
+        if hnoise(x, y // 4, 615) < .04: c = (150, 150, 158)                                          # quartz veins
+        if (x * 3 + y) % 23 == 0 and hnoise(x, y, 617) < .7: c = (36, 36, 44)                        # cracks
+        if hnoise(x // 2, y // 2, 619) < .04: c = (58, 70, 62)
+        return c
     if m == "glass":
         return (150, 196, 214)
     # concrete
@@ -231,6 +249,16 @@ def cap(m: str, x: int, y: int) -> Color:
         c = (156 + n, 166 + n, 178 + n)
         if (x + y * 2) % 12 in (0, 1): c = (206, 216, 228)
         if x % 16 == 0 or y % 16 == 0: c = (66, 74, 88)
+        return c
+    if m == "earth":
+        n = _n(x, y, 621, 22)
+        c = (104 + n, 76 + n * 3 // 4, 52 + n // 2)
+        if hnoise(x // 2, y // 2, 623) < .1: c = (126 + n // 2, 120 + n // 2, 110 + n // 2)
+        return c
+    if m == "rock":
+        n = _n(x, y, 625, 20)
+        c = (92 + n, 92 + n, 100 + n)
+        if hnoise(x // 5, y // 5, 627) < .2: c = (74 + n, 74 + n, 84 + n)
         return c
     if m == "glass":
         return (190, 224, 238)
@@ -374,9 +402,9 @@ def crack_overlay(level: int) -> Image.Image:
     for _ in range(1 + level * 2):
         x, y = rng.randrange(4, 28), rng.randrange(0, 8)
         for _ in range(12 + level * 6):
-            sp.px[(x, y)] = (22, 18, 22)
+            sp.set(x, y, (22, 18, 22))
             if (x + 1, y - 1) not in sp.px and rng.random() < .5:
-                sp.px[(x + 1, y - 1)] = (150, 140, 130)
+                sp.set(x + 1, y - 1, (150, 140, 130))
             x = max(0, min(S - 1, x + rng.choice((-1, 0, 0, 1))))
             y = min(S - 1, y + rng.choice((0, 1, 1)))
     if level >= 2:
@@ -517,6 +545,16 @@ def floor(m: str, variant: int) -> Image.Image:
                 if (x + y * 2) % 12 in (0, 1) and (x // 8 + y // 8) % 2: c = (206, 216, 228)
                 if (x - y * 2) % 12 in (0, 1) and (x // 8 + y // 8) % 2 == 0: c = (206, 216, 228)
                 if x % 16 == 0 or y % 16 == 0: c = (60, 68, 82)
+            elif m == "earth":
+                n = _n(x, y, 631 + o, 20)
+                c = (66 + n, 48 + n * 3 // 4, 34 + n // 2)
+                if hnoise(x // 2, y // 2, 633 + o) < .08: c = (110 + n // 2, 104 + n // 2, 96 + n // 2)
+                if hnoise(x, y, 635 + o) < .02: c = (46, 32, 24)
+            elif m == "rock":
+                n = _n(x, y, 637 + o, 18)
+                c = (78 + n, 78 + n, 86 + n)
+                if hnoise(x // 4, y // 4, 639 + o) < .2: c = (62 + n, 62 + n, 72 + n)
+                if x % 16 == 0 or y % 16 == 0: c = (46, 46, 54)
             else:                                                          # concrete (glass has its own)
                 n = _n(x, y, 81 + o, 14)
                 c = (150 + n, 148 + n, 142 + n)
@@ -839,6 +877,7 @@ def roof_piece(r: str, shape: str) -> Image.Image:
 
 # ------------------------------------------------------------------ stairs (one tile, going up in the given direction)
 STAIR_MATERIALS = ("wood", "log", "stone", "concrete", "brick", "steel")
+UNDERGROUND = ("earth", "rock")
 
 
 def stairs(m: str, d: str) -> Image.Image:
