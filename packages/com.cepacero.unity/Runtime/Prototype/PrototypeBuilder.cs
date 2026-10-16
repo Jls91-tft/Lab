@@ -49,6 +49,8 @@ namespace CepaCero.Unity.Prototype
         private readonly List<Placement> _queue = new List<Placement>();
         private readonly List<Placement> _preview = new List<Placement>();
         private readonly List<Int2> _cells = new List<Int2>();
+        private readonly List<Int2> _selection = new List<Int2>();
+        private readonly List<PlannedPiece> _planned = new List<PlannedPiece>();
         private readonly List<RoomCell> _room = new List<RoomCell>();
         private readonly Dictionary<string, int> _needed = new Dictionary<string, int>();
         private float _nextSend;
@@ -70,6 +72,18 @@ namespace CepaCero.Unity.Prototype
         public BuildPiece? Piece { get; private set; }
 
         public Int2? DragStart { get; private set; }
+
+        /// <summary>The last copied blueprint (Ctrl+C, or loaded from a file); null before the first copy.</summary>
+        public Blueprint Clipboard { get; set; }
+
+        /// <summary>A pasted plan follows the cursor until the player confirms with clicks or cancels.</summary>
+        public bool Pasting { get; private set; }
+
+        /// <summary>Alt + drag: corner of the selection being drawn.</summary>
+        public Int2? SelectStart { get; private set; }
+
+        /// <summary>Outline of the selection being drawn (for the ghost view).</summary>
+        public IReadOnlyList<Int2> SelectionCells => _selection;
 
         public DragKind Kind { get; private set; }
 
@@ -106,10 +120,69 @@ namespace CepaCero.Unity.Prototype
             Kind = kind;
         }
 
-        /// <summary>Right click or Escape: first cancels the drag, then the whole queue.</summary>
+        public void BeginSelect(Int2 cell) => SelectStart = cell;
+
+        /// <summary>Copies what was built inside the selection into the clipboard. Returns the number of pieces (0: nothing there).</summary>
+        public int EndSelect(Int2 cell, BlockWorld world)
+        {
+            if (!SelectStart.HasValue)
+            {
+                return 0;
+            }
+            Int2 a = SelectStart.Value;
+            SelectStart = null;
+            _selection.Clear();
+            Blueprint plan = Blueprint.Capture(world, a.X, a.Y, cell.X, cell.Y);
+            if (plan.IsEmpty)
+            {
+                return 0;
+            }
+            Clipboard = plan;
+            return plan.Pieces.Count;
+        }
+
+        public bool StartPaste()
+        {
+            Pasting = Clipboard != null && !Clipboard.IsEmpty;
+            return Pasting;
+        }
+
+        public void RotatePaste()
+        {
+            if (Clipboard != null)
+            {
+                Clipboard = Clipboard.RotatedClockwise();
+            }
+        }
+
+        /// <summary>Queues every piece of the pasted plan that can go there; the ghost stays for another copy.</summary>
+        public int ConfirmPaste()
+        {
+            int added = 0;
+            foreach (Placement p in _preview)
+            {
+                if ((p.Verdict == Verdict.Ok || p.Verdict == Verdict.Replace || p.Verdict == Verdict.OutOfReach) && !IsQueued(p.Cell, p.Type))
+                {
+                    _queue.Add(p);
+                    added++;
+                }
+            }
+            return added;
+        }
+
+        /// <summary>Right click or Escape: first cancels a paste or a drag, then the whole queue.</summary>
         public void Cancel()
         {
-            if (DragStart.HasValue)
+            if (Pasting)
+            {
+                Pasting = false;
+            }
+            else if (SelectStart.HasValue)
+            {
+                SelectStart = null;
+                _selection.Clear();
+            }
+            else if (DragStart.HasValue)
             {
                 DragStart = null;
             }
@@ -139,6 +212,26 @@ namespace CepaCero.Unity.Prototype
         public void UpdatePreview(Int2 cursor, in Context ctx)
         {
             _preview.Clear();
+            _selection.Clear();
+            if (SelectStart.HasValue)
+            {
+                Shape(SelectStart.Value, cursor, true, _selection);
+            }
+            if (Pasting && Clipboard != null)
+            {
+                _needed.Clear();
+                foreach (Placement q in _queue)
+                {
+                    Tally(ctx.Blocks.Registry[q.Type]);
+                }
+                _planned.Clear();
+                Clipboard.PlanAt(cursor.X - Clipboard.Width / 2, cursor.Y - Clipboard.Height / 2, ctx.Blocks.Registry, _planned, out _);
+                foreach (PlannedPiece pp in _planned)
+                {
+                    Add(new Int2(pp.X, pp.Y), pp.Type, pp.Variant, ctx);
+                }
+                return;
+            }
             if (!Active || !Piece.HasValue)
             {
                 return;

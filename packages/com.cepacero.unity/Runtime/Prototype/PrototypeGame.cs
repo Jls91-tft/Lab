@@ -164,7 +164,7 @@ namespace CepaCero.Unity.Prototype
             // The host pays from the session's book (it knows the unlocked recipes); a client builds its own.
             _recipes = Remote ? new RecipeBook(_data.RecipesData, _data.Items) : _session.Recipes;
             _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
-            _buildView = new PrototypeBuildView(_viewRoot, _world, viewBlocks.Registry);
+            _buildView = new PrototypeBuildView(_viewRoot, _world, _art, viewBlocks.Registry);
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
             _decor = new PrototypeDecorView(decor, _art, _viewRoot);
@@ -347,6 +347,10 @@ namespace CepaCero.Unity.Prototype
         /// <summary>"Muro de ladrillo · 3 Ladrillo", or "" when the hand builds nothing.</summary>
         private string BuildTitle()
         {
+            if (_builder.Pasting)
+            {
+                return $"Plano {_builder.Clipboard.Width}×{_builder.Clipboard.Height} · {_builder.Clipboard.Pieces.Count} piezas";
+            }
             if (!_builder.Active || !_builder.Piece.HasValue)
             {
                 return "";
@@ -358,6 +362,10 @@ namespace CepaCero.Unity.Prototype
 
         private string BuildHint()
         {
+            if (_builder.Pasting)
+            {
+                return PasteHint();
+            }
             if (!_builder.Active)
             {
                 return "";
@@ -373,6 +381,92 @@ namespace CepaCero.Unity.Prototype
             return _builder.DragStart.HasValue
                 ? $"{_builder.Preview.Count} piezas: suelta para construir{queued}"
                 : $"Clic: poner · Arrastra: línea · Mayús: contorno · Ctrl: habitación · Q/E forma · R girar · [ ] color{queued}";
+        }
+
+        private string PasteHint()
+        {
+            string missing = "";
+            List<ItemShortfall> short_ = _builder.Clipboard.Shortfall(_viewBlocks.Registry,
+                id => _data.Items.TryGetIndex(id, out ushort item) ? MyInventory.Count(item) : 0, _settings.BuildCost);
+            if (short_.Count > 0)
+            {
+                var parts = new List<string>();
+                foreach (ItemShortfall m in short_)
+                {
+                    parts.Add($"{m.Missing} {(_data.Items.TryGetIndex(m.Item, out ushort item) ? _data.Items[item].name : m.Item)}");
+                }
+                missing = " · Faltan: " + string.Join(", ", parts);
+            }
+            return $"Clic: pegar · R girar · Clic der./Esc: soltar{missing}";
+        }
+
+        private static string PlansDirectory => Path.Combine(Application.persistentDataPath, "plans");
+
+        private void SavePlan()
+        {
+            if (_builder.Clipboard == null || _builder.Clipboard.IsEmpty)
+            {
+                Say("No hay nada copiado: Alt + arrastrar y Ctrl+C");
+                return;
+            }
+            Directory.CreateDirectory(PlansDirectory);
+            string path = Path.Combine(PlansDirectory, $"plano_{DateTime.Now:yyyyMMdd_HHmmss}.cepaplan");
+            File.WriteAllText(path, _builder.Clipboard.ToText());
+            Say("Plano guardado: " + path);
+        }
+
+        private int _planIndex = -1;
+
+        /// <summary>Ctrl+L: the next saved blueprint becomes the clipboard (files from other people work too).</summary>
+        private void LoadNextPlan()
+        {
+            string[] files = Directory.Exists(PlansDirectory) ? Directory.GetFiles(PlansDirectory, "*.cepaplan") : new string[0];
+            if (files.Length == 0)
+            {
+                Say("No hay planos guardados en " + PlansDirectory);
+                return;
+            }
+            Array.Sort(files, StringComparer.Ordinal);
+            _planIndex = (_planIndex + 1) % files.Length;
+            try
+            {
+                _builder.Clipboard = Blueprint.FromText(File.ReadAllText(files[_planIndex]));
+                Say($"Plano cargado: {Path.GetFileName(files[_planIndex])} · Ctrl+V para pegarlo");
+            }
+            catch (FormatException e)
+            {
+                Say($"{Path.GetFileName(files[_planIndex])}: {e.Message}");
+            }
+        }
+
+        /// <summary>Plans: Alt + drag selects, Ctrl+C copies, Ctrl+V pastes (R turns, click confirms), Ctrl+S saves, Ctrl+L loads the next saved one.</summary>
+        private void HandlePlans(Int2 tile)
+        {
+            if (_input.SavePlan)
+            {
+                SavePlan();
+            }
+            if (_input.LoadPlan)
+            {
+                LoadNextPlan();
+            }
+            if (_input.PastePlan && !_builder.StartPaste())
+            {
+                Say("No hay ningún plano: Alt + arrastrar y Ctrl+C");
+            }
+            if (_input.CopyPlan && _builder.Clipboard != null)
+            {
+                Say($"Plano en el portapapeles: {_builder.Clipboard.Pieces.Count} piezas · Ctrl+V pega · Ctrl+S guarda");
+            }
+            if (_input.Alt && _input.Attack)
+            {
+                _builder.BeginSelect(tile);
+            }
+            if (_input.AttackReleased && _builder.SelectStart.HasValue)
+            {
+                int n = _builder.EndSelect(tile, _viewBlocks);
+                Say(n == 0 ? "No hay nada construido ahí" : $"{n} piezas copiadas · Ctrl+V pega · Ctrl+S guarda");
+            }
         }
 
         /// <summary>What the cell under the cursor offers the click (see <see cref="HandResolver"/>).</summary>
@@ -439,12 +533,42 @@ namespace CepaCero.Unity.Prototype
             {
                 _builder.Cursor.CycleColor(_input.ColorStep);
             }
-            if (_input.Rotate)
+            if (_input.Rotate && !_builder.Pasting)
             {
                 _builder.Cursor.Rotate(1);
             }
 
-            if (_builder.Active)
+            HandlePlans(tile);
+            if (_builder.Pasting)
+            {
+                if (_input.Secondary || _input.Cancel)
+                {
+                    _builder.Cancel();
+                }
+                else if (_input.Attack)
+                {
+                    if (_builder.ConfirmPaste() == 0)
+                    {
+                        Say(BuildHint());
+                    }
+                }
+                if (_input.Rotate)
+                {
+                    _builder.RotatePaste();
+                }
+                if (_builder.TryNext(Time.time, BuildContext(), out PlayerIntent pasted))
+                {
+                    Send(pasted);
+                }
+            }
+            else if (_input.Alt || _builder.SelectStart.HasValue)
+            {
+                if (_input.Cancel || _input.Secondary)
+                {
+                    _builder.Cancel();
+                }
+            }
+            else if (_builder.Active)
             {
                 if (_input.Secondary || _input.Cancel)
                 {

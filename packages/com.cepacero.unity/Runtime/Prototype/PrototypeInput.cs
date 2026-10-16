@@ -47,6 +47,15 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Ctrl + Z.</summary>
         public bool Undo;
 
+        /// <summary>Alt held: Alt + drag selects an area to copy.</summary>
+        public bool Alt;
+
+        /// <summary>Ctrl + C, Ctrl + V, Ctrl + S, Ctrl + L: copy, paste, save and load the next saved blueprint.</summary>
+        public bool CopyPlan;
+        public bool PastePlan;
+        public bool SavePlan;
+        public bool LoadPlan;
+
         public bool Take;
         public bool PickUp;
 
@@ -81,12 +90,17 @@ namespace CepaCero.Unity.Prototype
             Sprint = kb.leftShiftKey.isPressed;
             Ctrl = kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed;
             Revive = kb.fKey.isPressed;
+            Alt = kb.leftAltKey.isPressed || kb.rightAltKey.isPressed;
 
             Take |= kb.tKey.wasPressedThisFrame;
             PickUp |= kb.gKey.wasPressedThisFrame;
             Cancel |= kb.escapeKey.wasPressedThisFrame;
-            EquipFromBag |= kb.vKey.wasPressedThisFrame;
-            CraftBandage |= kb.cKey.wasPressedThisFrame;
+            EquipFromBag |= !Ctrl && kb.vKey.wasPressedThisFrame;
+            CraftBandage |= !Ctrl && kb.cKey.wasPressedThisFrame;
+            CopyPlan |= Ctrl && kb.cKey.wasPressedThisFrame;
+            PastePlan |= Ctrl && kb.vKey.wasPressedThisFrame;
+            SavePlan |= Ctrl && kb.sKey.wasPressedThisFrame;
+            LoadPlan |= Ctrl && kb.lKey.wasPressedThisFrame;
             Save |= kb.f5Key.wasPressedThisFrame;
             Load |= kb.f9Key.wasPressedThisFrame;
             ShapeStep += (kb.eKey.wasPressedThisFrame ? 1 : 0) - (kb.qKey.wasPressedThisFrame ? 1 : 0);
@@ -127,7 +141,7 @@ namespace CepaCero.Unity.Prototype
         public void ClearPresses()
         {
             Attack = Secondary = Pick = Take = PickUp = EquipFromBag = CraftBandage = Save = Load = false;
-            Rotate = Undo = AttackReleased = Cancel = false;
+            Rotate = Undo = AttackReleased = Cancel = CopyPlan = PastePlan = SavePlan = LoadPlan = false;
             ShapeStep = ColorStep = 0;
             Hotbar = -1;
             Scroll = 0;

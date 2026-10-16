@@ -61,6 +61,6 @@ namespace UnityEngine.InputSystem
 {
     public class ButtonControl { public bool isPressed; public bool wasPressedThisFrame; public bool wasReleasedThisFrame; }
     public class Vector2Control { public UnityEngine.Vector2 ReadValue() => default; }
-    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, digit9Key, escapeKey, leftCtrlKey, rightCtrlKey, leftBracketKey, rightBracketKey, commaKey, periodKey, zKey; }
+    public class Keyboard { public static Keyboard current; public ButtonControl rKey, aKey, dKey, wKey, sKey, leftArrowKey, rightArrowKey, upArrowKey, downArrowKey, leftShiftKey, fKey, eKey, tKey, gKey, qKey, bKey, vKey, cKey, hKey, f5Key, f9Key, digit1Key, digit2Key, digit3Key, digit4Key, digit5Key, digit6Key, digit7Key, digit8Key, digit9Key, escapeKey, leftCtrlKey, rightCtrlKey, leftBracketKey, rightBracketKey, commaKey, periodKey, zKey, leftAltKey, rightAltKey, lKey; }
     public class Mouse { public static Mouse current; public ButtonControl leftButton, rightButton, middleButton; public Vector2Control position; public Vector2Control scroll; }
 }

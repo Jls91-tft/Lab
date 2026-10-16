@@ -27,6 +27,7 @@ namespace CepaCero.Unity.Prototype
             "El clic izquierdo hace lo que pida lo que llevas en la mano: arma ataca, hacha o pico rompen, pala cava, vendas se usan",
             "Con un material: clic pone · arrastra línea · Mayús contorno · Ctrl habitación · clic der. quita · clic central copia",
             "Q/E forma · R girar · [ ] (o , .) color · Ctrl+Z deshacer · martillo: desmonta y devuelve la mitad",
+            "Planos: Alt + arrastrar elige · Ctrl+C copia · Ctrl+V pega (R gira, clic confirma) · Ctrl+S guarda · Ctrl+L carga el siguiente",
             "Clic der. abre puertas y contenedores · T coger del contenedor · G recoger del suelo · V equipar 1.º de la mochila",
             "C hacer vendas · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · H ocultar esta ayuda",
             "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. Lo lejano espera en cola a que te acerques.",
@@ -63,7 +64,7 @@ namespace CepaCero.Unity.Prototype
             if (m.Inventory != null)
             {
                 DrawHotbar(m.Inventory);
-                if (m.Build != null && m.Build.Active)
+                if (m.Build != null && (m.Build.Active || m.Build.Pasting))
                 {
                     DrawBuildPanel(m);
                 }
