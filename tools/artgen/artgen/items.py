@@ -146,6 +146,135 @@ def _water_bottle(c: Canvas) -> None:
     c.rect(6, 4, 6, 12, "white")
 
 
+# ---- building materials and tools (D-022)
+def _pallet(c: Canvas) -> None:
+    for y in (3, 7, 11):
+        c.rect(2, y, 13, y + 2, "tan")
+        c.rect(2, y + 2, 13, y + 2, "lbrown")
+    for x in (3, 7, 11):
+        c.rect(x, 3, x + 1, 13, "brown")
+    c.px(4, 4, "lsteel")
+
+
+def _plasterboard(c: Canvas) -> None:
+    c.rect(2, 3, 13, 13, "white")
+    c.rect(2, 3, 13, 3, "pale")
+    c.rect(2, 13, 13, 13, "lgray")
+    c.line(2, 8, 13, 8, "pale")
+    c.px(4, 5, "lgray")
+    c.px(11, 11, "lgray")
+
+
+def _log(c: Canvas) -> None:
+    c.rect(2, 5, 12, 11, "brown")
+    c.rect(2, 5, 12, 6, "lbrown")
+    c.ellipse(10, 4, 14, 12, "tan")
+    c.ellipse(11, 6, 13, 10, "lbrown")
+    c.px(12, 8, "brown")
+
+
+def _sandbag(c: Canvas) -> None:
+    c.ellipse(2, 5, 13, 13, "tan")
+    c.rect(5, 3, 10, 5, "tan")
+    c.rect(6, 3, 9, 3, "lbrown")
+    c.line(4, 8, 11, 8, "lbrown")
+    c.px(6, 11, "lbrown")
+
+
+def _adobe_brick(c: Canvas) -> None:
+    c.rect(2, 4, 13, 12, "orange")
+    c.rect(2, 4, 13, 5, "tan")
+    c.rect(2, 12, 13, 12, "lbrown")
+    c.px(5, 8, "lbrown")
+    c.px(10, 7, "tan")
+    c.px(8, 10, "lbrown")
+
+
+def _container_panel(c: Canvas) -> None:
+    c.rect(2, 3, 13, 13, "red")
+    for x in range(3, 13, 2):
+        c.rect(x, 3, x, 13, "dred")
+    c.rect(2, 3, 13, 3, "lsteel")
+    c.rect(2, 13, 13, 13, "steel")
+
+
+def _brick(c: Canvas) -> None:
+    c.rect(2, 5, 13, 11, "red")
+    c.rect(2, 5, 13, 5, "orange")
+    c.rect(2, 11, 13, 11, "dred")
+    c.line(7, 6, 7, 10, "dred")
+    c.px(4, 8, "orange")
+    c.px(11, 8, "dred")
+
+
+def _stone(c: Canvas) -> None:
+    c.polygon([(3, 11), (4, 5), (9, 3), (13, 6), (12, 12), (6, 13)], "lgray")
+    c.polygon([(5, 6), (9, 4), (11, 6), (8, 8)], "pale")
+    c.line(9, 8, 12, 11, "gray")
+    c.px(5, 11, "gray")
+
+
+def _rebar(c: Canvas) -> None:
+    for x in (4, 8, 12):
+        c.rect(x, 2, x, 13, "orange")
+        c.px(x, 2, "lsteel")
+    for y in (5, 9):
+        c.rect(3, y, 13, y, "steel")
+
+
+def _glass_pane(c: Canvas) -> None:
+    c.rect(3, 2, 12, 13, "cyan")
+    c.rect(3, 2, 12, 2, "white")
+    c.rect(3, 13, 12, 13, "lblue")
+    c.line(5, 11, 9, 4, "white")
+    c.line(8, 12, 10, 8, "white")
+
+
+def _earth(c: Canvas) -> None:
+    c.polygon([(2, 13), (5, 6), (9, 3), (13, 7), (14, 13)], "brown")
+    c.polygon([(5, 8), (9, 5), (12, 8), (9, 9)], "lbrown")
+    c.px(4, 11, "dbrown")
+    c.px(10, 11, "dbrown")
+    c.px(8, 7, "tan")
+
+
+def _clay(c: Canvas) -> None:
+    c.ellipse(2, 5, 13, 13, "orange")
+    c.ellipse(4, 6, 10, 10, "tan")
+    c.px(11, 10, "lbrown")
+    c.px(5, 11, "lbrown")
+
+
+def _gravel(c: Canvas) -> None:
+    for x, y, col in ((3, 9, "lgray"), (7, 6, "gray"), (10, 10, "pale"), (5, 12, "gray"), (11, 5, "lgray"), (8, 10, "dgray")):
+        c.ellipse(x - 1, y - 1, x + 2, y + 1, col)
+
+
+def _straw(c: Canvas) -> None:
+    for x, col in ((3, "yellow"), (5, "tan"), (7, "yellow"), (9, "tan"), (11, "yellow")):
+        c.line(x, 13, x + 2, 3, col)
+    c.line(2, 9, 13, 8, "lbrown")
+
+
+def _shovel(c: Canvas) -> None:
+    c.line(4, 12, 11, 4, "lbrown", width=2)
+    c.polygon([(10, 2), (13, 3), (14, 6), (11, 7), (9, 5)], "lsteel")
+    c.line(10, 3, 13, 6, "steel")
+
+
+def _pickaxe(c: Canvas) -> None:
+    c.line(3, 13, 11, 5, "lbrown", width=2)
+    c.polygon([(3, 5), (8, 2), (13, 4), (14, 7), (11, 5), (7, 4), (4, 7)], "lsteel")
+    c.line(5, 4, 12, 5, "steel")
+
+
+def _hammer(c: Canvas) -> None:
+    c.line(4, 13, 10, 6, "lbrown", width=2)
+    c.rect(7, 2, 13, 5, "lsteel")
+    c.rect(7, 5, 13, 5, "steel")
+    c.px(12, 3, "white")
+
+
 ICONS: dict[str, Callable[[Canvas], None]] = {
     "wood": _wood,
     "metal_scrap": _metal_scrap,
@@ -169,6 +298,23 @@ ICONS: dict[str, Callable[[Canvas], None]] = {
     "medkit": _medkit,
     "food_can": _food_can,
     "water_bottle": _water_bottle,
+    "pallet": _pallet,
+    "plasterboard": _plasterboard,
+    "log": _log,
+    "sandbag": _sandbag,
+    "adobe_brick": _adobe_brick,
+    "container_panel": _container_panel,
+    "brick": _brick,
+    "stone": _stone,
+    "rebar": _rebar,
+    "glass_pane": _glass_pane,
+    "earth": _earth,
+    "clay": _clay,
+    "gravel": _gravel,
+    "straw": _straw,
+    "shovel": _shovel,
+    "pickaxe": _pickaxe,
+    "hammer": _hammer,
 }
 
 
