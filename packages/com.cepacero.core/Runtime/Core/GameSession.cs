@@ -47,6 +47,7 @@ namespace CepaCero.Core
         private readonly float[] _nextClimb = new float[MaxPlayers];
         private readonly List<Float2> _livingPositions = new List<Float2>();
         private readonly List<int> _livingIndex = new List<int>();
+        private readonly List<int> _livingLevels = new List<int>();
         private readonly List<string> _due = new List<string>();
         private readonly List<string> _backlog = new List<string>();
         private readonly List<PlayerHit> _hits = new List<PlayerHit>();
@@ -350,7 +351,7 @@ namespace CepaCero.Core
             AdvanceClock();
             SpawnHorde();
             CollectLiving();
-            Zombies.Tick(_dt, _livingPositions);
+            Zombies.Tick(_dt, _livingPositions, _livingLevels);
             ApplyDamage();
             HandleZombieDeaths();
             CheckTeamWipe();
@@ -782,11 +783,13 @@ namespace CepaCero.Core
         {
             _livingPositions.Clear();
             _livingIndex.Clear();
+            _livingLevels.Clear();
             for (int p = 0; p < _players.Count; p++)
             {
-                if (!_players[p].IsDowned && _players[p].Level == 0)           // zombies do not know about people on other levels yet (phase G)
+                if (!_players[p].IsDowned)
                 {
                     _livingPositions.Add(_players[p].Position);
+                    _livingLevels.Add(_players[p].Level);
                     _livingIndex.Add(p);
                 }
             }

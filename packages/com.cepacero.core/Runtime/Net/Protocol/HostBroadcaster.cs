@@ -129,7 +129,7 @@ namespace CepaCero.Net.Protocol
             Messages.WritePlayerStates(w, (uint)tick, _session.Players, MaxStamina);
             if (tick % ZombieSnapshotEveryTicks == 0)
             {
-                Messages.WriteZombieSnapshot(w, _session.Zombies, (uint)tick, _session.Players[player].Position, ZombieInterestRadius, _scratch);
+                Messages.WriteZombieSnapshot(w, _session.Zombies, (uint)tick, _session.Players[player].Position, ZombieInterestRadius, _scratch, _session.Players[player].Level);
             }
             if (_zombieEvents.Count > 0)
             {

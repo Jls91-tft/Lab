@@ -12,6 +12,7 @@ namespace CepaCero.AI
         public byte Type;
         public ZombieState State;
         public byte Facing;
+        public sbyte Level;
     }
 
     /// <summary>
@@ -25,20 +26,20 @@ namespace CepaCero.AI
     /// </summary>
     public static class ZombieSnapshotCodec
     {
-        public const int BytesPerZombie = 8;
+        public const int BytesPerZombie = 9;
         public const int HeaderBytes = 6;
         public const float PositionScale = 16f;
 
         /// <summary>Writes the zombies within <paramref name="radius"/> tiles of <paramref name="viewer"/>, nearest first.</summary>
         public static int Write(ZombieSimulation sim, uint tick, Float2 viewer, float radius, ByteWriter writer,
-            List<int> scratch = null, int maxZombies = 255)
+            List<int> scratch = null, int maxZombies = 255, int viewerLevel = 0)
         {
             scratch ??= new List<int>();
             scratch.Clear();
             float r2 = radius * radius;
             for (int i = 0; i < sim.Capacity; i++)
             {
-                if (sim.IsAlive(i) && (sim.GetPosition(i) - viewer).LengthSquared <= r2)
+                if (sim.IsAlive(i) && sim.GetLevel(i) == viewerLevel && (sim.GetPosition(i) - viewer).LengthSquared <= r2)
                 {
                     scratch.Add(i);
                 }
@@ -57,6 +58,7 @@ namespace CepaCero.AI
                 writer.WriteUShort(sim.GetNetId(i));
                 writer.WriteUShort(Quantize(p.X));
                 writer.WriteUShort(Quantize(p.Y));
+                writer.WriteByte((byte)(sbyte)sim.GetLevel(i));
                 writer.WriteByte(sim.GetTypeIndex(i));
                 writer.WriteByte((byte)(((byte)sim.GetState(i) << 4) | (sim.GetFacing(i) & 0x0F)));
             }
@@ -73,6 +75,7 @@ namespace CepaCero.AI
                 {
                     NetId = reader.ReadUShort(),
                     Position = new Float2(reader.ReadUShort() / PositionScale, reader.ReadUShort() / PositionScale),
+                    Level = (sbyte)reader.ReadByte(),
                     Type = reader.ReadByte(),
                 };
                 byte packed = reader.ReadByte();

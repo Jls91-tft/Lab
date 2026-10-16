@@ -1,6 +1,6 @@
 # Propuesta: zombis multinivel (D-022, fase G)
 
-Estado: **propuesta, pendiente de OK de Javier**. Hoy los zombis viven solo en la calle (nivel 0): el subsuelo y las plantas altas son refugios seguros (a propósito, hasta esta fase).
+Estado: **aceptada con ajustes (Javier, 16/10/2026)**. Ajustes: la fosa y la trampilla abierta son verticales, así que los zombis **solo caen** por ellas (no trepan; daño de caída ×0,7) y vuelven a la calle por escaleras; la trampilla cerrada se aporrea y se rompe según el material; esconderse bajo tierra no debe ser seguro. Hoy los zombis viven solo en la calle (nivel 0): el subsuelo y las plantas altas son refugios seguros (a propósito, hasta esta fase).
 
 ## 1. Qué hay hoy
 - `ZombieSimulation` guarda posición 2D y un solo `FlowField` (un Dijkstra desde los objetivos; coste independiente del número de zombis). Se reconstruye si cambia `StructureRevision` (solo estructuras del nivel 0) o se mueven los objetivos.
@@ -13,7 +13,7 @@ Estado: **propuesta, pendiente de OK de Javier**. Hoy los zombis viven solo en l
    - Objetivos del campo del nivel *z*: los jugadores de *z* **y los conectores de *z* que llevan a un nivel con objetivos**, sembrados con el coste que tiene ese otro nivel desde el aterrizaje. Así un zombi de la calle "ve" la escalera o la fosa como camino hacia quien está abajo.
    - Se construyen en orden: primero los niveles con jugadores, luego los vecinos hacia fuera. En la práctica 1–3 campos.
    - Hay que añadir a `FlowField` la siembra con costes iniciales distintos de 0 (hoy todos los objetivos valen 0).
-3. **Conectores para zombis:** escaleras y fosas siempre; trampilla solo **abierta**. Una trampilla cerrada cuenta como pieza que romper, así que **es el cuello de botella** de un búnker (tiene vida y herramienta como cualquier pieza). Cambiar de nivel es instantáneo al pisar el conector, con un enfriamiento corto.
+3. **Conectores para zombis:** escaleras en los dos sentidos; **fosa y trampilla abierta solo hacia abajo, cayendo** (daño ×0,7, sin vuelta por ahí; en el campo de flujo son aristas dirigidas con coste de caída, así que prefieren escaleras). Trampilla cerrada: Una trampilla cerrada cuenta como pieza que romper, así que **es el cuello de botella** de un búnker (tiene vida y herramienta como cualquier pieza). Cambiar de nivel es instantáneo al pisar el conector, con un enfriamiento corto.
 4. **Los zombis no cavan** (ya decidido). Si el subsuelo no tiene conector con la calle, no pueden entrar. Si un suelo de planta alta se rompe, **un zombi encima cae** y se hace daño como un jugador.
 5. **Ruido con nivel:** el ruido se emite en un nivel con su radio completo y **a la mitad en los niveles contiguos** (ya se amortigua a la mitad para pasos bajo tierra). Cavar (radio 5–9) atrae a los de la calle: van al conector más barato hacia el sitio del ruido. Cuando se cava hacia abajo el aviso llega con la proyección en la calle.
 6. **Red:** la instantánea de zombis gana 1 byte de nivel (8 → 9 B, +12 %) y solo se envían los del **mismo nivel que el espectador** (menos tráfico, no más). Protocolo v5. La réplica del cliente guarda el nivel.
@@ -23,7 +23,7 @@ Estado: **propuesta, pendiente de OK de Javier**. Hoy los zombis viven solo en l
 ## 3. Trabajo, en pasos (un commit por paso)
 | Paso | Qué | Tests clave |
 | --- | --- | --- |
-| G1 | Nivel en la simulación y la red, línea de visión y golpes por nivel | un zombi no golpea a quien está en otro nivel; la instantánea lleva el nivel |
+| G1 ✔ | Nivel en la simulación y la red, línea de visión y golpes por nivel (hecho: protocolo v5, 9 B por zombi, solo se envían los del nivel del espectador) | un zombi no golpea a quien está en otro nivel; la instantánea lleva el nivel |
 | G2 | `FlowField` con siembra y un campo por nivel con portales | un zombi baja por una fosa hasta un jugador; sube por unas escaleras |
 | G3 | Ruido con nivel y cavar atrae | cavar a 6 casillas bajo la calle hace que un zombi vaya a la fosa |
 | G4 | Trampilla cerrada como cuello de botella; caída de zombis | zombis rompen la trampilla; el suelo roto los deja caer con daño |

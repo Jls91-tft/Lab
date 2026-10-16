@@ -59,7 +59,7 @@ namespace CepaCero.Unity.Prototype
         private static readonly ItemPile[] NoPiles = new ItemPile[0];
         private static readonly Int2[] NoCells = new Int2[0];
 
-        /// <summary>Level being shown (D-022): the street shows zombies, piles and containers; other levels only the players on them.</summary>
+        /// <summary>Level being shown (D-022): zombies and players of that level; piles and containers only exist on the street.</summary>
         public int ViewLevel { get; set; }
 
         private struct Walk
@@ -118,9 +118,9 @@ namespace CepaCero.Unity.Prototype
             float light = Mathf.Lerp(0.45f, 1f, ambient);
             ZombieSimulation zombies = session.Zombies;
             _used = 0;
-            for (int i = 0; ViewLevel == 0 && i < zombies.Capacity; i++)
+            for (int i = 0; i < zombies.Capacity; i++)
             {
-                if (zombies.IsAlive(i))
+                if (zombies.IsAlive(i) && zombies.GetLevel(i) == ViewLevel)
                 {
                     DrawZombie(i, zombies.GetPosition(i), zombies.GetTypeIndex(i), zombies.GetState(i), light);
                 }
@@ -138,7 +138,7 @@ namespace CepaCero.Unity.Prototype
         {
             float light = Mathf.Lerp(0.45f, 1f, ambient);
             _used = 0;
-            foreach (ushort id in ViewLevel == 0 ? client.Zombies.Ids : new ushort[0])
+            foreach (ushort id in client.Zombies.Ids)
             {
                 if (client.Zombies.TrySample(id, renderTime, out ZombieSnapshotEntry z) && z.Type < _catalog.Count)
                 {

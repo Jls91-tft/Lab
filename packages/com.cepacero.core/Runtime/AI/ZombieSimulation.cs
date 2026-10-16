@@ -44,6 +44,7 @@ namespace CepaCero.AI
             public byte Type;
             public Float2 Target;
             public float TimeLeft;
+            public sbyte Level;
         }
 
         private struct AcidPool
@@ -55,6 +56,7 @@ namespace CepaCero.AI
             public float TimeLeft;
             public float Dps;
             public float Accumulated;
+            public sbyte Level;
         }
 
         private struct Noise
@@ -74,6 +76,8 @@ namespace CepaCero.AI
         private readonly ushort[] _netId;
         private readonly byte[] _type;
         private readonly Float2[] _pos;
+        private readonly sbyte[] _level;
+        private IReadOnlyList<int> _playerLevels;
         private readonly int[] _health;
         private readonly ZombieState[] _state;
         private readonly float[] _cooldown;      // basic attack
@@ -139,6 +143,7 @@ namespace CepaCero.AI
             _netId = new ushort[capacity];
             _type = new byte[capacity];
             _pos = new Float2[capacity];
+            _level = new sbyte[capacity];
             _health = new int[capacity];
             _state = new ZombieState[capacity];
             _cooldown = new float[capacity];
@@ -237,6 +242,9 @@ namespace CepaCero.AI
 
         public Float2 GetPosition(int slot) => _pos[slot];
 
+        /// <summary>Level the zombie is on (D-022): 0 is the street.</summary>
+        public int GetLevel(int slot) => _level[slot];
+
         public int GetHealth(int slot) => _health[slot];
 
         public ZombieState GetState(int slot) => _state[slot];
@@ -249,14 +257,14 @@ namespace CepaCero.AI
         /// where the players are); zombies placed in the map during the day do not.
         /// Returns its slot, or −1 when full or the cell is blocked.
         /// </summary>
-        public int Spawn(byte typeIndex, Float2 position, int players = 1, bool aware = true)
+        public int Spawn(byte typeIndex, Float2 position, int players = 1, bool aware = true, int level = 0)
         {
             if (_free.Count == 0 || typeIndex >= _catalog.Count)
             {
                 return -1;
             }
             Int2 tile = position.Tile;
-            if (_blocks.IsSolid(tile.X, tile.Y) || GroundLayer.WalkCost(_ground.Get(tile.X, tile.Y)) == 0)
+            if (!_blocks.InLevels(level) || _blocks.IsSolidAt(tile.X, tile.Y, level) || (level == 0 && GroundLayer.WalkCost(_ground.Get(tile.X, tile.Y)) == 0))
             {
                 return -1;
             }
@@ -267,6 +275,7 @@ namespace CepaCero.AI
             _nextNetId = (ushort)(_nextNetId == ushort.MaxValue ? 1 : _nextNetId + 1);
             _type[slot] = typeIndex;
             _pos[slot] = position;
+            _level[slot] = (sbyte)level;
             _health[slot] = _catalog[typeIndex].HealthFor(players);
             _state[slot] = aware ? ZombieState.Idle : ZombieState.Unaware;
             _cooldown[slot] = 0f;
@@ -361,8 +370,15 @@ namespace CepaCero.AI
         }
 
         /// <summary>One simulation step. <paramref name="players"/> are the living players' positions.</summary>
-        public void Tick(float dt, IReadOnlyList<Float2> players)
+        public void Tick(float dt, IReadOnlyList<Float2> players) => Tick(dt, players, null);
+
+        /// <summary>
+        /// As above, with the level each player stands on (null: all on the street). A zombie only senses, chases and hurts
+        /// the players on its own level.
+        /// </summary>
+        public void Tick(float dt, IReadOnlyList<Float2> players, IReadOnlyList<int> levels)
         {
+            _playerLevels = levels;
             _time += dt;
             ProcessNoises();
             UpdateFlowField(players);
@@ -446,7 +462,7 @@ namespace CepaCero.AI
         }
 
         private bool Sees(int i, Float2 target, float distance, float range) =>
-            distance <= range && TileCollision.HasClearLine(_pos[i], target, _blocks);
+            distance <= range && TileCollision.HasClearLine(_pos[i], target, _blocks, _level[i]);
 
         // ------------------------------------------------------------ per zombie
 
@@ -468,7 +484,7 @@ namespace CepaCero.AI
                 return;
             }
 
-            int nearest = NearestPlayer(_pos[i], players, out float distance);
+            int nearest = NearestPlayer(i, players, out float distance);
             if (!_aware[i])
             {
                 if (nearest >= 0 && Sees(i, players[nearest], distance, def.detect_sight * SightMultiplier))
@@ -503,7 +519,7 @@ namespace CepaCero.AI
 
             if (_kind[type] != Kind.Spitter && nearest >= 0 && def.damage > 0
                 && distance <= def.attack_range + PlayerRadius + _radius[type]
-                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks))
+                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks, _level[i]))
             {
                 Face(i, players[nearest] - _pos[i]);
                 _state[i] = ZombieState.AttackingPlayer;
@@ -523,7 +539,12 @@ namespace CepaCero.AI
             Float2 pos = _pos[i];
             Int2 cell = pos.Tile;
             Float2 desired;
-            if (Field.GetDistance(cell.X, cell.Y) == 0 && nearest >= 0)
+            if (_level[i] != 0 && nearest < 0)
+            {
+                _state[i] = ZombieState.Idle;                       // no field for this level yet (D-022 phase G2)
+                return;
+            }
+            if (nearest >= 0 && (_level[i] != 0 || Field.GetDistance(cell.X, cell.Y) == 0))
             {
                 desired = players[nearest] - pos; // same tile as the player: go straight for them
             }
@@ -536,7 +557,7 @@ namespace CepaCero.AI
                     return;
                 }
                 Int2 next = cell + step;
-                if (_blocks.IsSolid(next.X, next.Y))
+                if (_blocks.IsSolidAt(next.X, next.Y, _level[i]))
                 {
                     AttackBlock(i, def, next);
                     return;
@@ -564,7 +585,7 @@ namespace CepaCero.AI
         private void Move(int i, Float2 velocity, float dt)
         {
             // Bodies are a bit smaller than their sprite so crowds flow through doors.
-            _pos[i] = TileCollision.Move(_pos[i], velocity * dt, _radius[_type[i]] * 0.8f, _blocks, _ground);
+            _pos[i] = TileCollision.Move(_pos[i], velocity * dt, _radius[_type[i]] * 0.8f, _blocks, _ground, _level[i]);
         }
 
         private float SprintSpeed(int i, ZombieDefinition def, float dt, bool seesPlayer)
@@ -695,6 +716,7 @@ namespace CepaCero.AI
                     ZombieId = _netId[i],
                     Type = _type[i],
                     Target = target,
+                    Level = _level[i],
                     TimeLeft = distance / ProjectileSpeed,
                 });
                 _cooldown[i] = def.attack_interval;
@@ -719,7 +741,7 @@ namespace CepaCero.AI
                 _events.Add(new ZombieEvent(ZombieEventType.AcidSplash, p.ZombieId, p.Target));
                 for (int pl = 0; pl < players.Count; pl++)
                 {
-                    if ((players[pl] - p.Target).LengthSquared <= DirectHitRadius * DirectHitRadius)
+                    if (PlayerLevel(pl) == p.Level && (players[pl] - p.Target).LengthSquared <= DirectHitRadius * DirectHitRadius)
                     {
                         _hits.Add(new PlayerHit(p.ZombieId, pl, def.damage, p.Type));
                     }
@@ -735,6 +757,7 @@ namespace CepaCero.AI
                         Radius = acid.radius,
                         TimeLeft = acid.seconds,
                         Dps = acid.dps,
+                        Level = p.Level,
                     });
                 }
             }
@@ -753,7 +776,7 @@ namespace CepaCero.AI
                     pool.Accumulated -= whole;
                     for (int pl = 0; pl < players.Count; pl++)
                     {
-                        if ((players[pl] - pool.Center).LengthSquared <= pool.Radius * pool.Radius)
+                        if (PlayerLevel(pl) == pool.Level && (players[pl] - pool.Center).LengthSquared <= pool.Radius * pool.Radius)
                         {
                             _hits.Add(new PlayerHit(pool.ZombieId, pl, whole, pool.Type));
                         }
@@ -795,12 +818,12 @@ namespace CepaCero.AI
                 return true;
             }
             if (slam != null && nearest >= 0 && _ability2[i] <= 0f && distance <= slam.radius
-                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks))
+                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks, _level[i]))
             {
                 for (int pl = 0; pl < players.Count; pl++)
                 {
-                    if ((players[pl] - _pos[i]).LengthSquared <= slam.radius * slam.radius
-                        && TileCollision.HasClearLine(_pos[i], players[pl], _blocks))
+                    if (PlayerLevel(pl) == _level[i] && (players[pl] - _pos[i]).LengthSquared <= slam.radius * slam.radius
+                        && TileCollision.HasClearLine(_pos[i], players[pl], _blocks, _level[i]))
                     {
                         _hits.Add(new PlayerHit(_netId[i], pl, (int)slam.damage, type));
                     }
@@ -817,7 +840,7 @@ namespace CepaCero.AI
             }
             Float2 direction = Float2.Zero;
             if (nearest >= 0 && distance >= 3f && distance <= ChargeDistance
-                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks))
+                && TileCollision.HasClearLine(_pos[i], players[nearest], _blocks, _level[i]))
             {
                 direction = players[nearest] - _pos[i];
             }
@@ -891,7 +914,7 @@ namespace CepaCero.AI
                 }
             }
             Float2 before = _pos[i];
-            _pos[i] = TileCollision.Move(before, _chargeDir[i] * step, r, _blocks, _ground);
+            _pos[i] = TileCollision.Move(before, _chargeDir[i] * step, r, _blocks, _ground, _level[i]);
             float moved = (_pos[i] - before).Length;
             _chargeLeft[i] -= step;
             if (moved < step * 0.5f)
@@ -903,7 +926,7 @@ namespace CepaCero.AI
                 for (int pl = 0; pl < players.Count; pl++)
                 {
                     float reach = _radius[type] + PlayerRadius;
-                    if ((players[pl] - _pos[i]).LengthSquared <= reach * reach)
+                    if (PlayerLevel(pl) == _level[i] && (players[pl] - _pos[i]).LengthSquared <= reach * reach)
                     {
                         _hits.Add(new PlayerHit(_netId[i], pl, def.damage, type));
                         _chargeHit[i] = true;
@@ -950,12 +973,22 @@ namespace CepaCero.AI
 
         // ---------------------------------------------------------------- shared
 
+        private readonly List<Int2> _wanted = new List<Int2>();
+
         private void UpdateFlowField(IReadOnlyList<Float2> players)
         {
-            bool targetsChanged = players.Count != _targets.Count;
-            for (int p = 0; !targetsChanged && p < players.Count; p++)
+            _wanted.Clear();
+            for (int p = 0; p < players.Count; p++)
             {
-                targetsChanged = players[p].Tile != _targets[p];
+                if (PlayerLevel(p) == 0)                       // the street's field only chases people on the street
+                {
+                    _wanted.Add(players[p].Tile);
+                }
+            }
+            bool targetsChanged = _wanted.Count != _targets.Count;
+            for (int p = 0; !targetsChanged && p < _wanted.Count; p++)
+            {
+                targetsChanged = _wanted[p] != _targets[p];
             }
             bool stale = Field.BuiltFromRevision != _blocks.StructureRevision || targetsChanged;
             if (!stale || _time - _lastRebuild < FlowRebuildInterval)
@@ -963,10 +996,7 @@ namespace CepaCero.AI
                 return;
             }
             _targets.Clear();
-            for (int p = 0; p < players.Count; p++)
-            {
-                _targets.Add(players[p].Tile);
-            }
+            _targets.AddRange(_wanted);
             Field.Build(_ground, _blocks, _policy, _targets, FlowMaxDistance);
             _lastRebuild = _time;
             FlowRebuilds++;
@@ -1045,12 +1075,19 @@ namespace CepaCero.AI
             _facing[i] = (byte)((sector % 16 + 16) % 16);
         }
 
-        private static int NearestPlayer(Float2 pos, IReadOnlyList<Float2> players, out float distance)
+        private int PlayerLevel(int p) => _playerLevels == null ? 0 : _playerLevels[p];
+
+        private int NearestPlayer(int zombie, IReadOnlyList<Float2> players, out float distance)
         {
             int best = -1;
             float bestD2 = float.PositiveInfinity;
+            Float2 pos = _pos[zombie];
             for (int p = 0; p < players.Count; p++)
             {
+                if (PlayerLevel(p) != _level[zombie])
+                {
+                    continue;
+                }
                 float d2 = (players[p] - pos).LengthSquared;
                 if (d2 < bestD2)
                 {

@@ -17,7 +17,7 @@ namespace CepaCero.Net.Protocol
     public static class Messages
     {
         /// <summary>Bump on any incompatible change; Welcome refuses mismatches.</summary>
-        public const ushort ProtocolVersion = 4;
+        public const ushort ProtocolVersion = 5;
 
         public const byte FlagSprinting = 1;
         public const byte FlagDowned = 2;
@@ -160,11 +160,11 @@ namespace CepaCero.Net.Protocol
             }
         }
 
-        public static int WriteZombieSnapshot(ByteWriter w, ZombieSimulation sim, uint tick, Float2 viewer, float radius, List<int> scratch)
+        public static int WriteZombieSnapshot(ByteWriter w, ZombieSimulation sim, uint tick, Float2 viewer, float radius, List<int> scratch, int viewerLevel = 0)
         {
             using (Begin(w, MessageType.ZombieSnapshot))
             {
-                return ZombieSnapshotCodec.Write(sim, tick, viewer, radius, w, scratch);
+                return ZombieSnapshotCodec.Write(sim, tick, viewer, radius, w, scratch, viewerLevel: viewerLevel);
             }
         }
 
