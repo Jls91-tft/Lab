@@ -149,6 +149,16 @@ namespace CepaCero.World
             Write(x, y, z, layer, typeId, Registry[typeId].MaxHealth, variant);
         }
 
+        /// <summary>Repaints or turns a piece in place: type and health stay as they are. Does nothing on air.</summary>
+        public void SetVariant(int x, int y, int z, BuildLayer layer, byte variant)
+        {
+            ushort type = GetTypeId(x, y, z, layer);
+            if (type != BlockRegistry.AirId)
+            {
+                Write(x, y, z, layer, type, GetHealth(x, y, z, layer), variant);
+            }
+        }
+
         /// <summary>
         /// Host-side validation for a player's "place block" intent. Distance, inventory and "is a player standing
         /// there" are checked by the caller. The block's own layer must be free in that cell.

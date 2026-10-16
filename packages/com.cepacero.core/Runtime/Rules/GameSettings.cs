@@ -90,6 +90,10 @@ namespace CepaCero.Rules
         /// <summary>Stamina regeneration with an empty water bar, as a share of the normal rate.</summary>
         public float ThirstyStaminaRegenFactor = 0.5f;
 
+        // ---- Building (D-022) -----------------------------------------------
+        /// <summary>Price of building pieces; refunds follow the same share.</summary>
+        public BuildCostMode BuildCost = BuildCostMode.Normal;
+
         public void Validate()
         {
             if (TickRate < 1 || TickRate > 120)

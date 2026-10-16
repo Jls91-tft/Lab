@@ -11,6 +11,12 @@ namespace CepaCero.Net
         MeleeAttack = 4,
         RangedAttack = 5,
 
+        /// <summary>Takes a construction piece down and refunds part of its cost (hammer, or a click with material).</summary>
+        Dismantle = 6,
+
+        /// <summary>Takes back the player's last fresh placement and refunds all of it (Ctrl+Z).</summary>
+        UndoPlace = 7,
+
         // Inventory actions (HostItemRules). X/Y/Arg meaning in each factory below.
         SelectHotbar = 10,
         MoveToHotbar = 11,
@@ -53,6 +59,12 @@ namespace CepaCero.Net
 
         public static PlayerIntent Place(int x, int y, ushort blockType, byte variant = 0, int z = 0) =>
             new PlayerIntent { Type = IntentType.PlaceBlock, X = (ushort)x, Y = (ushort)y, Arg = blockType, Variant = variant, Z = (sbyte)z };
+
+        /// <summary>layer: 0 = whatever is on top, otherwise <see cref="CepaCero.World.BuildLayer"/> + 1.</summary>
+        public static PlayerIntent Dismantle(int x, int y, int layer = 0) =>
+            new PlayerIntent { Type = IntentType.Dismantle, X = (ushort)x, Y = (ushort)y, Arg = (ushort)layer };
+
+        public static PlayerIntent Undo() => new PlayerIntent { Type = IntentType.UndoPlace };
 
         public static PlayerIntent Hit(int x, int y) => new PlayerIntent { Type = IntentType.HitBlock, X = (ushort)x, Y = (ushort)y };
 

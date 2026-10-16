@@ -84,6 +84,7 @@ namespace CepaCero.Core
             if (data.Construction?.rules != null)
             {
                 Rules.WrongToolFactor = data.Construction.rules.wrong_tool_factor;
+                Rules.DismantleRefund = data.Construction.rules.dismantle_refund;
             }
             _rng = new DeterministicRandom(settings.Seed);
             _dt = 1f / settings.TickRate;
@@ -103,6 +104,7 @@ namespace CepaCero.Core
                         ? TryPay(_inventories[p], bt.Build.Cost)                  // pieces of the construction data (D-022)
                         : Recipes.TryPayForBlock(_inventories[p], bt.Key);
                 };
+                Rules.RefundBlock = RefundPiece;
                 if (buildings != null && data.Loot != null)
                 {
                     Containers.PlaceInBuildings(buildings, blocks, ground, data.Loot, _rng);
@@ -118,19 +120,56 @@ namespace CepaCero.Core
         /// <summary>Checks and pays a cost from an inventory in one go: nothing is taken if any item is missing.</summary>
         private bool TryPay(Inventory inventory, IReadOnlyList<BlockCostItem> cost)
         {
+            if (Settings.BuildCost == BuildCostMode.Free)
+            {
+                return true;
+            }
             ItemCatalog items = Data.Items;
             foreach (BlockCostItem c in cost)
             {
-                if (!items.TryGetIndex(c.Item, out ushort index) || inventory.Count(index) < c.Count)
+                if (!items.TryGetIndex(c.Item, out ushort index) || inventory.Count(index) < PricedCount(c.Count))
                 {
                     return false;
                 }
             }
             foreach (BlockCostItem c in cost)
             {
-                inventory.Remove(items.IndexOf(c.Item), c.Count);
+                inventory.Remove(items.IndexOf(c.Item), PricedCount(c.Count));
             }
             return true;
+        }
+
+        private int PricedCount(int count) => Settings.BuildCost == BuildCostMode.Cheap ? (count + 1) / 2 : count;
+
+        /// <summary>Gives a share of a piece's cost back (dismantling, replacing, undoing); what does not fit in the bag drops at the player's feet.</summary>
+        private void RefundPiece(int player, BlockType type, float share)
+        {
+            if (Settings.BuildCost == BuildCostMode.Free || !Data.HasItems)
+            {
+                return;
+            }
+            IReadOnlyList<BlockCostItem> cost = type.Build?.Cost;
+            if ((cost == null || cost.Count == 0) && type.ToggleTo != 0)
+            {
+                cost = Blocks.Registry[type.ToggleTo].Build?.Cost;                       // an open door costs what the closed one does
+            }
+            if (cost == null)
+            {
+                return;
+            }
+            foreach (BlockCostItem c in cost)
+            {
+                int n = (int)Math.Round(PricedCount(c.Count) * share, MidpointRounding.AwayFromZero);
+                if (n <= 0 || !Data.Items.TryGetIndex(c.Item, out ushort index))
+                {
+                    continue;
+                }
+                int added = _inventories[player].Add(index, n);
+                if (added < n)
+                {
+                    DropPile(_players[player].Position, new[] { new ItemStack(index, (ushort)(n - added)) });
+                }
+            }
         }
 
         public GameSettings Settings { get; }

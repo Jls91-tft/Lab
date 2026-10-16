@@ -296,7 +296,7 @@ namespace CepaCero.Tests.World
             Assert.That(map.Blocks.GetBlock(6, 6, 0, BuildLayer.Floor).Key, Is.EqualTo("floor_wood"));
             Assert.That(map.Blocks.GetBlock(6, 6).Key, Is.EqualTo("wall_wood"));
             Assert.That(map.Blocks.GetVariant(6, 6, 0, BuildLayer.Structure), Is.EqualTo(variant));
-            Assert.That(Do(s, p, PlayerIntent.Place(6, 6, Id("wall_wood"))), Is.EqualTo(IntentResult.Occupied));
+            Assert.That(Do(s, p, PlayerIntent.Place(6, 6, Id("wall_wood"), variant)), Is.EqualTo(IntentResult.Occupied), "the same piece again");
             Assert.That(Do(s, p, PlayerIntent.Place(6, 7, Id("wall_wood"), 0, z: 1)), Is.EqualTo(IntentResult.InvalidTarget),
                 "players only act on their own level until they can climb");
         }

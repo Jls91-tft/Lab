@@ -36,6 +36,10 @@ namespace CepaCero.Net
         /// <summary>Share of the damage a tool does to a material it is not meant for (D-022).</summary>
         public float WrongToolFactor { get; set; } = 0.25f;
 
+        /// <summary>Share of a piece's cost that comes back when it is dismantled or replaced (D-022).</summary>
+        public float DismantleRefund { get; set; } = 0.5f;
+
+        private const int HistorySize = 16;
         private const float BodyRadius = 0.4f;
         private const float DefaultHitNoise = 5f;
         private const float RayStep = 0.1f;
@@ -47,6 +51,8 @@ namespace CepaCero.Net
         private readonly HashSet<ushort> _placeable = new HashSet<ushort>();
         private readonly float[] _nextActionTime;
         private readonly List<PlayerDamage> _playerDamage = new List<PlayerDamage>();
+        private readonly PlacedPiece[][] _history;
+        private readonly int[] _historyCount;
 
         public HostIntentRules(BlockWorld blocks, GroundLayer ground, ZombieSimulation zombies, PlayerSettings settings,
             int maxPlayers = 4)
@@ -56,6 +62,12 @@ namespace CepaCero.Net
             _zombies = zombies;
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
             _nextActionTime = new float[maxPlayers];
+            _history = new PlacedPiece[maxPlayers][];
+            _historyCount = new int[maxPlayers];
+            for (int i = 0; i < maxPlayers; i++)
+            {
+                _history[i] = new PlacedPiece[HistorySize];
+            }
             foreach (string key in new[] { "wood_wall", "metal_wall", "concrete_wall", "door", "fence", "workbench", "chest", "spike_trap" })
             {
                 if (blocks.Registry.TryGet(key, out BlockType type))
@@ -78,6 +90,9 @@ namespace CepaCero.Net
         /// The match wires it to <see cref="RecipeBook.TryPayForBlock"/>; it pays when it returns true.
         /// </summary>
         public Func<int, ushort, bool> CanAffordBlock { get; set; } = (player, type) => true;
+
+        /// <summary>Gives back part of a piece's cost to a player (dismantling, replacing, undoing). Arguments: player, block, share 0..1.</summary>
+        public Action<int, BlockType, float> RefundBlock { get; set; } = (player, type, share) => { };
 
         /// <summary>Players' inventories, for equipped weapons, tools and ammo. Null: everyone uses bare hands.</summary>
         public IReadOnlyList<Inventory> Inventories { get; set; }
@@ -129,6 +144,12 @@ namespace CepaCero.Net
                 case IntentType.HitBlock:
                     result = HitBlock(playerIndex, player, intent);
                     break;
+                case IntentType.Dismantle:
+                    result = Dismantle(playerIndex, player, intent);
+                    break;
+                case IntentType.UndoPlace:
+                    result = Undo(playerIndex, player);
+                    break;
                 case IntentType.ToggleDoor:
                     result = ToggleDoor(player, intent, players);
                     break;
@@ -172,15 +193,31 @@ namespace CepaCero.Net
                 return IntentResult.OutOfReach;
             }
             BlockType placing = _blocks.Registry[intent.Arg];
-            if (_blocks.GetTypeId(x, y, 0, placing.Layer) != BlockRegistry.AirId)
+            byte variant = BlockVariant.Sanitize(intent.Variant, placing);
+            ushort existing = _blocks.GetTypeId(x, y, 0, placing.Layer);
+            BlockType old = existing == BlockRegistry.AirId ? null : _blocks.Registry[existing];
+            if (old != null)
             {
-                return IntentResult.Occupied;
+                if (old.Build == null)
+                {
+                    return IntentResult.Occupied;                           // map buildings and legacy blocks are not replaced
+                }
+                if (existing == intent.Arg)
+                {
+                    if (_blocks.GetVariant(x, y, 0, placing.Layer) == variant)
+                    {
+                        return IntentResult.Occupied;
+                    }
+                    _blocks.SetVariant(x, y, 0, placing.Layer, variant);    // same piece, other colour or turn: free, health stays
+                    LastNoise = 1f;
+                    return IntentResult.Ok;
+                }
             }
             if (!GroundLayer.IsBuildable(_ground.Get(x, y)))
             {
                 return IntentResult.InvalidTarget;
             }
-            if (placing.IsSolid && IsOccupiedByBody(x, y, players))
+            if (placing.IsSolid && (old == null || !old.IsSolid) && IsOccupiedByBody(x, y, players))
             {
                 return IntentResult.Occupied;
             }
@@ -189,9 +226,102 @@ namespace CepaCero.Net
             {
                 return IntentResult.MissingIngredients;
             }
-            _blocks.TryPlace(x, y, 0, intent.Arg, intent.Variant, _ground);
+            if (old != null)
+            {
+                RefundBlock(playerIndex, old, DismantleRefund);             // replacing in place: the old piece goes back to the bag
+                _blocks.SetBlock(x, y, 0, placing.Layer, intent.Arg, variant);
+            }
+            else
+            {
+                _blocks.TryPlace(x, y, 0, intent.Arg, variant, _ground);
+                Remember(playerIndex, x, y, placing.Layer, intent.Arg);
+            }
             LastNoise = 3f;
             return IntentResult.Ok;
+        }
+
+        /// <summary>The piece on top of a cell: structure, then object, floor and roof.</summary>
+        private bool TopPiece(int x, int y, int layerArg, out BuildLayer layer)
+        {
+            if (layerArg > 0)
+            {
+                layer = (BuildLayer)(layerArg - 1);
+                return _blocks.GetTypeId(x, y, 0, layer) != BlockRegistry.AirId;
+            }
+            foreach (BuildLayer l in TopOrder)
+            {
+                if (_blocks.GetTypeId(x, y, 0, l) != BlockRegistry.AirId)
+                {
+                    layer = l;
+                    return true;
+                }
+            }
+            layer = BuildLayer.Structure;
+            return false;
+        }
+
+        private static readonly BuildLayer[] TopOrder = { BuildLayer.Structure, BuildLayer.Object, BuildLayer.Floor, BuildLayer.Roof };
+
+        private IntentResult Dismantle(int playerIndex, PlayerState player, in PlayerIntent intent)
+        {
+            if (!_blocks.InBounds(intent.X, intent.Y) || intent.Arg > 4 || !TopPiece(intent.X, intent.Y, intent.Arg, out BuildLayer layer))
+            {
+                return IntentResult.InvalidTarget;
+            }
+            BlockType type = _blocks.GetBlock(intent.X, intent.Y, 0, layer);
+            if (type.Build == null)
+            {
+                return IntentResult.InvalidTarget;                          // only what players built
+            }
+            if (!InReach(player, intent.X, intent.Y))
+            {
+                return IntentResult.OutOfReach;
+            }
+            RefundBlock(playerIndex, type, DismantleRefund);
+            _blocks.SetBlock(intent.X, intent.Y, 0, layer, BlockRegistry.AirId);
+            LastNoise = type.Build.Noise > 0f ? type.Build.Noise * 0.5f : DefaultHitNoise * 0.5f;
+            return IntentResult.Ok;
+        }
+
+        private IntentResult Undo(int playerIndex, PlayerState player)
+        {
+            while (_historyCount[playerIndex] > 0)
+            {
+                PlacedPiece last = _history[playerIndex][--_historyCount[playerIndex]];
+                if (_blocks.GetTypeId(last.X, last.Y, 0, last.Layer) != last.Type)
+                {
+                    continue;                                               // already broken or replaced: look further back
+                }
+                if (!InReach(player, last.X, last.Y))
+                {
+                    _historyCount[playerIndex]++;                           // keep it: walk back to it
+                    return IntentResult.OutOfReach;
+                }
+                RefundBlock(playerIndex, _blocks.Registry[last.Type], 1f);
+                _blocks.SetBlock(last.X, last.Y, 0, last.Layer, BlockRegistry.AirId);
+                LastNoise = 1f;
+                return IntentResult.Ok;
+            }
+            return IntentResult.InvalidTarget;
+        }
+
+        private void Remember(int player, int x, int y, BuildLayer layer, ushort type)
+        {
+            PlacedPiece[] ring = _history[player];
+            if (_historyCount[player] == ring.Length)
+            {
+                Array.Copy(ring, 1, ring, 0, ring.Length - 1);              // forget the oldest
+                _historyCount[player]--;
+            }
+            ring[_historyCount[player]++] = new PlacedPiece { X = x, Y = y, Layer = layer, Type = type };
+        }
+
+        private struct PlacedPiece
+        {
+            public int X;
+            public int Y;
+            public BuildLayer Layer;
+            public ushort Type;
         }
 
         private IntentResult HitBlock(int playerIndex, PlayerState player, in PlayerIntent intent)

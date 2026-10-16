@@ -28,7 +28,7 @@ namespace CepaCero.Items
             _hotbar = new ItemStack[hotbarSlots];
         }
 
-        public static Inventory ForPlayer(ItemCatalog catalog) => new Inventory(catalog, 20, 5);
+        public static Inventory ForPlayer(ItemCatalog catalog) => new Inventory(catalog, 27, 9);
 
         public ItemCatalog Catalog => _catalog;
 
