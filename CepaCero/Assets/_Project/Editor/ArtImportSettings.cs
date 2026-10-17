@@ -9,7 +9,8 @@ namespace CepaCero.EditorTools
     /// </summary>
     public sealed class ArtImportSettings : AssetPostprocessor
     {
-        private const string ArtFolder = "Assets/Resources/Cepa/Art/";
+        // Covers Art/ (artgen, 16 px) and Art32/ (spritegen, 32 px, D-021).
+        private const string ArtFolder = "Assets/Resources/Cepa/Art";
 
         private void OnPreprocessTexture()
         {
