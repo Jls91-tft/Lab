@@ -13,7 +13,7 @@ namespace CepaCero.Unity.Prototype
         public static readonly string[] Verbs =
         {
             "state", "select", "aim", "click", "hold", "rclick", "mclick", "drag", "key", "move", "walk", "wait",
-            "screenshot", "give", "spawn", "time",
+            "screenshot", "give", "spawn", "time", "clear",
         };
 
         public static readonly string[] Keys =
@@ -105,7 +105,9 @@ namespace CepaCero.Unity.Prototype
                 case "spawn":
                     return (Count == 3 || (Count == 4 && IsInt(3))) && IsInt(1) && IsInt(2) ? null : "spawn ZOMBIE_ID X Y [LEVEL]";
                 case "time":
-                    return Count == 1 && (Args[0] == "day" || Args[0] == "night") ? null : "time day|night";
+                    return Count == 1 && (Args[0] == "day" || Args[0] == "night" || Args[0] == "dawn") ? null : "time day|night|dawn";
+                case "clear":
+                    return Count == 0 ? null : "clear takes no arguments";
                 default:
                     return "unknown verb; known: " + string.Join(", ", Verbs);
             }

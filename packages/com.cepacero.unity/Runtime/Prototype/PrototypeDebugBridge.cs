@@ -302,8 +302,11 @@ namespace CepaCero.Unity.Prototype
                     Spawn(c);
                     break;
                 case "time":
-                    SetTime(c.Args[0] == "night");
+                    SetTime(c.Args[0]);
                     Settle("time " + c.Args[0]);
+                    break;
+                case "clear":
+                    Settle($"cleared {ClearZombies()} zombies");
                     break;
                 default:
                     Fail("unknown verb " + c.Verb);
@@ -512,13 +515,32 @@ namespace CepaCero.Unity.Prototype
             Settle($"spawned {c.Args[0]} at {c.Int(1)},{c.Int(2)} level {level}");
         }
 
-        private void SetTime(bool night)
+        /// <summary>Jumps to the start of the day, the night or the dawn of the current cycle (dawn respawns the dead).</summary>
+        private void SetTime(string when)
         {
             var s = _host.HostSession.Settings;
             int rate = _host.HostSession.Clock.TickRate;
             long cycle = (long)(s.DaySeconds + s.DuskSeconds + s.NightSeconds + s.DawnSeconds) * rate;
             long start = (_host.HostSession.Clock.Tick / cycle) * cycle;
-            _host.HostSession.Clock.SetTick(night ? start + (long)(s.DaySeconds + s.DuskSeconds) * rate : start);
+            long offset = when == "night" ? (long)(s.DaySeconds + s.DuskSeconds) * rate
+                : when == "dawn" ? (long)(s.DaySeconds + s.DuskSeconds + s.NightSeconds) * rate
+                : 0L;
+            _host.HostSession.Clock.SetTick(start + offset);
+        }
+
+        private int ClearZombies()
+        {
+            ZombieSimulation zombies = _host.HostSession.Zombies;
+            int killed = 0;
+            for (int i = 0; i < zombies.Capacity; i++)
+            {
+                if (zombies.IsAlive(i))
+                {
+                    zombies.Damage(i, int.MaxValue / 2, "debug");
+                    killed++;
+                }
+            }
+            return killed;
         }
 
         private void AimAt(in DebugCommand c)
