@@ -90,6 +90,7 @@ tools/osm2tiles/cache/
 # Vista previa del atlas de artgen (el atlas en sí sí se versiona)
 tools/artgen/out/
 tools/spritegen/out/
+tools/gamebridge/out/
 
 # ---------- Sistema operativo ----------
 .DS_Store

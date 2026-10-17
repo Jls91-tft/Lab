@@ -37,8 +37,9 @@ namespace UnityEngine
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
     public static class Mathf { public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; public static int Clamp(int v, int a, int b) => v; }
-    public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; }
-    public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} }
+    public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; public static float fixedTime; }
+    public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} public static bool isDebugBuild => true; }
+    public static class ScreenCapture { public static void CaptureScreenshot(string path) {} }
     public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; }
     public static class JsonUtility { public static T FromJson<T>(string s) => default; }
     public static class Screen { public static int width, height; }

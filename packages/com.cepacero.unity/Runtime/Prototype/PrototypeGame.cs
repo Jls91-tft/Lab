@@ -28,7 +28,7 @@ namespace CepaCero.Unity.Prototype
     ///   the view draws only the client replica, exactly what FishNet will carry.
     /// Not the real game: placeholder art, no real network, prototype HUD.
     /// </summary>
-    public sealed class PrototypeGame : MonoBehaviour
+    public sealed class PrototypeGame : MonoBehaviour, IPrototypeDebugHost
     {
         private const string SaveFile = "prototype.sav";
 
@@ -47,6 +47,11 @@ namespace CepaCero.Unity.Prototype
 
         [Tooltip("Play as a remote client of an in-process host: everything goes through the network protocol.")]
         [SerializeField] private bool _playAsRemoteClient;
+
+        [Tooltip("Debug bridge port on localhost (D-023, tools/gamebridge). 0 turns it off. Editor and development builds only.")]
+        [SerializeField] private int _debugBridgePort = 7777;
+
+        private PrototypeDebugBridge _bridge;
 
         private readonly PrototypeInput _input = new PrototypeInput();
         private readonly PlayerSettings _playerSettings = new PlayerSettings();
@@ -93,6 +98,7 @@ namespace CepaCero.Unity.Prototype
                 _data = RepoData.LoadGameData();
                 _builder = new PrototypeBuilder(new BuildPalette(_data.Construction));
                 StartMatch(loadSave: false);
+                _bridge = PrototypeDebugBridge.TryStart(this, _debugBridgePort, RepoData.PathOf("tools/gamebridge/out"));
             }
             catch (Exception e)
             {
@@ -177,6 +183,13 @@ namespace CepaCero.Unity.Prototype
         private void Update()
         {
             _input.Poll(_camera);
+            _bridge?.ApplyContinuous(_input);
+        }
+
+        private void OnDestroy()
+        {
+            _bridge?.Dispose();
+            _bridge = null;
         }
 
         private void FixedUpdate()
@@ -200,6 +213,7 @@ namespace CepaCero.Unity.Prototype
             {
                 _session.SetInput(_me, PlayerInput.FromVector(_input.Move, _input.Sprint));
             }
+            _bridge?.Step(_input); // debug bridge (D-023): its presses go in before the game reads them
             QueueActions();
             _input.ClearPresses();
 
@@ -330,6 +344,18 @@ namespace CepaCero.Unity.Prototype
         }
 
         private Inventory MyInventory => Remote ? _client.MyInventory : _session.Inventories[_me];
+
+        // ------------------------------------------------------- debug bridge host (D-023)
+
+        PlayerState IPrototypeDebugHost.Me => MyState;
+        int IPrototypeDebugHost.MeIndex => _me;
+        BlockWorld IPrototypeDebugHost.ViewBlocks => _viewBlocks;
+        GroundLayer IPrototypeDebugHost.ViewGround => _viewGround;
+        Inventory IPrototypeDebugHost.MyInventory => MyInventory;
+        DayNightCycle IPrototypeDebugHost.ViewClock => Remote ? _client.Clock : _session.Clock;
+        GameSession IPrototypeDebugHost.HostSession => _session;
+        PlayerSettings IPrototypeDebugHost.PlayerSettings => _playerSettings;
+        bool IPrototypeDebugHost.IsRemoteClient => Remote;
 
         private void Send(PlayerIntent intent)
         {
@@ -853,6 +879,7 @@ namespace CepaCero.Unity.Prototype
         {
             _message = text;
             _messageUntil = Time.time + 4f;
+            _bridge?.Log(text);
             Debug.Log($"Cepa Cero: {text}");
         }
 

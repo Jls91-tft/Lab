@@ -32,6 +32,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - **Código de Unity** en `packages/com.cepacero.unity` (D-014; incluye `PrototypeGame`, prototipo de depuración);
   `CepaCero/Assets/_Project/` solo contenido. Aún no compilado contra Unity real.
 - **Hambre y sed** duras por defecto, configurables Off/Soft/Hard (D-015, `SurvivalRules`).
+- **Puente de depuración** (D-023): `PrototypeDebugBridge` en `localhost:7777`, solo editor y builds de desarrollo; las órdenes se convierten en la misma entrada que el teclado.
 
 **Pendientes**: tamaño de tile en píxeles (16/32) · resolución base · 4 u 8 direcciones · paleta · versión exacta de Unity (propuesta en
 `docs/setup-unity.md`) · nombre definitivo.
@@ -84,6 +85,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - `tools/artgen/`: iconos, interfaz y cursor a 16 px (D-018) y el atlas actual del juego (`python -m artgen`).
 - `tools/spritegen/`: arte del mundo a 32 px por código (D-021): suelos, bloques, decoración, jugadores y zombis. `python -m spritegen --preview`.
 - `tools/simbench/`: `dotnet run -c Release --project tools/simbench -- --zombies 100`. Prueba de estrés sin Unity.
+- `tools/gamebridge/`: jugar el prototipo desde la terminal (D-023): con Play activo, `tools/gamebridge/play.sh "select 7; walk 120 85; key down; state"`. Órdenes y respuesta JSON en su `README.md`. Claude lo usa para probar el juego y ver capturas.
 
 ## docs/
 | Fichero | Para qué |

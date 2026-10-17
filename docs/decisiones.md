@@ -25,6 +25,12 @@ antigua como **Sustituida por D-XXX**.
 
 ---
 
+## D-023 · 17/10/2026 · Puente de depuración: Claude juega el prototipo por `localhost`
+- **Estado:** Aceptada (OK de Javier el 17/10/2026).
+- **Decisión:** `PrototypeDebugBridge` (solo en el editor y en builds de desarrollo, `Debug.isDebugBuild`) escucha órdenes de texto en `http://localhost:7777/`. Las órdenes **escriben en `PrototypeInput`** las mismas pulsaciones que el teclado y el ratón (mover, apuntar, clic, mantener, arrastrar, Av Pág, Q/E, Ctrl+C…), así que recorren exactamente el camino de un jugador y el anfitrión las valida igual. Además: `walk` (camina por un camino calculado con la misma regla de colisión), `state` (JSON con jugador, mano, mochila, celdas cercanas, zombis y mensajes), `screenshot`, y trucos de depuración separados (`give`, `spawn`, `time`). Cuando no hay órdenes, no toca la entrada. Detalle y lista de órdenes en `tools/gamebridge/README.md`.
+- **Motivo:** que Claude pueda probar el juego, ver capturas y comprobar resultados sin depender de que Javier lo maneje; sirve también para recorridos de regresión guionizados.
+- **Seguridad:** solo acepta conexiones de la propia máquina y nunca existe en una build de publicación. Sin dependencias (usa `HttpListener` de .NET).
+
 ## D-022 · 16/10/2026 · Construcción avanzada: pisos y subsuelo, 14+ materiales, pintura, planos y construcción con la mano
 - **Estado:** Aceptada (OK de Javier el 16/10/2026: orden de fases, niveles de −3 a +3, ruido de cavar y construcción "como Minecraft"). Amplía D-020 y **sustituye** su modo construcción con **B** (paso 1) por el modelo de abajo. Detalle en `docs/propuesta-construccion-avanzada.md`.
 - **Decisión:**
