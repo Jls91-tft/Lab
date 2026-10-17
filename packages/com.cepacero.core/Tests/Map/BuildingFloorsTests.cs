@@ -149,10 +149,24 @@ namespace CepaCero.Tests.Map
         }
 
         [Test]
-        public void ARoofOnlyAppearsWhenThereIsAnUpperStorey()
+        public void EveryBuildingWithAnInteriorHasARoofSoNothingIsSeenFromOutside()
         {
-            MapImportResult map = Import(Map(1, 1, "tile"));
-            Assert.That(map.Blocks.GetBlock(8, 7, 0, BuildLayer.Roof).IsAir, Is.True);
+            // D-024: a house is not seen from the street until you go in, whatever its height.
+            MapImportResult basementOnly = Import(Map(1, 1, "tile"));
+            Assert.That(basementOnly.Blocks.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "a basement does not make a roof necessary");
+
+            MapImportResult singleStorey = Import(Map(1, 0, "tile"));
+            BlockWorld w = singleStorey.Blocks;
+            Assert.That(w.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "over the interior");
+            Assert.That(w.GetBlock(5, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "and over its walls");
+            Assert.That(w.GetBlock(2, 2, 0, BuildLayer.Roof).IsAir, Is.True, "but not over the street");
+        }
+
+        [Test]
+        public void ABuildingWithNoRoofKindGetsTheCommonTileRoof()
+        {
+            MapImportResult map = Import(Map(1, 0, ""));
+            Assert.That(map.Blocks.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"));
         }
 
         [Test]

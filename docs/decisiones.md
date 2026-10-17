@@ -25,6 +25,22 @@ antigua como **Sustituida por D-XXX**.
 
 ---
 
+## D-024 · 17/10/2026 · Salto visual: arte de 32 px, tejados, luz real y sensación de juego (referencias: Core Keeper y Project Zomboid)
+- **Estado:** Aceptada (OK de Javier el 17/10/2026: "dale a todo lo que has dicho", más "que no se pueda ver el interior de las casas sin entrar" y "Core Keeper y Project Zomboid son perfectos"). Concreta D-021 y sustituye a D-019 en el mundo.
+- **Problema:** el prototipo se veía "plano, básico y feo": todo a la misma luz, sin jerarquía visual, suelos ruidosos, sin respuesta a los golpes y con la interfaz de depuración.
+- **Decisión** (por orden de trabajo; el estado de cada punto está en `docs/guia-arte.md`):
+  1. **Mundo con el arte de 32 px de `tools/spritegen`** (D-021), resolución base **960×540**. Los iconos y la interfaz siguen a 16 px (`tools/artgen`) con su propia escala. Muros que se unen, fachadas y remates, escaleras con orientación, subsuelo con la pared cortada.
+  2. **Tejados en todos los edificios con interior**, también los de una planta: desde fuera son opacos y **no se ve el interior**; al entrar se desvanece **solo el tejado de tu casa** (como Project Zomboid). Lo que hay bajo un tejado cerrado (muebles, zombis, objetos) no se dibuja.
+  3. **Iluminación por casillas con sombras** (calculada por código sobre el mundo, sin URP 2D lights): noche oscura de verdad, linterna del jugador, farolas, ventanas encendidas, hogueras y antorchas; los muros dan sombra.
+  4. **Jerarquía visual**: entorno apagado y de menor contraste; jugador, zombis y objetos interactivos más contrastados y con contorno.
+  5. **Sensación de golpe**: destellos, sangre, polvo al andar, sacudida de cámara.
+  6. **Interfaz compacta**: mochila con tecla, mensajes breves y fuente pixel.
+  7. **Sonido** de ambiente y de acciones.
+  8. **Guía de arte** (`docs/guia-arte.md`) como referencia de todo lo anterior.
+- **Motivo:** la luz y la jerarquía importan más que los sprites (Core Keeper se apoya en la oscuridad y en pocos colores con mucho contraste de valor); Project Zomboid resuelve la lectura de los edificios con tejados que se abren al entrar. El arte generado por código tiene techo: para un aspecto propio y memorable hará falta un artista, y se decidirá aparte.
+- **Cambios en el núcleo:** `BuildingFloors` pone tejado a todo edificio con interior (antes solo a los de varias plantas); tests actualizados.
+- **Coste:** la luz por casillas es propia (más trabajo que usar luces 2D de URP) pero encaja con el mundo por casillas, no depende de sombras por geometría y se puede probar.
+
 ## D-023 · 17/10/2026 · Puente de depuración: Claude juega el prototipo por `localhost`
 - **Estado:** Aceptada (OK de Javier el 17/10/2026).
 - **Decisión:** `PrototypeDebugBridge` (solo en el editor y en builds de desarrollo, `Debug.isDebugBuild`) escucha órdenes de texto en `http://localhost:7777/`. Las órdenes **escriben en `PrototypeInput`** las mismas pulsaciones que el teclado y el ratón (mover, apuntar, clic, mantener, arrastrar, Av Pág, Q/E, Ctrl+C…), así que recorren exactamente el camino de un jugador y el anfitrión las valida igual. Además: `walk` (camina por un camino calculado con la misma regla de colisión), `state` (JSON con jugador, mano, mochila, celdas cercanas, zombis y mensajes), `screenshot`, y trucos de depuración separados (`give`, `spawn`, `time`). Cuando no hay órdenes, no toca la entrada. Detalle y lista de órdenes en `tools/gamebridge/README.md`.

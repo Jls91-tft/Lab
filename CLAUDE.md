@@ -20,6 +20,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - Unity 6000.3.26f1 (LTS) + C#, plantilla 2D URP (D-016). Proyecto Unity en la subcarpeta `CepaCero/`.
 - Paquetes de Unity alineados con el editor: collab-proxy 2.13.6 e Input System 1.20.0 (D-017).
 - Arte: tile 16 px, base 640×360, 4 direcciones (D-018). El mundo sale de las piezas CC0 de Kenney en `art/vendor/kenney/` (fuera de LFS), transformadas por `tools/artgen/` con un filtro propio; personajes, zombis, iconos e interfaz se dibujan por código; la decoración se coloca con `DecorPlanner` (solo visual) (D-019). Todo va al atlas `CepaCero/Assets/Resources/Cepa/Art/`: no editar esos PNG a mano. **D-021 (16/10)** pasa el mundo a 32 px con `tools/spritegen/` (mismos nombres de sprite, `ppu` 32, atlas en `Art32/`); falta integrarlo en Unity; resolución base decidida: 960×540. `artgen` sigue para iconos e interfaz.
+- **Salto visual (D-024, `docs/guia-arte.md`)**: mundo con el arte de 32 px de `tools/spritegen` a 960×540 (interfaz a 16 px, escala propia); tejados en todo edificio con interior (opacos desde fuera, se abre solo el de tu casa); luz por casillas con sombras; jerarquía de valor; golpes y partículas; interfaz compacta; sonido. Referencias: Core Keeper y Project Zomboid.
 - Construcción (D-020, detalle en `docs/propuesta-construccion.md`): tres capas por casilla (suelo, estructura, objeto), ventanas y barricadas sobre los edificios reales, cama como reaparición, techos solo visuales. Orden: modo construcción → capas → ventanas/barricadas → objetos con función y luz → autotiling, techos y grietas.
 - Cooperativo anfitrión + Steam P2P, sin servidores propios. **Autoridad del anfitrión.**
 - Git + Git LFS para binarios. Textos fuera del código (ES + EN).
@@ -93,6 +94,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 | `docs/cepa-cero-contexto-proyecto.md` | Traspaso original: mercado, posicionamiento, arte, Steam |
 | `docs/GDD.md` | Diseño del juego en una página |
 | `docs/arquitectura.md` | Capas, estructura del repo y modelo de red |
+| `docs/guia-arte.md` | Guía de arte (D-024): valor, luz, tejados, escala, paleta, sensación de juego, interfaz y sonido |
 | `docs/decisiones.md` | Registro de decisiones (fecha, decisión, motivo) |
 | `docs/bestiario.md` | Zombis con estadísticas (se convertirá en datos) |
 | `docs/lore.md` | La cepa, cómo se descubre y el diario (entradas en YAML con disparadores) |

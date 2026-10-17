@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CepaCero.Building;
+using CepaCero.Util;
 using CepaCero.World;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -7,31 +8,59 @@ using UnityEngine.Tilemaps;
 namespace CepaCero.Unity.Prototype
 {
     /// <summary>
-    /// The map as two Tilemaps (ground below, blocks above) with the generated
-    /// 16 px art (D-018). One world unit = one tile and tile (0,0) sits at the
-    /// origin. Only changed cells are repainted; changing level repaints it all.
+    /// The map as Tilemaps (ground, floors, blocks, objects, roofs) with the 32 px art of tools/spritegen (D-021).
+    /// One world unit = one tile and tile (0,0) sits at the origin. Only changed cells are repainted; changing
+    /// level repaints it all. Walls join their neighbours (<see cref="PrototypeBlockSprites"/>).
+    ///
+    /// Roofs (D-024): every building has one, opaque from outside, so no interior is seen from the street. When
+    /// you are under a roof, only that house's roof fades (its flood-filled interior and its outline), not the
+    /// neighbours' (Project Zomboid). Things standing under a roof that is not fading are hidden too
+    /// (<see cref="IsHiddenByRoof"/>), so furniture and zombies do not show through.
     /// </summary>
     public sealed class PrototypeWorldView
     {
+        private const float FadeSpeed = 3.5f;
+        private const int MaxHouseCells = 6000;
+        private static readonly Int2[] Neighbours = { new Int2(1, 0), new Int2(-1, 0), new Int2(0, 1), new Int2(0, -1) };
+
         private readonly BlockWorld _blocks;
+        private readonly GroundLayer _ground;
         private readonly PrototypeArt _art;
+        private readonly PrototypeBlockSprites _sprites;
         private readonly Tilemap _groundMap;
         private readonly Tilemap _blockMap;
         private readonly Tilemap _floorMap;
         private readonly Tilemap _objectMap;
         private readonly Tilemap _roofMap;
+        private readonly Tilemap _roofFadeMap;
         private readonly Tilemap _belowFloorMap;
         private readonly Tilemap _belowBlockMap;
-        private bool _inside;
-        private readonly PrototypePlaceholders _placeholders;
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
+
+        private int _level;
+        private Color _tint = Color.white;
+        private float _ambient = 1f;
+
+        // The roof of the house you are in: its cells live in _roofFadeMap while it fades.
+        private readonly HashSet<int> _house = new HashSet<int>();
+        private readonly HashSet<int> _scratch = new HashSet<int>();
+        private readonly Queue<Int2> _queue = new Queue<Int2>();
+        private float _fade = 1f;
+        private float _fadeTarget = 1f;
+        private Int2 _lastPlayer = new Int2(-1, -1);
+        private bool _roofDirty = true;
+        private bool _houseOpen;
+
+        /// <summary>Changes whenever something under a roof may have become visible or hidden (decoration and entities re-check).</summary>
+        public int RoofVersion { get; private set; }
 
         public PrototypeWorldView(BlockWorld blocks, GroundLayer ground, PrototypeArt art, Transform parent)
         {
             _blocks = blocks;
+            _ground = ground;
             _art = art;
-            _placeholders = new PrototypePlaceholders(art.PixelsPerUnit);
+            _sprites = new PrototypeBlockSprites(blocks, art);
 
             var grid = new GameObject("World (prototype)");
             grid.transform.SetParent(parent, false);
@@ -42,15 +71,11 @@ namespace CepaCero.Unity.Prototype
             _floorMap = CreateLayer(grid.transform, "Floors", PrototypeDecorView.FlatOrder);        // under the flat decals' neighbours: you walk on it
             _blockMap = CreateLayer(grid.transform, "Blocks", PrototypeDecorView.FlatOrder + 1); // flat decals go in between
             _objectMap = CreateLayer(grid.transform, "Objects", PrototypeDecorView.FlatOrder + 1);
-            _roofMap = CreateLayer(grid.transform, "Roofs", PrototypeDecorView.FlatOrder + 2);   // translucent: see the house through it
+            _roofMap = CreateLayer(grid.transform, "Roofs", PrototypeDecorView.FlatOrder + 2);
+            _roofFadeMap = CreateLayer(grid.transform, "Roof of your house (fading)", PrototypeDecorView.FlatOrder + 2);
 
-            _ground = ground;
             RepaintAll();
         }
-
-        private readonly GroundLayer _ground;
-        private int _level;
-        private float _ambient = 1f;
 
         /// <summary>Shows another level (D-022): the street, a floor of a building (the street dimmed below it) or the ground underneath.</summary>
         public void SetLevel(int level)
@@ -61,9 +86,14 @@ namespace CepaCero.Unity.Prototype
             }
             _level = level;
             _groundMap.gameObject.SetActive(level >= 0);
+            _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
+            _roofFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
         }
+
+        /// <summary>The sprite a block would have on its own (ghosts, the held piece).</summary>
+        public Sprite SpriteOf(BlockType type) => _sprites.Representative(type);
 
         private void RepaintAll()
         {
@@ -85,8 +115,13 @@ namespace CepaCero.Unity.Prototype
             _floorMap.ClearAllTiles();
             _objectMap.ClearAllTiles();
             _roofMap.ClearAllTiles();
+            _roofFadeMap.ClearAllTiles();
             _belowFloorMap.ClearAllTiles();
             _belowBlockMap.ClearAllTiles();
+            _house.Clear();
+            _fade = _fadeTarget = 1f;
+            _lastPlayer = new Int2(-1, -1);
+            _roofDirty = true;
             for (int y = 0; y < h; y++)
             {
                 for (int x = 0; x < w; x++)
@@ -95,6 +130,7 @@ namespace CepaCero.Unity.Prototype
                     PaintBelow(x, y);
                 }
             }
+            RoofVersion++;
         }
 
         /// <summary>
@@ -113,24 +149,13 @@ namespace CepaCero.Unity.Prototype
                 _belowBlockMap.SetTile(cell, null);
                 return;
             }
-            BlockType floor = _blocks.GetBlock(x, y, below, BuildLayer.Floor);
-            BlockType wall = _blocks.GetBlock(x, y, below, BuildLayer.Structure);
-            _belowFloorMap.SetTile(cell, floor.IsAir ? null : TileFor(SpriteOf(floor), _blocks.GetVariant(x, y, below, BuildLayer.Floor)));
-            _belowBlockMap.SetTile(cell, wall.IsAir ? null : TileFor(SpriteOf(wall), _blocks.GetVariant(x, y, below, BuildLayer.Structure)));
+            Sprite floor = _sprites.Floor(x, y, below);
+            Sprite wall = _sprites.Structure(x, y, below);
+            _belowFloorMap.SetTile(cell, TileFor(floor, _blocks.GetVariant(x, y, below, BuildLayer.Floor)));
+            _belowBlockMap.SetTile(cell, TileFor(wall, _blocks.GetVariant(x, y, below, BuildLayer.Structure)));
         }
 
-        /// <summary>
-        /// Roofs are seen from outside and fade when you are under one (D-020): the player's cell has a roof over it, on this level or above.
-        /// </summary>
-        public void SetInside(bool inside)
-        {
-            if (inside == _inside)
-            {
-                return;
-            }
-            _inside = inside;
-            SetAmbient(_ambient);
-        }
+        // ------------------------------------------------------------------ roofs
 
         /// <summary>The topmost roof over a cell at or above the level being shown, or air.</summary>
         private BlockType TopRoof(int x, int y, out int level)
@@ -148,7 +173,138 @@ namespace CepaCero.Unity.Prototype
             return _blocks.GetBlock(x, y, _level, BuildLayer.Roof);
         }
 
-        public bool HasRoofOver(int x, int y) => _blocks.InBounds(x, y) && !TopRoof(x, y, out _).IsAir;
+        public bool HasRoofOver(int x, int y) => _level >= 0 && _blocks.InBounds(x, y) && !TopRoof(x, y, out _).IsAir;
+
+        /// <summary>True when something at this position is under a roof that is not open: you must not see it from outside.</summary>
+        public bool IsHiddenByRoof(Float2 position)
+        {
+            Int2 t = position.Tile;
+            if (!HasRoofOver(t.X, t.Y))
+            {
+                return false;
+            }
+            return !(_houseOpen && _house.Contains(Key(t.X, t.Y)));
+        }
+
+        /// <summary>
+        /// Call every frame with the player's tile: finds the house you are in (the roof cells connected over the interior, bounded
+        /// by walls) and fades only that roof. Leaving it fades the roof back in.
+        /// </summary>
+        public void UpdateRoofs(Int2 player, float deltaTime)
+        {
+            if (_level < 0)
+            {
+                if (_house.Count > 0)
+                {
+                    ReleaseHouse();
+                }
+                return;
+            }
+            if (player != _lastPlayer || _roofDirty)
+            {
+                _lastPlayer = player;
+                _roofDirty = false;
+                if (FindHouse(player, _scratch))
+                {
+                    if (!_house.SetEquals(_scratch))
+                    {
+                        ReleaseHouse();
+                        foreach (int key in _scratch)
+                        {
+                            _house.Add(key);
+                            MoveRoofCell(key % _blocks.Width, key / _blocks.Width, toFade: true);
+                        }
+                        _fade = 1f;
+                    }
+                    _fadeTarget = 0f;
+                }
+                else if (_house.Count > 0)
+                {
+                    _fadeTarget = 1f;
+                }
+            }
+            if (_house.Count == 0)
+            {
+                return;
+            }
+            _fade = Mathf.MoveTowards(_fade, _fadeTarget, deltaTime * FadeSpeed);
+            _roofFadeMap.color = new Color(_tint.r, _tint.g, _tint.b, _fade);
+            bool open = _fade < 0.5f;
+            if (open != _houseOpen)
+            {
+                _houseOpen = open;
+                RoofVersion++;
+            }
+            if (_fadeTarget >= 1f && _fade >= 0.999f)
+            {
+                ReleaseHouse();
+            }
+        }
+
+        /// <summary>The roof cells of the house over this cell: flood fill through roofed cells, stopping at walls (which fade with it).</summary>
+        private bool FindHouse(Int2 start, HashSet<int> into)
+        {
+            into.Clear();
+            if (!HasRoofOver(start.X, start.Y))
+            {
+                return false;
+            }
+            _queue.Clear();
+            _queue.Enqueue(start);
+            into.Add(Key(start.X, start.Y));
+            while (_queue.Count > 0 && into.Count < MaxHouseCells)
+            {
+                Int2 c = _queue.Dequeue();
+                foreach (Int2 d in Neighbours)
+                {
+                    var n = new Int2(c.X + d.X, c.Y + d.Y);
+                    if (!_blocks.InBounds(n.X, n.Y) || !HasRoofOver(n.X, n.Y) || !into.Add(Key(n.X, n.Y)))
+                    {
+                        continue;
+                    }
+                    if (!_sprites.IsWallLike(n.X, n.Y, _level))
+                    {
+                        _queue.Enqueue(n);                       // the outline is part of the house but does not lead into the next one
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void ReleaseHouse()
+        {
+            foreach (int key in _house)
+            {
+                MoveRoofCell(key % _blocks.Width, key / _blocks.Width, toFade: false);
+            }
+            _house.Clear();
+            _fade = _fadeTarget = 1f;
+            _roofFadeMap.ClearAllTiles();
+            if (_houseOpen)
+            {
+                _houseOpen = false;
+            }
+            RoofVersion++;
+        }
+
+        private void MoveRoofCell(int x, int y, bool toFade)
+        {
+            var cell = new Vector3Int(x, y, 0);
+            if (toFade)
+            {
+                _roofFadeMap.SetTile(cell, _roofMap.GetTile<TileBase>(cell));
+                _roofMap.SetTile(cell, null);
+            }
+            else
+            {
+                _roofMap.SetTile(cell, _roofFadeMap.GetTile<TileBase>(cell));
+                _roofFadeMap.SetTile(cell, null);
+            }
+        }
+
+        private int Key(int x, int y) => y * _blocks.Width + x;
+
+        // ------------------------------------------------------------------ refresh
 
         /// <summary>Repaints the blocks that changed since the last call (drains the world's change queue).</summary>
         public void Refresh()
@@ -165,10 +321,11 @@ namespace CepaCero.Unity.Prototype
                         {
                             if (_blocks.InBounds(c.X + dx, c.Y + dy))
                             {
-                                Paint(_roofMap, c.X + dx, c.Y + dy, BuildLayer.Roof);
+                                PaintRoofCell(c.X + dx, c.Y + dy);
                             }
                         }
                     }
+                    _roofDirty = true;
                     continue;
                 }
                 if (c.Z == _level - 1 || c.Z == _level)
@@ -179,16 +336,20 @@ namespace CepaCero.Unity.Prototype
                 {
                     continue;                                   // only the level being shown is drawn
                 }
-                if (c.Layer == BuildLayer.Structure)
+                if (c.Layer == BuildLayer.Structure || c.Layer == BuildLayer.Floor)
                 {
-                    _blockMap.SetTile(new Vector3Int(c.X, c.Y, 0), BlockTile(c.X, c.Y));
-                    // The wall above may switch between its top and its brick front.
-                    if (c.Y + 1 < _blocks.Height)
+                    // Walls join their neighbours, and the cut face of dug-out ground depends on what is dug around it.
+                    foreach (Int2 d in new[] { new Int2(0, 0), new Int2(1, 0), new Int2(-1, 0), new Int2(0, 1), new Int2(0, -1) })
                     {
-                        _blockMap.SetTile(new Vector3Int(c.X, c.Y + 1, 0), BlockTile(c.X, c.Y + 1));
+                        int x = c.X + d.X;
+                        int y = c.Y + d.Y;
+                        if (_blocks.InBounds(x, y))
+                        {
+                            _blockMap.SetTile(new Vector3Int(x, y, 0), BlockTile(x, y));
+                        }
                     }
                 }
-                else
+                if (c.Layer != BuildLayer.Structure)
                 {
                     PaintExtraLayers(c.X, c.Y);
                 }
@@ -200,85 +361,45 @@ namespace CepaCero.Unity.Prototype
         {
             _ambient = light;
             float v = Mathf.Lerp(0.3f, 1f, light) * (_level != 0 ? 0.75f : 1f);          // other levels read a little darker
-            var tint = new Color(v, v, Mathf.Min(1f, v * 1.1f), 1f);
-            _groundMap.color = _level > 0 ? new Color(tint.r * 0.6f, tint.g * 0.6f, tint.b * 0.6f, 1f) : tint;
-            _blockMap.color = tint;
-            _floorMap.color = tint;
-            _objectMap.color = tint;
-            _roofMap.color = new Color(tint.r, tint.g, tint.b, _inside ? 0.18f : 0.95f);
-            var dim = new Color(tint.r * 0.45f, tint.g * 0.45f, tint.b * 0.45f, 1f);
+            _tint = new Color(v, v, Mathf.Min(1f, v * 1.1f), 1f);
+            _groundMap.color = _level > 0 ? new Color(_tint.r * 0.6f, _tint.g * 0.6f, _tint.b * 0.6f, 1f) : _tint;
+            _blockMap.color = _tint;
+            _floorMap.color = _tint;
+            _objectMap.color = _tint;
+            _roofMap.color = _tint;
+            _roofFadeMap.color = new Color(_tint.r, _tint.g, _tint.b, _fade);
+            var dim = new Color(_tint.r * 0.45f, _tint.g * 0.45f, _tint.b * 0.45f, 1f);
             _belowFloorMap.color = dim;
             _belowBlockMap.color = dim;
         }
 
-        /// <summary>
-        /// Seen from above at an angle (D-019): a wall shows its brick front when nothing
-        /// wall-like stands just south of it, and its top when it continues southwards.
-        /// </summary>
-        private TileBase BlockTile(int x, int y)
-        {
-            if (_level != 0)
-            {
-                BlockType here = _blocks.GetBlock(x, y, _level, BuildLayer.Structure);
-                if (!here.IsAir)
-                {
-                    return TileFor(SpriteOf(here), _blocks.GetVariant(x, y, _level, BuildLayer.Structure));
-                }
-                if (_blocks.IsUndug(x, y, _level) && _blocks.Registry.TryGet(_level <= -3 ? "rock" : "earth", out BlockType soil))
-                {
-                    return TileFor(SpriteOf(soil));                 // untouched ground, solid until dug
-                }
-                return null;
-            }
-            BlockType type = _blocks.GetBlock(x, y);
-            if (type.Key == "building_wall" && !IsWallLike(x, y - 1))
-            {
-                return TileFor(_art.Get("block_building_wall_face"));
-            }
-            return TileFor(SpriteOf(type), _blocks.GetVariant(x, y, 0, BuildLayer.Structure));
-        }
+        // ------------------------------------------------------------------ painting
 
-        /// <summary>The atlas sprite of a block or, for pieces the atlas does not have yet, a flat stand-in.</summary>
-        public Sprite SpriteOf(BlockType type)
-        {
-            if (type.IsAir)
-            {
-                return null;
-            }
-            return _art.TryGet("block_" + type.Key, out Sprite sprite) ? sprite : _placeholders.Get(type);
-        }
+        private TileBase BlockTile(int x, int y) =>
+            TileFor(_sprites.Structure(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Structure));
 
         private void PaintExtraLayers(int x, int y)
         {
-            Paint(_floorMap, x, y, BuildLayer.Floor);
-            Paint(_objectMap, x, y, BuildLayer.Object);
-            Paint(_roofMap, x, y, BuildLayer.Roof);
+            var cell = new Vector3Int(x, y, 0);
+            _floorMap.SetTile(cell, TileFor(_sprites.Floor(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Floor)));
+            _objectMap.SetTile(cell, TileFor(_sprites.Object(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Object)));
+            PaintRoofCell(x, y);
         }
 
-        private void Paint(Tilemap map, int x, int y, BuildLayer layer)
+        /// <summary>The roof of a cell goes to the fading map when the cell belongs to the house you are in.</summary>
+        private void PaintRoofCell(int x, int y)
         {
-            int level = _level;
-            BlockType type = layer == BuildLayer.Roof ? TopRoof(x, y, out level) : _blocks.GetBlock(x, y, _level, layer);
-            Sprite sprite = type.IsAir ? null : layer == BuildLayer.Roof ? RoofSprite(type, x, y) : SpriteOf(type);
-            map.SetTile(new Vector3Int(x, y, 0), type.IsAir ? null : TileFor(sprite, _blocks.GetVariant(x, y, level, layer)));
-        }
-
-        /// <summary>The roof sprite for its place in the roof (slope, corner, ridge, flat) when the atlas has it, else the flat stand-in.</summary>
-        private Sprite RoofSprite(BlockType type, int x, int y)
-        {
-            RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
-            string name = $"roof_{type.Build.MaterialId}_{RoofShapes.SpriteSuffix(shape)}";
-            return _art.TryGet(name, out Sprite sprite) ? sprite : SpriteOf(type);
-        }
-
-        private bool IsWallLike(int x, int y)
-        {
-            if (!_blocks.InBounds(x, y))
+            var cell = new Vector3Int(x, y, 0);
+            BlockType type = TopRoof(x, y, out int level);
+            TileBase tile = null;
+            if (!type.IsAir && _level >= 0)
             {
-                return false;
+                RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
+                tile = TileFor(_sprites.Roof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof));
             }
-            string key = _blocks.GetBlock(x, y).Key;
-            return key == "building_wall" || key == "door" || key == "door_open";
+            bool fading = _house.Contains(Key(x, y));
+            (fading ? _roofFadeMap : _roofMap).SetTile(cell, tile);
+            (fading ? _roofMap : _roofFadeMap).SetTile(cell, null);
         }
 
         /// <summary>One tile per sprite and paint colour (the colour of <see cref="BlockVariant"/> tints the tile).</summary>

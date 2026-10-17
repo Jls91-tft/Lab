@@ -259,9 +259,11 @@ namespace CepaCero.Unity.Prototype
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
                 : _entities.Draw(_session, _me, ambient);
             _world.SetLevel(MyState.Level);
-            _world.SetInside(_world.HasRoofOver(MyState.Position.Tile.X, MyState.Position.Tile.Y));
+            _world.UpdateRoofs(MyState.Position.Tile, Time.deltaTime);   // only the roof of the house you are in fades (D-024)
             _entities.ViewLevel = MyState.Level;
             _decor.SetVisible(MyState.Level == 0);
+            _decor.ApplyRoofs(_world);
+            _entities.Roofs = _world;
             _builder.SetHand(MyInventory.EquippedDefinition);
             _builder.UpdatePreview(_input.MouseWorld.Tile, BuildContext());
             _buildView.Draw(_builder);

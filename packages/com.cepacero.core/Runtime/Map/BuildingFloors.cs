@@ -30,27 +30,29 @@ namespace CepaCero.Map
             {
                 int above = Math.Min(b.Levels - 1, world.MaxLevel);
                 int below = Math.Min(b.Underground, -world.MinLevel);
-                if (above <= 0 && below <= 0)
-                {
-                    continue;
-                }
+                bool storeys = above > 0 || below > 0;
                 var interior = new List<Int2>();
                 if (!FindInterior(world, ground, b, legacyWall, legacyDoor, interior) || interior.Count < MinInterior)
                 {
-                    skipped++;
+                    if (storeys)
+                    {
+                        skipped++;                                           // single-storey buildings with no interior just stay as they are
+                    }
                     continue;
                 }
                 Int2 up = PickStairs(interior, b.Doors, null);
                 Int2 down = PickStairs(interior, b.Doors, up);
                 var set = new HashSet<Int2>(interior);
+                List<Int2> walls = FindWalls(world, set, legacyWall, legacyDoor);
                 if (above > 0)
                 {
-                    BuildUpstairs(world, b, set, up, above, reg, floor, stairs, legacyWall, legacyDoor);
+                    BuildUpstairs(world, b, set, walls, up, above, reg, floor, stairs, legacyDoor);
                 }
                 if (below > 0)
                 {
                     BuildBasement(world, set, down, below, floor, stairs);
                 }
+                PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
             if (skipped > 0)
@@ -130,12 +132,9 @@ namespace CepaCero.Map
             return false;
         }
 
-        private static void BuildUpstairs(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, Int2 stairwell, int above, BlockRegistry reg,
-            BlockType floor, BlockType stairs, BlockType legacyWall, BlockType legacyDoor)
+        /// <summary>The map's wall and door blocks around an interior: the outline of the building, in reading order.</summary>
+        private static List<Int2> FindWalls(BlockWorld world, HashSet<Int2> interior, BlockType legacyWall, BlockType legacyDoor)
         {
-            string material = WallMaterial(b.Kind);
-            BlockType wall = reg.Get("wall_" + material);
-            BlockType window = reg.Get("window_" + material);
             var walls = new List<Int2>();
             var wallSet = new HashSet<Int2>();
             foreach (Int2 c in interior)
@@ -155,6 +154,33 @@ namespace CepaCero.Map
                 }
             }
             walls.Sort((p, q) => p.Y != q.Y ? p.Y.CompareTo(q.Y) : p.X.CompareTo(q.X));
+            return walls;
+        }
+
+        /// <summary>A roof over the interior and its walls, on the top storey (the ground floor for a single-storey building).</summary>
+        private static void PlaceRoof(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, int top, BlockRegistry reg)
+        {
+            string kind = string.IsNullOrEmpty(b.Roof) ? "tile" : b.Roof;
+            if (!reg.TryGet("roof_" + kind, out BlockType roof) || !world.InLevels(top))
+            {
+                return;
+            }
+            foreach (Int2 c in interior)
+            {
+                world.SetBlock(c.X, c.Y, top, BuildLayer.Roof, roof.Id);
+            }
+            foreach (Int2 w in walls)
+            {
+                world.SetBlock(w.X, w.Y, top, BuildLayer.Roof, roof.Id);
+            }
+        }
+
+        private static void BuildUpstairs(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, Int2 stairwell, int above, BlockRegistry reg,
+            BlockType floor, BlockType stairs, BlockType legacyDoor)
+        {
+            string material = WallMaterial(b.Kind);
+            BlockType wall = reg.Get("wall_" + material);
+            BlockType window = reg.Get("window_" + material);
             for (int z = 1; z <= above; z++)
             {
                 foreach (Int2 c in interior)
@@ -176,17 +202,6 @@ namespace CepaCero.Map
                 }
             }
             world.SetBlock(stairwell.X, stairwell.Y, 0, BuildLayer.Structure, stairs.Id);
-            if (!string.IsNullOrEmpty(b.Roof) && reg.TryGet("roof_" + b.Roof, out BlockType roof))
-            {
-                foreach (Int2 c in interior)
-                {
-                    world.SetBlock(c.X, c.Y, above, BuildLayer.Roof, roof.Id);
-                }
-                foreach (Int2 w in walls)
-                {
-                    world.SetBlock(w.X, w.Y, above, BuildLayer.Roof, roof.Id);
-                }
-            }
         }
 
         private static void BuildBasement(BlockWorld world, HashSet<Int2> interior, Int2 stairwell, int below, BlockType floor, BlockType stairs)

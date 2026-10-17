@@ -54,7 +54,7 @@ namespace CepaCero.Unity.Prototype
 
         public void Draw(in HudModel m)
         {
-            _s = PrototypeArt.Zoom(Screen.height);
+            _s = PrototypeArt.UiZoom(Screen.height);
             if (_styleScale != _s)
             {
                 BuildStyles();

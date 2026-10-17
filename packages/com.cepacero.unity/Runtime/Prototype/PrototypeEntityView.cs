@@ -43,6 +43,8 @@ namespace CepaCero.Unity.Prototype
         private readonly Sprite[][][] _zombieFrames;
         private readonly Sprite[][] _playerFrames;
         private readonly Sprite[][] _otherFrames;
+        private readonly List<Sprite[][]> _walkerVariants = new List<Sprite[][]>();
+        private readonly int _walkerType = -1;
         private readonly Sprite _downed;
         private readonly Sprite _pile;
         private readonly Sprite _container;
@@ -62,6 +64,12 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Level being shown (D-022): zombies and players of that level; piles and containers only exist on the street.</summary>
         public int ViewLevel { get; set; }
 
+        /// <summary>The world, to hide what stands under a closed roof (D-024).</summary>
+        public PrototypeWorldView Roofs { get; set; }
+
+        /// <summary>The characters' pivot is at their feet; the entity position is the middle of the body, a little above.</summary>
+        private const float FootOffset = -0.25f;
+
         private struct Walk
         {
             public Float2 Last;
@@ -80,6 +88,16 @@ namespace CepaCero.Unity.Prototype
             for (byte t = 0; t < catalog.Count; t++)
             {
                 _zombieFrames[t] = Frames(art, "zombie_" + catalog[t].id);
+            }
+            // Several looks for the commonest zombie, so the horde reads as the city's people (spritegen: zombie_walker_v1..v9).
+            if (catalog.TryGetIndex("walker", out byte walker))
+            {
+                _walkerType = walker;
+                _walkerVariants.Add(_zombieFrames[walker]);
+                for (int v = 1; v <= 9 && art.TryGet($"zombie_walker_v{v}_down_0", out _); v++)
+                {
+                    _walkerVariants.Add(Frames(art, $"zombie_walker_v{v}"));
+                }
             }
             _playerFrames = Frames(art, "player");
             _otherFrames = Frames(art, "player_other");
@@ -155,6 +173,10 @@ namespace CepaCero.Unity.Prototype
 
         private void DrawZombie(int key, Float2 position, byte type, ZombieState state, float light)
         {
+            if (Roofs != null && Roofs.IsHiddenByRoof(position))
+            {
+                return;                                              // inside a closed house: you cannot see it
+            }
             Animate(_zombieWalk, key, position, out int facing, out int frame);
             // Mutants glow at night (docs/lore.md): never darker than half their colour.
             Color c = Color.Lerp(Dim(Color.white, light), Color.white, 0.5f);
@@ -166,8 +188,8 @@ namespace CepaCero.Unity.Prototype
             {
                 c = Color.Lerp(c, Color.red, Mathf.PingPong(Time.time * 6f, 1f));
             }
-            Sprite[][] frames = _zombieFrames[type];
-            Place(_zombies, _used++, position, frames[Math.Min(facing, Left)][frame], facing == Right, c, ZombieBias);
+            Sprite[][] frames = type == _walkerType && _walkerVariants.Count > 1 ? _walkerVariants[Math.Abs(key) % _walkerVariants.Count] : _zombieFrames[type];
+            Place(_zombies, _used++, position, frames[Math.Min(facing, Left)][frame], facing == Right, c, ZombieBias, FootOffset);
         }
 
         private void DrawPlayers(IReadOnlyList<PlayerState> players, int me, float light)
@@ -177,13 +199,13 @@ namespace CepaCero.Unity.Prototype
             for (int p = 0; p < players.Count; p++)
             {
                 PlayerState s = players[p];
-                if (s.IsDead || s.Level != ViewLevel)
+                if (s.IsDead || s.Level != ViewLevel || (p != me && Roofs != null && Roofs.IsHiddenByRoof(s.Position)))
                 {
                     continue;
                 }
                 Animate(_playerWalk, p, s.Position, out int facing, out int frame);
                 Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[Math.Min(facing, Left)][frame];
-                Place(_players, used++, s.Position, sprite, facing == Right && !s.IsDowned, c, PlayerBias);
+                Place(_players, used++, s.Position, sprite, facing == Right && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
             }
             Trim(_players, used);
         }
@@ -193,6 +215,10 @@ namespace CepaCero.Unity.Prototype
             int used = 0;
             foreach (ItemPile pile in piles)
             {
+                if (Roofs != null && Roofs.IsHiddenByRoof(pile.Position))
+                {
+                    continue;
+                }
                 Place(_piles, used++, pile.Position, _pile, false, Dim(Color.white, light), PileBias);
             }
             Trim(_piles, used);
@@ -205,6 +231,10 @@ namespace CepaCero.Unity.Prototype
             {
                 foreach (Int2 cell in cells)
                 {
+                    if (Roofs != null && Roofs.IsHiddenByRoof(new Float2(cell.X + 0.5f, cell.Y + 0.5f)))
+                    {
+                        continue;
+                    }
                     Place(_containers, used++, new Float2(cell.X + 0.5f, cell.Y + 0.5f), _container, false, Dim(Color.white, light), ContainerBias);
                 }
             }
@@ -235,7 +265,7 @@ namespace CepaCero.Unity.Prototype
             frame = moving ? (int)w.Phase % 4 : 0;
         }
 
-        private void Place(List<SpriteRenderer> pool, int index, Float2 position, Sprite sprite, bool flip, Color color, int bias)
+        private void Place(List<SpriteRenderer> pool, int index, Float2 position, Sprite sprite, bool flip, Color color, int bias, float footOffset = 0f)
         {
             while (pool.Count <= index)
             {
@@ -251,7 +281,7 @@ namespace CepaCero.Unity.Prototype
                 sr.gameObject.SetActive(true);
             }
             // Snap to the pixel grid so sprites never shimmer between screen pixels.
-            sr.transform.localPosition = new Vector3(Snap(position.X), Snap(position.Y), 0f);
+            sr.transform.localPosition = new Vector3(Snap(position.X), Snap(position.Y + footOffset), 0f);
             sr.sprite = sprite;
             sr.flipX = flip;
             sr.color = color;
