@@ -383,7 +383,7 @@ namespace CepaCero.Tests.Core
             PlayerIntent.Dismantle(3, 4, 2).Write(w);
             PlayerIntent back = PlayerIntent.Read(new ByteReader(w.Segment));
             Assert.That(back.Type, Is.EqualTo(IntentType.Dismantle));
-            Assert.That((back.X, back.Y, back.Arg), Is.EqualTo((3, 4, 2)));
+            Assert.That((back.X, back.Y, back.Arg), Is.EqualTo(((ushort)3, (ushort)4, (ushort)2))); // same types: Unity's NUnit does not convert numbers inside tuples
             Assert.That(PlayerIntent.Undo().IsInventoryAction, Is.False);
         }
     }
