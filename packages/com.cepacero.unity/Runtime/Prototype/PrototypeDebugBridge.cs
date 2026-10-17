@@ -808,12 +808,19 @@ namespace CepaCero.Unity.Prototype
 
         private static void Reply(HttpListenerContext ctx, int status, string json)
         {
-            byte[] body = Encoding.UTF8.GetBytes(json);
-            ctx.Response.StatusCode = status;
-            ctx.Response.ContentType = "application/json; charset=utf-8";
-            ctx.Response.ContentLength64 = body.Length;
-            ctx.Response.OutputStream.Write(body, 0, body.Length);
-            ctx.Response.OutputStream.Close();
+            try
+            {
+                byte[] body = Encoding.UTF8.GetBytes(json);
+                ctx.Response.StatusCode = status;
+                ctx.Response.ContentType = "application/json; charset=utf-8";
+                ctx.Response.ContentLength64 = body.Length;
+                ctx.Response.OutputStream.Write(body, 0, body.Length);
+                ctx.Response.OutputStream.Close();
+            }
+            catch (Exception)
+            {
+                // The client gave up (a timed-out curl): nothing to answer, and the server must keep serving.
+            }
         }
     }
 }

@@ -593,6 +593,8 @@ namespace CepaCero.Unity.Prototype
                 }
                 else if (_input.Attack)
                 {
+                    // The ghost was drawn last frame: confirm what is under the cursor now, not where it was.
+                    _builder.UpdatePreview(tile, BuildContext());
                     if (_builder.ConfirmPaste() == 0)
                     {
                         Say(BuildHint());
