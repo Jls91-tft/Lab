@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using CepaCero.Building;
+using CepaCero.Map;
 using CepaCero.Util;
 using CepaCero.World;
 using UnityEngine;
@@ -35,6 +36,19 @@ namespace CepaCero.Unity.Prototype
         private readonly Tilemap _roofFadeMap;
         private readonly Tilemap _belowFloorMap;
         private readonly Tilemap _belowBlockMap;
+        // Each building's roof gets its own shade, so neighbours read as separate houses instead of one red sea.
+        private static readonly Color[] RoofTints =
+        {
+            Color.white,
+            new Color(0.80f, 0.86f, 1.00f),
+            new Color(1.00f, 0.90f, 0.70f),
+            new Color(0.74f, 0.68f, 0.66f),
+            new Color(0.86f, 0.98f, 0.84f),
+            new Color(1.00f, 0.76f, 0.68f),
+            new Color(0.66f, 0.74f, 0.88f),
+        };
+
+        private byte[] _roofTint;
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
 
@@ -75,6 +89,80 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap = CreateLayer(grid.transform, "Roof of your house (fading)", PrototypeDecorView.FlatOrder + 2);
 
             RepaintAll();
+        }
+
+        /// <summary>
+        /// Gives every building's roof its own shade: finds each building's interior (floor connected to its doors) and the walls around it,
+        /// and a neighbour never takes the shade of the one next to it.
+        /// </summary>
+        public void SetBuildings(IReadOnlyList<BuildingInfo> buildings)
+        {
+            if (buildings == null)
+            {
+                return;
+            }
+            int w = _blocks.Width;
+            _roofTint = new byte[w * _blocks.Height];
+            var owner = new int[w * _blocks.Height];                       // building index + 1, 0 = none
+            var queue = new Queue<Int2>();
+            var cells = new List<Int2>();
+            for (int bi = 0; bi < buildings.Count; bi++)
+            {
+                BuildingInfo b = buildings[bi];
+                cells.Clear();
+                foreach (Int2 d in b.Doors)
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        Enqueue(b, new Int2(d.X + Neighbours[k].X, d.Y + Neighbours[k].Y), owner, bi + 1, queue, cells);
+                    }
+                }
+                while (queue.Count > 0)
+                {
+                    Int2 c = queue.Dequeue();
+                    for (int k = 0; k < 4; k++)
+                    {
+                        Enqueue(b, new Int2(c.X + Neighbours[k].X, c.Y + Neighbours[k].Y), owner, bi + 1, queue, cells);
+                    }
+                }
+                int shade = 1 + (int)(((uint)(b.Id * 2654435761u)) >> 16) % (RoofTints.Length - 1);
+                int count = cells.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    Int2 c = cells[i];
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int x = c.X + dx;
+                            int y = c.Y + dy;
+                            if (_blocks.InBounds(x, y) && owner[y * w + x] == 0 && x >= b.Min.X && x <= b.Max.X && y >= b.Min.Y && y <= b.Max.Y)
+                            {
+                                owner[y * w + x] = bi + 1;                 // its walls
+                                _roofTint[y * w + x] = (byte)shade;
+                            }
+                        }
+                    }
+                    _roofTint[c.Y * w + c.X] = (byte)shade;
+                }
+            }
+            RepaintAll();
+        }
+
+        private void Enqueue(BuildingInfo b, Int2 p, int[] owner, int id, Queue<Int2> queue, List<Int2> cells)
+        {
+            if (p.X < b.Min.X || p.X > b.Max.X || p.Y < b.Min.Y || p.Y > b.Max.Y || !_blocks.InBounds(p.X, p.Y))
+            {
+                return;
+            }
+            int i = p.Y * _blocks.Width + p.X;
+            if (owner[i] != 0 || _ground.Get(p.X, p.Y) != GroundType.Floor || !_blocks.GetBlock(p.X, p.Y).IsAir)
+            {
+                return;
+            }
+            owner[i] = id;
+            queue.Enqueue(p);
+            cells.Add(p);
         }
 
         /// <summary>Shows another level (D-022): the street, a floor of a building (the street dimmed below it) or the ground underneath.</summary>
@@ -396,7 +484,8 @@ namespace CepaCero.Unity.Prototype
             if (!type.IsAir && _level >= 0)
             {
                 RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
-                tile = TileFor(_sprites.Roof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof));
+                byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
+                tile = TileFor(_sprites.Roof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
             }
             bool fading = _house.Contains(Key(x, y));
             (fading ? _roofFadeMap : _roofMap).SetTile(cell, tile);
@@ -404,19 +493,22 @@ namespace CepaCero.Unity.Prototype
         }
 
         /// <summary>One tile per sprite and paint colour (the colour of <see cref="BlockVariant"/> tints the tile).</summary>
-        private Tile TileFor(Sprite sprite, byte variant = 0)
+        private Tile TileFor(Sprite sprite, byte variant = 0, int tint = 0)
         {
             if (sprite == null)
             {
                 return null;
             }
             int paint = BlockVariant.Color(variant);
-            if (!_tiles.TryGetValue((sprite, paint), out Tile tile))
+            int key = paint + 100 * tint;
+            if (!_tiles.TryGetValue((sprite, key), out Tile tile))
             {
                 tile = ScriptableObject.CreateInstance<Tile>();
                 tile.sprite = sprite;
-                tile.color = paint == 0 ? Color.white : (Color)PrototypePlaceholders.Paints[Mathf.Clamp(paint, 0, PrototypePlaceholders.Paints.Length - 1)];
-                _tiles.Add((sprite, paint), tile);
+                Color baseColor = paint == 0 ? Color.white : (Color)PrototypePlaceholders.Paints[Mathf.Clamp(paint, 0, PrototypePlaceholders.Paints.Length - 1)];
+                Color shade = RoofTints[tint % RoofTints.Length];
+                tile.color = new Color(baseColor.r * shade.r, baseColor.g * shade.g, baseColor.b * shade.b, 1f);
+                _tiles.Add((sprite, key), tile);
             }
             return tile;
         }

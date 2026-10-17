@@ -174,6 +174,7 @@ namespace CepaCero.Unity.Prototype
             // The host pays from the session's book (it knows the unlocked recipes); a client builds its own.
             _recipes = Remote ? new RecipeBook(_data.RecipesData, _data.Items) : _session.Recipes;
             _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
+            _world.SetBuildings(_map.Buildings);
             _buildView = new PrototypeBuildView(_viewRoot, _world, _art, viewBlocks.Registry);
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));

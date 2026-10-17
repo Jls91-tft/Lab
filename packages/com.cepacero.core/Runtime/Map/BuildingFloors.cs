@@ -157,7 +157,7 @@ namespace CepaCero.Map
             return walls;
         }
 
-        /// <summary>A roof over the interior and its walls, on the top storey (the ground floor for a single-storey building).</summary>
+        /// <summary>A roof over the interior and its walls, on the top storey (the ground floor for a single-storey building); doors are left uncovered.</summary>
         private static void PlaceRoof(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, int top, BlockRegistry reg)
         {
             string kind = string.IsNullOrEmpty(b.Roof) ? "tile" : b.Roof;
@@ -171,8 +171,24 @@ namespace CepaCero.Map
             }
             foreach (Int2 w in walls)
             {
+                if (IsDoor(b, w))
+                {
+                    continue;                                          // the doorway stays open to the sky: the way in is seen from outside
+                }
                 world.SetBlock(w.X, w.Y, top, BuildLayer.Roof, roof.Id);
             }
+        }
+
+        private static bool IsDoor(BuildingInfo b, Int2 cell)
+        {
+            for (int i = 0; i < b.Doors.Count; i++)
+            {
+                if (b.Doors[i] == cell)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static void BuildUpstairs(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, Int2 stairwell, int above, BlockRegistry reg,

@@ -160,6 +160,7 @@ namespace CepaCero.Tests.Map
             Assert.That(w.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "over the interior");
             Assert.That(w.GetBlock(5, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "and over its walls");
             Assert.That(w.GetBlock(2, 2, 0, BuildLayer.Roof).IsAir, Is.True, "but not over the street");
+            Assert.That(w.GetBlock(10, 4, 0, BuildLayer.Roof).IsAir, Is.True, "the doorway stays uncovered so the way in is seen from outside");
         }
 
         [Test]
