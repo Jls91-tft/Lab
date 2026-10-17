@@ -34,6 +34,10 @@ namespace CepaCero.Unity.Prototype
         private readonly Tilemap _objectMap;
         private readonly Tilemap _roofMap;
         private readonly Tilemap _roofFadeMap;
+        private readonly Tilemap _edgeMap;                         // dark outline and eave of each building, over its roof
+        private readonly Tilemap _edgeFadeMap;
+        private Tile[] _edgeTiles;
+        private int[] _owner;                                       // building index + 1 per cell, 0 = none
         private readonly Tilemap _belowFloorMap;
         private readonly Tilemap _belowBlockMap;
         // Each building's roof gets its own shade, so neighbours read as separate houses instead of one red sea.
@@ -87,6 +91,8 @@ namespace CepaCero.Unity.Prototype
             _objectMap = CreateLayer(grid.transform, "Objects", PrototypeDecorView.FlatOrder + 1);
             _roofMap = CreateLayer(grid.transform, "Roofs", PrototypeDecorView.FlatOrder + 2);
             _roofFadeMap = CreateLayer(grid.transform, "Roof of your house (fading)", PrototypeDecorView.FlatOrder + 2);
+            _edgeMap = CreateLayer(grid.transform, "Roof edges", PrototypeDecorView.FlatOrder + 3);
+            _edgeFadeMap = CreateLayer(grid.transform, "Roof edges of your house (fading)", PrototypeDecorView.FlatOrder + 3);
 
             RepaintAll();
         }
@@ -146,6 +152,7 @@ namespace CepaCero.Unity.Prototype
                     _roofTint[c.Y * w + c.X] = (byte)shade;
                 }
             }
+            _owner = owner;
             RepaintAll();
         }
 
@@ -176,6 +183,8 @@ namespace CepaCero.Unity.Prototype
             _groundMap.gameObject.SetActive(level >= 0);
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
             _roofFadeMap.gameObject.SetActive(level >= 0);
+            _edgeMap.gameObject.SetActive(level >= 0);
+            _edgeFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
         }
@@ -204,6 +213,8 @@ namespace CepaCero.Unity.Prototype
             _objectMap.ClearAllTiles();
             _roofMap.ClearAllTiles();
             _roofFadeMap.ClearAllTiles();
+            _edgeMap.ClearAllTiles();
+            _edgeFadeMap.ClearAllTiles();
             _belowFloorMap.ClearAllTiles();
             _belowBlockMap.ClearAllTiles();
             _house.Clear();
@@ -317,6 +328,7 @@ namespace CepaCero.Unity.Prototype
             }
             _fade = Mathf.MoveTowards(_fade, _fadeTarget, deltaTime * FadeSpeed);
             _roofFadeMap.color = new Color(_tint.r, _tint.g, _tint.b, _fade);
+            _edgeFadeMap.color = _roofFadeMap.color;
             bool open = _fade < 0.5f;
             if (open != _houseOpen)
             {
@@ -382,11 +394,15 @@ namespace CepaCero.Unity.Prototype
             {
                 _roofFadeMap.SetTile(cell, _roofMap.GetTile<TileBase>(cell));
                 _roofMap.SetTile(cell, null);
+                _edgeFadeMap.SetTile(cell, _edgeMap.GetTile<TileBase>(cell));
+                _edgeMap.SetTile(cell, null);
             }
             else
             {
                 _roofMap.SetTile(cell, _roofFadeMap.GetTile<TileBase>(cell));
                 _roofFadeMap.SetTile(cell, null);
+                _edgeMap.SetTile(cell, _edgeFadeMap.GetTile<TileBase>(cell));
+                _edgeFadeMap.SetTile(cell, null);
             }
         }
 
@@ -456,7 +472,9 @@ namespace CepaCero.Unity.Prototype
             _floorMap.color = _tint;
             _objectMap.color = _tint;
             _roofMap.color = _tint;
+            _edgeMap.color = _tint;
             _roofFadeMap.color = new Color(_tint.r, _tint.g, _tint.b, _fade);
+            _edgeFadeMap.color = _roofFadeMap.color;
             var dim = new Color(_tint.r * 0.45f, _tint.g * 0.45f, _tint.b * 0.45f, 1f);
             _belowFloorMap.color = dim;
             _belowBlockMap.color = dim;
@@ -481,8 +499,10 @@ namespace CepaCero.Unity.Prototype
             var cell = new Vector3Int(x, y, 0);
             BlockType type = TopRoof(x, y, out int level);
             TileBase tile = null;
+            TileBase edge = null;
             if (!type.IsAir && _level >= 0)
             {
+                edge = EdgeTile(x, y);
                 RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
                 byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
                 tile = TileFor(_sprites.Roof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
@@ -490,9 +510,67 @@ namespace CepaCero.Unity.Prototype
             bool fading = _house.Contains(Key(x, y));
             (fading ? _roofFadeMap : _roofMap).SetTile(cell, tile);
             (fading ? _roofMap : _roofFadeMap).SetTile(cell, null);
+            (fading ? _edgeFadeMap : _edgeMap).SetTile(cell, edge);
+            (fading ? _edgeMap : _edgeFadeMap).SetTile(cell, null);
         }
 
         /// <summary>One tile per sprite and paint colour (the colour of <see cref="BlockVariant"/> tints the tile).</summary>
+        /// <summary>The outline of a roof piece: dark where the next cell is outside the building (or another building), with a deeper eave to the south.</summary>
+        private TileBase EdgeTile(int x, int y)
+        {
+            int self = OwnerAt(x, y);
+            int mask = 0;
+            if (!SameRoof(x, y + 1, self)) { mask |= 1; }
+            if (!SameRoof(x + 1, y, self)) { mask |= 2; }
+            if (!SameRoof(x, y - 1, self)) { mask |= 4; }
+            if (!SameRoof(x - 1, y, self)) { mask |= 8; }
+            if (mask == 0)
+            {
+                return null;
+            }
+            if (_edgeTiles == null)
+            {
+                _edgeTiles = new Tile[16];
+            }
+            if (_edgeTiles[mask] == null)
+            {
+                var tile = ScriptableObject.CreateInstance<Tile>();
+                tile.sprite = MakeEdgeSprite(mask);
+                _edgeTiles[mask] = tile;
+            }
+            return _edgeTiles[mask];
+        }
+
+        private int OwnerAt(int x, int y) => _owner != null && _blocks.InBounds(x, y) ? _owner[y * _blocks.Width + x] : 0;
+
+        private bool SameRoof(int x, int y, int owner) => HasRoofOver(x, y) && OwnerAt(x, y) == owner;
+
+        // Mask: N = 1, E = 2, S = 4, W = 8 (a side where the roof ends). 2 px of dark line; the south side adds a soft shadow like an eave.
+        private Sprite MakeEdgeSprite(int mask)
+        {
+            const int S = 32;
+            var tex = new Texture2D(S, S, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+            var clear = new Color(0f, 0f, 0f, 0f);
+            for (int py = 0; py < S; py++)
+            {
+                for (int px = 0; px < S; px++)
+                {
+                    float a = 0f;
+                    if ((mask & 1) != 0 && py >= S - 2) { a = Mathf.Max(a, 0.9f); }
+                    if ((mask & 2) != 0 && px >= S - 2) { a = Mathf.Max(a, 0.9f); }
+                    if ((mask & 8) != 0 && px < 2) { a = Mathf.Max(a, 0.9f); }
+                    if ((mask & 4) != 0)
+                    {
+                        if (py < 3) { a = Mathf.Max(a, 0.95f); }
+                        else if (py < 8) { a = Mathf.Max(a, 0.35f * (8 - py) / 5f); }
+                    }
+                    tex.SetPixel(px, py, a <= 0f ? clear : new Color(0.06f, 0.03f, 0.03f, a));
+                }
+            }
+            tex.Apply(false);
+            return Sprite.Create(tex, new Rect(0, 0, S, S), new Vector2(0.5f, 0.5f), _art.PixelsPerUnit);
+        }
+
         private Tile TileFor(Sprite sprite, byte variant = 0, int tint = 0)
         {
             if (sprite == null)
