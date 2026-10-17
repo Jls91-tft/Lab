@@ -777,6 +777,10 @@ namespace CepaCero.Unity.Prototype
         {
             switch (e.Type)
             {
+                case SessionEventType.IntentResolved when e.Value == (int)IntentType.ChangeLevel && e.Result == IntentResult.InvalidTarget:
+                    // The rule looks at the cell under your feet, not at the mouse: say so.
+                    Say("Para bajar o subir, ponte encima de una fosa, trampilla o escalera (Av Pág baja, Re Pág sube)");
+                    break;
                 case SessionEventType.IntentResolved when e.Result != IntentResult.Ok && e.Result != IntentResult.TooSoon:
                     Say(ResultText(e.Result));
                     break;
