@@ -134,13 +134,21 @@ namespace CepaCero.Unity.Prototype
             {
                 return;
             }
+            // The screen is a rotated rectangle on the grid (D-025): light the cells of its bounding box, plus the wall height above it.
             float halfH = camera.orthographicSize;
             float halfW = halfH * camera.aspect;
             Vector3 c = camera.transform.position;
-            int x0 = (int)Math.Floor(c.x - halfW) - Margin;
-            int y0 = (int)Math.Floor(c.y - halfH) - Margin;
-            int w = (int)Math.Ceiling(halfW * 2f) + Margin * 2 + 1;
-            int h = (int)Math.Ceiling(halfH * 2f) + Margin * 2 + 1;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            for (int k = 0; k < 4; k++)
+            {
+                Float2 g = PrototypeIso.ToGrid(c.x + ((k & 1) == 0 ? -halfW : halfW), c.y + ((k & 2) == 0 ? -halfH : halfH + PrototypeIso.WallHeight));
+                minX = Math.Min(minX, g.X); maxX = Math.Max(maxX, g.X);
+                minY = Math.Min(minY, g.Y); maxY = Math.Max(maxY, g.Y);
+            }
+            int x0 = (int)Math.Floor(minX) - Margin;
+            int y0 = (int)Math.Floor(minY) - Margin;
+            int w = (int)Math.Ceiling(maxX - minX) + Margin * 2 + 1;
+            int h = (int)Math.Ceiling(maxY - minY) + Margin * 2 + 1;
             Resize(w, h);
             _grid.Begin(x0, y0, w, h);
 

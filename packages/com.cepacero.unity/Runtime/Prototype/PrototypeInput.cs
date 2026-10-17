@@ -152,7 +152,7 @@ namespace CepaCero.Unity.Prototype
                 Scroll += wheel > 0f ? -1 : wheel < 0f ? 1 : 0;
                 Vector2 screen = mouse.position.ReadValue();
                 Vector3 world = camera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -camera.transform.position.z));
-                MouseWorld = new Float2(world.x, world.y);
+                MouseWorld = PrototypeIso.ToGrid(world.x, world.y);          // the grid cell under the mouse (D-025)
             }
         }
 

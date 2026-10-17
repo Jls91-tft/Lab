@@ -5,11 +5,11 @@ using System;
 namespace UnityEngine
 {
     public class Object { public string name; public static void Destroy(Object o) {} public static implicit operator bool(Object o) => o != null; }
-    public class Component : Object { public GameObject gameObject => null; public Transform transform => null; }
+    public class Component : Object { public GameObject gameObject => null; public Transform transform => null; public T GetComponent<T>() where T : Component => null; }
     public class Behaviour : Component { public bool enabled; }
     public class MonoBehaviour : Behaviour { }
     public class GameObject : Object { public GameObject(string n) {} public Transform transform => null; public string tag; public T AddComponent<T>() where T : Component => null; public bool activeSelf => true; public void SetActive(bool v) {} }
-    public class Transform : Component { public void SetParent(Transform p, bool w) {} public Vector3 position; public Vector3 localPosition; public Vector3 localScale; }
+    public class Transform : Component { public Transform parent => null; public Quaternion localRotation; public void SetParent(Transform p, bool w) {} public Vector3 position; public Vector3 localPosition; public Vector3 localScale; }
     public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } public static Vector2 zero => default; public static Vector2 operator /(Vector2 a, float d) => a; }
     public struct Vector3 { public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; } public static Vector3 one => new Vector3(1f, 1f, 1f); public static Vector3 operator +(Vector3 a, Vector3 b) => a; public static Vector3 operator -(Vector3 a, Vector3 b) => a; public static Vector3 operator *(Vector3 a, float b) => a; }
     public struct Vector3Int { public int x, y, z; public Vector3Int(int x, int y, int z) { this.x = x; this.y = y; this.z = z; } }
@@ -19,8 +19,8 @@ namespace UnityEngine
     public class ScriptableObject : Object { public static T CreateInstance<T>() where T : ScriptableObject => null; }
     public class TextAsset : Object { public string text => ""; }
     public static class Resources { public static T Load<T>(string path) where T : Object => null; }
-    public class GridLayout : Behaviour { }
-    public class Grid : GridLayout { }
+    public class GridLayout : Behaviour { public enum CellLayout { Rectangle, Hexagon, Isometric, IsometricZAsY } }
+    public class Grid : GridLayout { public CellLayout cellLayout; public Vector3 cellSize; }
     public enum SpriteMeshType { FullRect, Tight }
     public struct Color { public float r, g, b, a; public Color(float r, float g, float b, float a = 1f) { this.r = r; this.g = g; this.b = b; this.a = a; } public static Color white => default; public static Color black => default; public static Color red => default; public static Color Lerp(Color a, Color b, float t) => a; }
     public struct Color32 { public byte r, g, b, a; public Color32(byte r, byte g, byte b, byte a) { this.r = r; this.g = g; this.b = b; this.a = a; } public static implicit operator Color(Color32 c) => default; }
@@ -33,7 +33,9 @@ namespace UnityEngine
     public class Shader : Object { public static Shader Find(string n) => null; }
     public class Material : Object { public Material(Shader s) {} }
     public class Renderer : Component { public Material sharedMaterial; public int sortingOrder; public bool enabled; }
-    public class SpriteRenderer : Renderer { public Sprite sprite; public Color color; public bool flipX; }
+    public enum SpriteSortPoint { Center, Pivot }
+    public class SpriteRenderer : Renderer { public Sprite sprite; public Color color; public bool flipX; public SpriteSortPoint spriteSortPoint; }
+    public struct Quaternion { public static Quaternion Euler(float x, float y, float z) => default; }
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public float aspect; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
     public static class Mathf { public static float Clamp(float v, float a, float b) => v; public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; public static int Clamp(int v, int a, int b) => v; public static float MoveTowards(float c, float t, float d) => c; }
@@ -54,12 +56,17 @@ namespace UnityEngine
     public class TooltipAttribute : Attribute { public TooltipAttribute(string t) {} }
     public class SerializeField : Attribute { }
 }
+namespace UnityEngine.Rendering
+{
+    public class SortingGroup : UnityEngine.Behaviour { public int sortingOrder; }
+}
+
 namespace UnityEngine.Tilemaps
 {
     public class TileBase : UnityEngine.ScriptableObject { }
     public class Tile : TileBase { public UnityEngine.Sprite sprite; public UnityEngine.Color color; }
-    public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public T GetTile<T>(UnityEngine.Vector3Int p) where T : TileBase => null; public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} public void ClearAllTiles() {} }
-    public class TilemapRenderer : UnityEngine.Renderer { }
+    public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public UnityEngine.Vector3 tileAnchor; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public T GetTile<T>(UnityEngine.Vector3Int p) where T : TileBase => null; public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} public void ClearAllTiles() {} }
+    public class TilemapRenderer : UnityEngine.Renderer { public enum Mode { Chunk, Individual, SRPBatch } public Mode mode; }
 }
 namespace UnityEngine.InputSystem
 {

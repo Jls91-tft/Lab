@@ -22,10 +22,12 @@ namespace CepaCero.Unity.Prototype
         private bool _visible = true;
         private int _roofVersion = -1;
 
-        public PrototypeDecorView(IReadOnlyList<DecorItem> items, PrototypeArt art, Transform parent)
+        public PrototypeDecorView(IReadOnlyList<DecorItem> items, PrototypeArt art, Transform parent, Transform upright)
         {
             var root = new GameObject("Decoration (prototype)").transform;
             root.SetParent(parent, false);
+            var standing = new GameObject("Standing decoration").transform;
+            standing.SetParent(upright, false);
             foreach (DecorItem item in items)
             {
                 if (!art.TryGet(item.Sprite, out Sprite sprite))
@@ -33,18 +35,31 @@ namespace CepaCero.Unity.Prototype
                     continue; // an old atlas: skip rather than fail
                 }
                 var go = new GameObject(item.Sprite);
-                go.transform.SetParent(root, false);
                 SpriteRenderer r = go.AddComponent<SpriteRenderer>();
                 r.sprite = sprite;
                 r.flipX = item.FlipX;
                 PrototypeMaterials.Apply(r);
 
-                // Centred on its footprint; standing pieces rest on the footprint's bottom edge.
                 Vector2 size = art.UnitSize(item.Sprite);
                 float x = item.X + item.Width / 2f;
-                float y = item.Flat ? item.Y + item.Height / 2f : item.Y + size.y / 2f;
-                go.transform.localPosition = new Vector3(x, y, 0f);
-                r.sortingOrder = item.Flat ? FlatOrder : PrototypeEntityView.SortingOrder(item.Y + 0.3f, PrototypeEntityView.DecorBias);
+                float y = item.Y + item.Height / 2f;
+                if (item.Flat)
+                {
+                    go.transform.SetParent(root, false);                      // marks on the ground: on the grid (D-025)
+                    go.transform.localPosition = new Vector3(x, y, 0f);
+                    r.sortingOrder = FlatOrder;
+                }
+                else
+                {
+                    // Standing pieces: an anchor on the projected footprint sorts them with walls and people; the sprite stands on it.
+                    var anchor = new GameObject(item.Sprite + " (anchor)");
+                    anchor.transform.SetParent(standing, false);
+                    anchor.transform.localPosition = PrototypeIso.ToScreen(x, y);
+                    UnityEngine.Rendering.SortingGroup group = anchor.AddComponent<UnityEngine.Rendering.SortingGroup>();
+                    group.sortingOrder = PrototypeIso.UprightOrder;
+                    go.transform.SetParent(anchor.transform, false);
+                    go.transform.localPosition = new Vector3(0f, size.y / 2f - 0.25f, 0f);
+                }
                 _renderers.Add(r);
                 if (item.Sprite.EndsWith("_fire_0"))
                 {
@@ -93,7 +108,7 @@ namespace CepaCero.Unity.Prototype
             {
                 if (renderer.enabled)
                 {
-                    renderer.sprite = frames[((int)(time * 5f + renderer.transform.localPosition.x * 0.7f)) & 3];
+                    renderer.sprite = frames[((int)(time * 5f + renderer.transform.parent.localPosition.x * 0.7f)) & 3];
                 }
             }
         }

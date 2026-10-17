@@ -108,6 +108,48 @@ namespace CepaCero.Unity.Prototype
             return Named($"roof_{type.Build.MaterialId}_{RoofShapes.SpriteSuffix(shape)}", type);
         }
 
+        /// <summary>
+        /// The standing block of a wall-like cell in the isometric view (D-025): its material, a door or a window on the face that runs along
+        /// the wall (south when the wall goes east-west, west when it goes north-south), or the low cut-away block.
+        /// </summary>
+        public Sprite IsoWall(int x, int y, int level, bool low)
+        {
+            BlockType t = _blocks.GetBlock(x, y, level, BuildLayer.Structure);
+            string m = t.Build != null ? t.Build.MaterialId : "brick";       // the map's own walls are brick
+            if (t.IsAir)
+            {
+                m = level <= -3 ? "rock" : "earth";
+            }
+            string name = "iso_wall_" + m;
+            if (low)
+            {
+                name += "_low";
+            }
+            else
+            {
+                string shape = t.Build != null ? t.Build.Shape : t.Key == "door" || t.Key == "door_open" ? "door" : "wall";
+                bool open = t.Build != null ? t.Build.IsOpenVariant : t.Key == "door_open";
+                string piece = shape == "door" ? (open ? "dooropen" : "door") : shape == "window" || shape == "bigwindow" ? "window" : null;
+                if (piece != null)
+                {
+                    bool eastWest = IsWallLike(x + 1, y, level) || IsWallLike(x - 1, y, level);
+                    name += "_" + piece + "_" + (eastWest ? "s" : "w");
+                }
+            }
+            if (_art.TryGet(name, out Sprite s))
+            {
+                return s;
+            }
+            return _art.TryGet("iso_wall_brick" + (low ? "_low" : ""), out s) ? s : null;
+        }
+
+        /// <summary>The roof piece as a diamond lifted onto the walls (D-025, spritegen iso.roof); the flat one if the atlas is older.</summary>
+        public Sprite IsoRoof(BlockType type, RoofShape shape)
+        {
+            string name = $"iso_roof_{type.Build.MaterialId}_{RoofShapes.SpriteSuffix(shape)}";
+            return _art.TryGet(name, out Sprite s) ? s : Roof(type, shape);
+        }
+
         /// <summary>True for blocks that join walls: walls, doors, windows, gates, arches, pillars and the map's own walls.</summary>
         public bool IsWallLike(int x, int y, int level)
         {

@@ -38,6 +38,7 @@ namespace CepaCero.Unity.Prototype
         public static int SortingOrder(float y, int bias) => SortBase - Mathf.RoundToInt(y * 4f) * 4 + bias;
 
         private readonly Transform _root;
+        private readonly Transform _flat;                     // the cursor lies on the ground (D-025)
         private readonly int _ppu;
         private readonly ZombieCatalog _catalog;
         private readonly Sprite[][][] _zombieFrames;
@@ -87,8 +88,9 @@ namespace CepaCero.Unity.Prototype
             public float Phase;
         }
 
-        public PrototypeEntityView(Transform parent, ZombieCatalog catalog, PrototypeArt art)
+        public PrototypeEntityView(Transform parent, Transform flat, ZombieCatalog catalog, PrototypeArt art)
         {
+            _flat = flat;
             var go = new GameObject("Entities (prototype)");
             go.transform.SetParent(parent, false);
             _root = go.transform;
@@ -123,7 +125,7 @@ namespace CepaCero.Unity.Prototype
             if (_cursor == null)
             {
                 var go = new GameObject("Cursor");
-                go.transform.SetParent(_root, false);
+                go.transform.SetParent(_flat, false);
                 _cursor = go.AddComponent<SpriteRenderer>();
                 _cursor.sprite = _cursorSprite;
                 _cursor.sortingOrder = short.MaxValue;
@@ -305,6 +307,7 @@ namespace CepaCero.Unity.Prototype
                 var go = new GameObject("sprite");
                 go.transform.SetParent(_root, false);
                 SpriteRenderer r = go.AddComponent<SpriteRenderer>();
+                r.spriteSortPoint = SpriteSortPoint.Pivot;               // their feet decide who is in front
                 PrototypeMaterials.Apply(r);
                 pool.Add(r);
             }
@@ -313,12 +316,13 @@ namespace CepaCero.Unity.Prototype
             {
                 sr.gameObject.SetActive(true);
             }
-            // Snap to the pixel grid so sprites never shimmer between screen pixels.
-            sr.transform.localPosition = new Vector3(Snap(position.X), Snap(position.Y + footOffset), 0f);
+            // Projected to the screen (D-025), feet on the point, snapped to the pixel grid so sprites never shimmer.
+            Vector3 p = PrototypeIso.ToScreen(position);
+            sr.transform.localPosition = new Vector3(Snap(p.x), Snap(p.y), 0f);
             sr.sprite = sprite;
             sr.flipX = flip;
             sr.color = color;
-            sr.sortingOrder = order != int.MinValue ? order : SortingOrder(position.Y, bias);
+            sr.sortingOrder = order != int.MinValue ? order : PrototypeIso.UprightOrder;   // sorted by screen height with the walls
         }
 
         private float Snap(float v) => Mathf.Round(v * _ppu) / _ppu;

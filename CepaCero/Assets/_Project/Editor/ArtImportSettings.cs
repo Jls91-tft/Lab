@@ -27,6 +27,7 @@ namespace CepaCero.EditorTools
             importer.npotScale = TextureImporterNPOTScale.None;
             importer.alphaIsTransparency = true;
             importer.sRGBTexture = true;
+            importer.maxTextureSize = 8192;                  // the isometric pieces made the 32 px atlas 4096 tall (D-025)
         }
     }
 }

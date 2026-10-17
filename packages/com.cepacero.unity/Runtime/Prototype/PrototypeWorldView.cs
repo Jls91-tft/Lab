@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CepaCero.Building;
 using CepaCero.Map;
@@ -22,8 +23,6 @@ namespace CepaCero.Unity.Prototype
     {
         private const float FadeSpeed = 3.5f;
 
-        /// <summary>Walls are one tile tall: the roof is drawn that much higher on screen, so the south wall shows its front (windows, doors) like in Project Zomboid.</summary>
-        public const float RoofLift = 1f;
         private const int MaxHouseCells = 6000;
         private static readonly Int2[] Neighbours = { new Int2(1, 0), new Int2(-1, 0), new Int2(0, 1), new Int2(0, -1) };
 
@@ -40,6 +39,17 @@ namespace CepaCero.Unity.Prototype
         private readonly Tilemap _edgeMap;                         // dark outline and eave of each building, over its roof
         private readonly Tilemap _edgeFadeMap;
         private Tile[] _edgeTiles;
+
+        // D-025: walls stand up as isometric blocks on their own Tilemap (an isometric grid in screen space), sorted with the people.
+        private readonly Tilemap _wallMap;
+        private readonly HashSet<int> _cut = new HashSet<int>();      // walls drawn low so you can see yourself (in front of you, PZ)
+        private readonly HashSet<int> _cutNext = new HashSet<int>();
+        private readonly List<int> _cutChanged = new List<int>();
+        private readonly HashSet<int> _roofCut = new HashSet<int>();  // roofs in front of you, see-through (PZ)
+        private readonly HashSet<int> _roofCutNext = new HashSet<int>();
+        private readonly Tilemap _roofCutMap;
+        private readonly Tilemap _roofLineMap;                       // the outline of each building's roof
+        private Tile[] _lineTiles;
         private int[] _owner;                                       // building index + 1 per cell, 0 = none
         private readonly Tilemap _belowFloorMap;
         private readonly Tilemap _belowBlockMap;
@@ -76,7 +86,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Changes whenever something under a roof may have become visible or hidden (decoration and entities re-check).</summary>
         public int RoofVersion { get; private set; }
 
-        public PrototypeWorldView(BlockWorld blocks, GroundLayer ground, PrototypeArt art, Transform parent)
+        public PrototypeWorldView(BlockWorld blocks, GroundLayer ground, PrototypeArt art, Transform parent, Transform upright)
         {
             _blocks = blocks;
             _ground = ground;
@@ -92,14 +102,32 @@ namespace CepaCero.Unity.Prototype
             _floorMap = CreateLayer(grid.transform, "Floors", PrototypeDecorView.FlatOrder);        // under the flat decals' neighbours: you walk on it
             _blockMap = CreateLayer(grid.transform, "Blocks", PrototypeDecorView.FlatOrder + 1); // flat decals go in between
             _objectMap = CreateLayer(grid.transform, "Objects", PrototypeDecorView.FlatOrder + 1);
-            _roofMap = CreateLayer(grid.transform, "Roofs", PrototypeDecorView.FlatOrder + 2);
-            _roofFadeMap = CreateLayer(grid.transform, "Roof of your house (fading)", PrototypeDecorView.FlatOrder + 2);
+            // D-025: walls and roofs stand on an isometric grid in screen space and sort with the people (Individual mode, by screen height).
+            var isoGrid = new GameObject("Walls and roofs (isometric)");
+            isoGrid.transform.SetParent(upright, false);
+            Grid g = isoGrid.AddComponent<Grid>();
+            g.cellLayout = GridLayout.CellLayout.Isometric;
+            g.cellSize = new Vector3(2f, 1f, 1f);
+            _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
+            _wallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+            // A roof piece is drawn on top of the walls (its sprite pivot lifts it) but sorts at the ground of its cell, a hair in front of the
+            // wall of the same cell: whoever is behind the house is covered, whoever is in front is not.
+            _roofMap = CreateLayer(isoGrid.transform, "Roofs", PrototypeIso.UprightOrder);
+            _roofFadeMap = CreateLayer(isoGrid.transform, "Roof of your house (fading)", PrototypeIso.UprightOrder);
+            _roofCutMap = CreateLayer(isoGrid.transform, "Roofs in front of you (see-through)", PrototypeIso.UprightOrder);
+            _roofCutMap.color = new Color(1f, 1f, 1f, 0.22f);
+            _roofLineMap = CreateLayer(isoGrid.transform, "Roof outlines", PrototypeIso.UprightOrder);
+            foreach (Tilemap roof in new[] { _roofMap, _roofFadeMap, _roofCutMap, _roofLineMap })
+            {
+                roof.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+                roof.tileAnchor = new Vector3(0.48f, 0.48f, 0f);
+            }
+            _roofLineMap.tileAnchor = new Vector3(0.47f, 0.47f, 0f);            // just in front of its roof piece
+            // The outlines of the flat roofs are not used in the isometric view (the walls draw the edges); kept empty and hidden.
             _edgeMap = CreateLayer(grid.transform, "Roof edges", PrototypeDecorView.FlatOrder + 3);
             _edgeFadeMap = CreateLayer(grid.transform, "Roof edges of your house (fading)", PrototypeDecorView.FlatOrder + 3);
-            foreach (Tilemap lifted in new[] { _roofMap, _roofFadeMap, _edgeMap, _edgeFadeMap })
-            {
-                lifted.transform.localPosition = new Vector3(0f, RoofLift, 0f);
-            }
+            _edgeMap.gameObject.SetActive(false);
+            _edgeFadeMap.gameObject.SetActive(false);
 
             RepaintAll();
         }
@@ -190,8 +218,6 @@ namespace CepaCero.Unity.Prototype
             _groundMap.gameObject.SetActive(level >= 0);
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
             _roofFadeMap.gameObject.SetActive(level >= 0);
-            _edgeMap.gameObject.SetActive(level >= 0);
-            _edgeFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
         }
@@ -216,10 +242,25 @@ namespace CepaCero.Unity.Prototype
             var area = new BoundsInt(0, 0, 0, w, h, 1);
             _groundMap.SetTilesBlock(area, groundTiles);
             _blockMap.SetTilesBlock(area, blockTiles);
+            _wallMap.ClearAllTiles();
+            _cut.Clear();
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if (_sprites.IsWallLike(x, y, _level))
+                    {
+                        PaintWall(x, y);
+                    }
+                }
+            }
             _floorMap.ClearAllTiles();
             _objectMap.ClearAllTiles();
             _roofMap.ClearAllTiles();
             _roofFadeMap.ClearAllTiles();
+            _roofCutMap.ClearAllTiles();
+            _roofLineMap.ClearAllTiles();
+            _roofCut.Clear();
             _edgeMap.ClearAllTiles();
             _edgeFadeMap.ClearAllTiles();
             _belowFloorMap.ClearAllTiles();
@@ -318,7 +359,7 @@ namespace CepaCero.Unity.Prototype
                         foreach (int key in _scratch)
                         {
                             _house.Add(key);
-                            MoveRoofCell(key % _blocks.Width, key / _blocks.Width, toFade: true);
+                            PaintRoofCell(key % _blocks.Width, key / _blocks.Width);
                         }
                         _fade = 1f;
                     }
@@ -328,6 +369,7 @@ namespace CepaCero.Unity.Prototype
                 {
                     _fadeTarget = 1f;
                 }
+                UpdateCut(player, _fadeTarget <= 0f && _house.Count > 0);
             }
             if (_house.Count == 0)
             {
@@ -380,11 +422,12 @@ namespace CepaCero.Unity.Prototype
 
         private void ReleaseHouse()
         {
-            foreach (int key in _house)
-            {
-                MoveRoofCell(key % _blocks.Width, key / _blocks.Width, toFade: false);
-            }
+            var cells = new List<int>(_house);
             _house.Clear();
+            foreach (int key in cells)
+            {
+                PaintRoofCell(key % _blocks.Width, key / _blocks.Width);
+            }
             _fade = _fadeTarget = 1f;
             _roofFadeMap.ClearAllTiles();
             if (_houseOpen)
@@ -457,6 +500,7 @@ namespace CepaCero.Unity.Prototype
                         if (_blocks.InBounds(x, y))
                         {
                             _blockMap.SetTile(new Vector3Int(x, y, 0), BlockTile(x, y));
+                            PaintWall(x, y);
                         }
                     }
                 }
@@ -476,6 +520,7 @@ namespace CepaCero.Unity.Prototype
             _tint = new Color(v, v, v, 1f);
             _groundMap.color = _level > 0 ? new Color(_tint.r * 0.6f, _tint.g * 0.6f, _tint.b * 0.6f, 1f) : _tint;
             _blockMap.color = _tint;
+            _wallMap.color = _tint;
             _floorMap.color = _tint;
             _objectMap.color = _tint;
             _roofMap.color = _tint;
@@ -489,8 +534,111 @@ namespace CepaCero.Unity.Prototype
 
         // ------------------------------------------------------------------ painting
 
-        private TileBase BlockTile(int x, int y) =>
-            TileFor(_sprites.Structure(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Structure));
+        private TileBase BlockTile(int x, int y)
+        {
+            if (_sprites.IsWallLike(x, y, _level))
+            {
+                return null;                                     // drawn standing up on the wall map
+            }
+            return TileFor(_sprites.Structure(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Structure));
+        }
+
+        private void PaintWall(int x, int y)
+        {
+            Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y))) : null;
+            _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
+        }
+
+        /// <summary>
+        /// The cutaway (Project Zomboid): the walls in front of you are drawn low, those of the house you are in and any wall right in
+        /// front of you outside, so a building never hides the player.
+        /// </summary>
+        private void UpdateCut(Int2 player, bool inside)
+        {
+            _cutNext.Clear();
+            int pd = player.X + player.Y;
+            if (inside)
+            {
+                foreach (int key in _house)
+                {
+                    int x = key % _blocks.Width;
+                    int y = key / _blocks.Width;
+                    if (x + y <= pd + 1 && _sprites.IsWallLike(x, y, _level))
+                    {
+                        _cutNext.Add(key);
+                    }
+                }
+            }
+            for (int dy = -3; dy <= 1; dy++)
+            {
+                for (int dx = -3; dx <= 1; dx++)
+                {
+                    int x = player.X + dx;
+                    int y = player.Y + dy;
+                    if (dx + dy < 0 && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
+                    {
+                        _cutNext.Add(Key(x, y));
+                    }
+                }
+            }
+            // Roofs that would cover you on screen: in front of you and close, drawn see-through.
+            _roofCutNext.Clear();
+            for (int dy = -7; dy <= 2; dy++)
+            {
+                for (int dx = -7; dx <= 2; dx++)
+                {
+                    int x = player.X + dx;
+                    int y = player.Y + dy;
+                    if (dx + dy <= 1 && Math.Abs(dx - dy) <= 6 && _blocks.InBounds(x, y) && HasRoofOver(x, y))
+                    {
+                        _roofCutNext.Add(Key(x, y));
+                    }
+                }
+            }
+            var roofChanged = new List<int>();
+            foreach (int k in _roofCut)
+            {
+                if (!_roofCutNext.Contains(k))
+                {
+                    roofChanged.Add(k);
+                }
+            }
+            foreach (int k in _roofCutNext)
+            {
+                if (!_roofCut.Contains(k))
+                {
+                    roofChanged.Add(k);
+                }
+            }
+            _roofCut.Clear();
+            _roofCut.UnionWith(_roofCutNext);
+            foreach (int k in roofChanged)
+            {
+                PaintRoofCell(k % _blocks.Width, k / _blocks.Width);
+            }
+
+            _cutChanged.Clear();
+            foreach (int k in _cut)
+            {
+                if (!_cutNext.Contains(k))
+                {
+                    _cutChanged.Add(k);
+                }
+            }
+            foreach (int k in _cutNext)
+            {
+                if (!_cut.Contains(k))
+                {
+                    _cutChanged.Add(k);
+                }
+            }
+            _cut.Clear();
+            _cut.UnionWith(_cutNext);
+            foreach (int k in _cutChanged)
+            {
+                PaintWall(k % _blocks.Width, k / _blocks.Width);
+            }
+        }
 
         private void PaintExtraLayers(int x, int y)
         {
@@ -507,16 +655,20 @@ namespace CepaCero.Unity.Prototype
             BlockType type = TopRoof(x, y, out int level);
             TileBase tile = null;
             TileBase edge = null;
-            if (!type.IsAir && _level >= 0 && !CoversADoor(x, y))
+            if (!type.IsAir && _level >= 0)
             {
                 edge = EdgeTile(x, y);
-                RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
+                RoofShape shape = RoofShape.Flat;                       // pitched roofs come in phase 3 (D-025); flat reads clearer meanwhile
                 byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
-                tile = TileFor(_sprites.Roof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
+                tile = TileFor(_sprites.IsoRoof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
             }
+            // One map per state: your house (fading), in front of you (see-through) or the rest.
             bool fading = _house.Contains(Key(x, y));
-            (fading ? _roofFadeMap : _roofMap).SetTile(cell, tile);
-            (fading ? _roofMap : _roofFadeMap).SetTile(cell, null);
+            bool cut = !fading && _roofCut.Contains(Key(x, y));
+            _roofFadeMap.SetTile(cell, fading ? tile : null);
+            _roofCutMap.SetTile(cell, cut ? tile : null);
+            _roofMap.SetTile(cell, fading || cut ? null : tile);
+            _roofLineMap.SetTile(cell, fading || cut || tile == null ? null : LineTile(x, y));
             (fading ? _edgeFadeMap : _edgeMap).SetTile(cell, edge);
             (fading ? _edgeMap : _edgeFadeMap).SetTile(cell, null);
         }
@@ -557,6 +709,56 @@ namespace CepaCero.Unity.Prototype
             }
             BlockType t = _blocks.GetBlock(x, y + 1, 0, BuildLayer.Structure);
             return !t.IsAir && (t.Key == "door" || t.Key == "door_open" || (t.Build != null && t.Build.Shape == "door"));
+        }
+
+        /// <summary>Dark lines along the sides of a roof piece where the building ends (iso diamond: N up-left, E up-right, S down-right, W down-left).</summary>
+        private TileBase LineTile(int x, int y)
+        {
+            int self = OwnerAt(x, y);
+            int mask = (SameRoof(x, y + 1, self) ? 0 : 1) | (SameRoof(x + 1, y, self) ? 0 : 2) | (SameRoof(x, y - 1, self) ? 0 : 4) | (SameRoof(x - 1, y, self) ? 0 : 8);
+            if (mask == 0)
+            {
+                return null;
+            }
+            if (_lineTiles == null)
+            {
+                _lineTiles = new Tile[16];
+            }
+            if (_lineTiles[mask] == null)
+            {
+                const int Wd = 64, Hd = 32;
+                var tex = new Texture2D(Wd, Hd, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                var clear = new Color(0f, 0f, 0f, 0f);
+                var line = new Color(0.07f, 0.04f, 0.04f, 0.9f);
+                var light = new Color(1f, 0.92f, 0.8f, 0.35f);
+                for (int py = 0; py < Hd; py++)
+                {
+                    for (int px = 0; px < Wd; px++)
+                    {
+                        // Distance (in px) to each edge of the diamond; py counts from the bottom.
+                        float fx = (px + 0.5f - 32f) / 32f;
+                        float fy = (py + 0.5f - 16f) / 16f;
+                        bool inside = Mathf.Abs(fx) + Mathf.Abs(fy) <= 1f;
+                        Color c = clear;
+                        if (inside)
+                        {
+                            float d = (1f - Mathf.Abs(fx) - Mathf.Abs(fy)) * 16f;
+                            bool up = fy > 0f, right = fx > 0f;
+                            int edge = up ? (right ? 2 : 1) : (right ? 4 : 8);
+                            if ((mask & edge) != 0 && d < 1.6f)
+                            {
+                                c = (edge == 4 || edge == 8) ? line : light;     // the eave toward you is dark, the far edge catches the light
+                            }
+                        }
+                        tex.SetPixel(px, py, c);
+                    }
+                }
+                tex.Apply(false);
+                var tile = ScriptableObject.CreateInstance<Tile>();
+                tile.sprite = Sprite.Create(tex, new Rect(0, 0, Wd, Hd), new Vector2(0.5f, (16f - PrototypeIso.WallHeight * 32f) / Hd), 32f);
+                _lineTiles[mask] = tile;
+            }
+            return _lineTiles[mask];
         }
 
         private int OwnerAt(int x, int y) => _owner != null && _blocks.InBounds(x, y) ? _owner[y * _blocks.Width + x] : 0;

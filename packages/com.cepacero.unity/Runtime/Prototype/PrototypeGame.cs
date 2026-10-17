@@ -73,7 +73,9 @@ namespace CepaCero.Unity.Prototype
         private PrototypeEffects _effects;
         private PrototypeAudio _audio;
         private Float2 _audioLast;
-        private Transform _viewRoot;
+        private Transform _viewRoot;                         // flat things, in grid coordinates (D-025)
+        private Transform _viewTop;
+        private Transform _upright;                          // things that stand up, in screen coordinates
         private Camera _camera;
         private int _me;
         private PrototypeBuilder _builder;
@@ -113,9 +115,9 @@ namespace CepaCero.Unity.Prototype
 
         private void StartMatch(bool loadSave)
         {
-            if (_viewRoot != null)
+            if (_viewTop != null)
             {
-                Destroy(_viewRoot.gameObject);
+                Destroy(_viewTop.gameObject);
             }
             _map = RepoData.LoadMap(_mapPath);
             _session = new GameSession(_settings, _playerSettings, _map.Blocks, _map.Ground, _data, _map.Buildings);
@@ -146,7 +148,7 @@ namespace CepaCero.Unity.Prototype
                 }
             }
 
-            _viewRoot = new GameObject("Cepa Cero (prototype view)").transform;
+            _viewTop = PrototypeIso.CreateRoots(out _viewRoot, out _upright);
             BlockWorld viewBlocks = _map.Blocks;
             GroundLayer viewGround = _map.Ground;
             if (_playAsRemoteClient && _session.Players.Count > 1)
@@ -173,17 +175,17 @@ namespace CepaCero.Unity.Prototype
             _viewGround = viewGround;
             // The host pays from the session's book (it knows the unlocked recipes); a client builds its own.
             _recipes = Remote ? new RecipeBook(_data.RecipesData, _data.Items) : _session.Recipes;
-            _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot);
+            _world = new PrototypeWorldView(viewBlocks, viewGround, _art, _viewRoot, _upright);
             _world.SetBuildings(_map.Buildings);
             _buildView = new PrototypeBuildView(_viewRoot, _world, _art, viewBlocks.Registry);
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
-            _decor = new PrototypeDecorView(decor, _art, _viewRoot);
+            _decor = new PrototypeDecorView(decor, _art, _viewRoot, _upright);
             // Real light (D-024): street lamps and fires from the decoration, and some houses with their lights on.
             _lighting = new PrototypeLighting(_viewRoot, viewBlocks);
             _lighting.AddFromDecor(decor);
             _lighting.AddHouses(_map.Buildings, viewGround, DecorPlanner.SeedFor(_map.Name));
-            _entities = new PrototypeEntityView(_viewRoot, _data.Zombies, _art);
+            _entities = new PrototypeEntityView(_upright, _viewRoot, _data.Zombies, _art);
             _effects = new PrototypeEffects(_viewRoot, _art);
             _entities.Effects = _effects;
             _entities.Lighting = _lighting;
@@ -314,8 +316,9 @@ namespace CepaCero.Unity.Prototype
             int zoom = _pixelZoom > 0 ? _pixelZoom : PrototypeArt.Zoom(screenHeight);
             float screenPixelsPerUnit = _art.PixelsPerUnit * zoom;
             _camera.orthographicSize = screenHeight / (2f * screenPixelsPerUnit);
-            float x = Mathf.Round(target.X * screenPixelsPerUnit) / screenPixelsPerUnit;
-            float y = Mathf.Round(target.Y * screenPixelsPerUnit) / screenPixelsPerUnit;
+            Vector3 onScreen = PrototypeIso.ToScreen(target);                 // D-025: the camera looks at the projected point
+            float x = Mathf.Round(onScreen.x * screenPixelsPerUnit) / screenPixelsPerUnit;
+            float y = Mathf.Round(onScreen.y * screenPixelsPerUnit) / screenPixelsPerUnit;
             Vector3 shake = _effects != null ? _effects.ShakeOffset() : new Vector3(0f, 0f, 0f);
             _camera.transform.position = new Vector3(x + shake.x, y + shake.y, -10f);
         }
