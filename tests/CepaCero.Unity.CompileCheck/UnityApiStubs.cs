@@ -40,7 +40,7 @@ namespace UnityEngine
     public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; public static float fixedTime; }
     public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} public static bool isDebugBuild => true; }
     public static class ScreenCapture { public static void CaptureScreenshot(string path) {} }
-    public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; }
+    public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; public static bool runInBackground; }
     public static class JsonUtility { public static T FromJson<T>(string s) => default; }
     public static class Screen { public static int width, height; }
     public enum TextAnchor { UpperLeft, MiddleLeft, MiddleCenter, LowerRight }

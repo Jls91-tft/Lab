@@ -95,6 +95,8 @@ namespace CepaCero.Unity.Prototype
             try
             {
                 var bridge = new PrototypeDebugBridge(host, port, screenshotDir);
+                // Driven from outside: keep simulating when the window loses focus to the terminal.
+                Application.runInBackground = true;
                 Debug.Log($"Cepa Cero debug bridge: http://localhost:{port}/ (D-023, tools/gamebridge/README.md)");
                 return bridge;
             }
