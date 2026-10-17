@@ -53,6 +53,7 @@ namespace CepaCero.Unity.Prototype
         private readonly Dictionary<int, Walk> _zombieWalk = new Dictionary<int, Walk>();
         private readonly Dictionary<int, Walk> _playerWalk = new Dictionary<int, Walk>();
         private readonly List<SpriteRenderer> _zombies = new List<SpriteRenderer>();
+        private readonly List<SpriteRenderer> _glows = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _players = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _piles = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _containers = new List<SpriteRenderer>();
@@ -66,6 +67,12 @@ namespace CepaCero.Unity.Prototype
 
         /// <summary>The world, to hide what stands under a closed roof (D-024).</summary>
         public PrototypeWorldView Roofs { get; set; }
+
+        /// <summary>Hit flashes and blood (D-024). Optional.</summary>
+        public PrototypeEffects Effects { get; set; }
+
+        /// <summary>Light on the map: mutants glow green where it is dark.</summary>
+        public PrototypeLighting Lighting { get; set; }
 
         /// <summary>The characters' pivot is at their feet; the entity position is the middle of the body, a little above.</summary>
         private const float FootOffset = -0.25f;
@@ -140,11 +147,13 @@ namespace CepaCero.Unity.Prototype
             {
                 if (zombies.IsAlive(i) && zombies.GetLevel(i) == ViewLevel)
                 {
-                    DrawZombie(i, zombies.GetPosition(i), zombies.GetTypeIndex(i), zombies.GetState(i), light);
+                    DrawZombie(i, zombies.GetPosition(i), zombies.GetTypeIndex(i), zombies.GetState(i), light, zombies.GetHealth(i));
                 }
             }
             int drawn = _used;
             Trim(_zombies, _used);
+            Trim(_glows, _used);
+            Effects?.EndFrame(session.Players.Count > me && me >= 0 ? session.Players[me].Position : default);
             DrawPlayers(session.Players, me, light);
             DrawPiles(ViewLevel == 0 ? session.GroundItems.Piles : NoPiles, light);
             DrawContainers(ViewLevel == 0 && session.Containers != null ? session.Containers.Positions : NoCells, light);
@@ -160,23 +169,26 @@ namespace CepaCero.Unity.Prototype
             {
                 if (client.Zombies.TrySample(id, renderTime, out ZombieSnapshotEntry z) && z.Type < _catalog.Count)
                 {
-                    DrawZombie(id, z.Position, z.Type, z.State, light);
+                    DrawZombie(id, z.Position, z.Type, z.State, light, -1);
                 }
             }
             int drawn = _used;
             Trim(_zombies, _used);
+            Trim(_glows, _used);
+            Effects?.EndFrame(client.Players.Count > client.MyPlayer && client.MyPlayer >= 0 ? client.Players[client.MyPlayer].Position : default);
             DrawPlayers(client.Players, client.MyPlayer, light);
             DrawPiles(ViewLevel == 0 ? client.Piles : NoPiles, light);
             DrawContainers(ViewLevel == 0 ? client.ContainerCells : NoCells, light);
             return drawn;
         }
 
-        private void DrawZombie(int key, Float2 position, byte type, ZombieState state, float light)
+        private void DrawZombie(int key, Float2 position, byte type, ZombieState state, float light, int health)
         {
             if (Roofs != null && Roofs.IsHiddenByRoof(position))
             {
                 return;                                              // inside a closed house: you cannot see it
             }
+            Effects?.Observe(key, position, health);
             Animate(_zombieWalk, key, position, out int facing, out int frame);
             // Mutants glow at night (docs/lore.md): never darker than half their colour.
             Color c = Color.Lerp(Dim(Color.white, light), Color.white, 0.5f);
@@ -189,7 +201,24 @@ namespace CepaCero.Unity.Prototype
                 c = Color.Lerp(c, Color.red, Mathf.PingPong(Time.time * 6f, 1f));
             }
             Sprite[][] frames = type == _walkerType && _walkerVariants.Count > 1 ? _walkerVariants[Math.Abs(key) % _walkerVariants.Count] : _zombieFrames[type];
-            Place(_zombies, _used++, position, frames[Math.Min(facing, Left)][frame], facing == Right, c, ZombieBias, FootOffset);
+            Sprite sprite = frames[Math.Min(facing, Left)][frame];
+            Place(_zombies, _used, position, sprite, facing == Right, c, ZombieBias, FootOffset);
+
+            // The same sprite again above the light: a green glow that grows with the darkness (the mutants shine, docs/lore.md), white when hit.
+            float dark = Lighting != null && Lighting.Available ? 1f - Lighting.LightAt(position) : 0f;
+            float flash = Effects != null ? Effects.Flash(key) : 0f;
+            float alpha = Mathf.Max(Mathf.Clamp01(dark * 0.75f), flash * 0.85f);
+            if (alpha > 0.02f)
+            {
+                Color glow = Color.Lerp(new Color(0.42f, 1f, 0.38f, 1f), Color.white, flash);
+                glow.a = alpha;
+                Place(_glows, _used, position, sprite, facing == Right, glow, ZombieBias, FootOffset, short.MaxValue - 1);
+            }
+            else if (_glows.Count > _used && _glows[_used].gameObject.activeSelf)
+            {
+                _glows[_used].gameObject.SetActive(false);
+            }
+            _used++;
         }
 
         private void DrawPlayers(IReadOnlyList<PlayerState> players, int me, float light)
@@ -265,7 +294,7 @@ namespace CepaCero.Unity.Prototype
             frame = moving ? (int)w.Phase % 4 : 0;
         }
 
-        private void Place(List<SpriteRenderer> pool, int index, Float2 position, Sprite sprite, bool flip, Color color, int bias, float footOffset = 0f)
+        private void Place(List<SpriteRenderer> pool, int index, Float2 position, Sprite sprite, bool flip, Color color, int bias, float footOffset = 0f, int order = int.MinValue)
         {
             while (pool.Count <= index)
             {
@@ -285,7 +314,7 @@ namespace CepaCero.Unity.Prototype
             sr.sprite = sprite;
             sr.flipX = flip;
             sr.color = color;
-            sr.sortingOrder = SortingOrder(position.Y, bias);
+            sr.sortingOrder = order != int.MinValue ? order : SortingOrder(position.Y, bias);
         }
 
         private float Snap(float v) => Mathf.Round(v * _ppu) / _ppu;

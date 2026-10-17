@@ -61,7 +61,7 @@ cuidado; para un aspecto propio y memorable se necesitará un artista (decisión
 | Arte de 32 px cableado, 960×540 | En curso |
 | Tejados por edificio, interior oculto | En curso |
 | Luz por casillas con sombras | Hecho (primera pasada: farolas, hogueras, casas, linterna con L; falta calibrar y lámparas construibles) |
-| Jerarquía de valor y suelos limpios | Pendiente |
-| Golpes, partículas, cámara | Pendiente |
+| Jerarquía de valor y suelos limpios | En curso (zombis brillan en verde en la oscuridad; faltan contornos y suelos más limpios) |
+| Golpes, partículas, cámara | Hecho (destello al golpear, sangre y manchas, sacudida al recibir daño; faltan polvo y niebla) |
 | Interfaz compacta y fuente pixel | Pendiente |
 | Sonido | Pendiente |

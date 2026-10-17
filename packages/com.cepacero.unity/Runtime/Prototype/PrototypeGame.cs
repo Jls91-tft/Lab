@@ -70,6 +70,7 @@ namespace CepaCero.Unity.Prototype
         private PrototypeEntityView _entities;
         private PrototypeDecorView _decor;
         private PrototypeLighting _lighting;
+        private PrototypeEffects _effects;
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
@@ -179,8 +180,11 @@ namespace CepaCero.Unity.Prototype
             _lighting = new PrototypeLighting(_viewRoot, viewBlocks);
             _lighting.AddFromDecor(decor);
             _lighting.AddHouses(_map.Buildings, viewGround, DecorPlanner.SeedFor(_map.Name));
-            Debug.Log($"Cepa Cero prototype: {_decor.Count} pieces of decoration.");
             _entities = new PrototypeEntityView(_viewRoot, _data.Zombies, _art);
+            _effects = new PrototypeEffects(_viewRoot, _art);
+            _entities.Effects = _effects;
+            _entities.Lighting = _lighting;
+            Debug.Log($"Cepa Cero prototype: {_decor.Count} pieces of decoration.");
             SetupCamera();
             Say(loadSave ? "Partida cargada" : $"Mapa: {_map.Name} ({_map.Blocks.Width}×{_map.Blocks.Height}). {_map.Attribution}");
         }
@@ -275,6 +279,7 @@ namespace CepaCero.Unity.Prototype
             UpdateCursor();
             PlaceCamera(MyState.Position);
             Float2 toCursor = _input.MouseWorld - MyState.Position;
+            _effects.Update(Time.deltaTime);
             _lighting.Update(_camera, MyState.Level, ambient, MyState.Position, toCursor.LengthSquared > 0.01f ? toCursor.Normalized : default, Time.time);
         }
 
@@ -301,7 +306,8 @@ namespace CepaCero.Unity.Prototype
             _camera.orthographicSize = screenHeight / (2f * screenPixelsPerUnit);
             float x = Mathf.Round(target.X * screenPixelsPerUnit) / screenPixelsPerUnit;
             float y = Mathf.Round(target.Y * screenPixelsPerUnit) / screenPixelsPerUnit;
-            _camera.transform.position = new Vector3(x, y, -10f);
+            Vector3 shake = _effects != null ? _effects.ShakeOffset() : new Vector3(0f, 0f, 0f);
+            _camera.transform.position = new Vector3(x + shake.x, y + shake.y, -10f);
         }
 
         private void OnGUI()
@@ -828,6 +834,9 @@ namespace CepaCero.Unity.Prototype
                     break;
                 case SessionEventType.IntentResolved when e.Result != IntentResult.Ok && e.Result != IntentResult.TooSoon:
                     Say(ResultText(e.Result));
+                    break;
+                case SessionEventType.PlayerHurt when e.Player == _me:
+                    _effects?.Shake(Mathf.Clamp(0.04f + e.Value * 0.006f, 0.05f, 0.25f));
                     break;
                 case SessionEventType.PlayerFell when e.Player == _me:
                     Say($"¡Caes {e.Value} nivel{(e.Value > 1 ? "es" : "")}!");
