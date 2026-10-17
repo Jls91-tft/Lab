@@ -146,24 +146,25 @@ dotnet run -c Release --project tools/simbench -- --map tools/osm2tiles/out/deli
 ```
 
 ## 5. MCP oficial de Unity para Claude Code
-Paquete **`com.unity.ai.assistant`** (Unity AI Assistant, en beta). Pasos según las guías que encontré:
+**Confirmado (17/10/2026):**
+- Paquete `com.unity.ai.assistant` **2.20.0-pre.2** en `CepaCero/Packages/manifest.json` (Unity solo lo publica como versión preliminar).
+- El **servidor MCP es gratis**; lo de pago son los créditos del asistente que chatea dentro del editor, que no usamos.
+- La documentación del propio paquete lo marca como **obsoleto** en favor de la *Unity CLI*, pero sigue funcionando.
+- Al abrir el editor, Unity instala el intermediario en `%USERPROFILE%/.unity/relay/relay_win.exe`.
+elay
+elay_win.exe`.
+  `.mcp.json` (en la raíz del repo) lo registra para Claude Code como servidor `unity-mcp`, con `--mcp`.
 
-- [ ] **Coste antes de nada:** al activarlo, mira si pide una suscripción, prueba o "puntos" de Unity AI.
-  **Si cuesta dinero, para y me lo dices** (regla: nada de pago sin decidirlo juntos). Hay
-  alternativas comunitarias gratuitas que podemos valorar.
-- [ ] *Window > Package Manager* → **+** → *Add package by name…* → `com.unity.ai.assistant`.
-  Si no lo encuentra, activa los paquetes preliminares: *Project Settings > Package Manager > Enable Pre-release Packages*.
-- [ ] *Edit > Project Settings > AI > Unity MCP*: comprobar que el **Unity Bridge** aparece como *running*.
-- [ ] En la sección **Integrations**, busca **Claude Code**. Para Claude Code la configuración
-  automática no suele estar disponible: **copia el comando** que muestra el panel y ejecútalo
-  en una terminal **en la raíz del repo**.
-- [ ] Arranca Claude Code en la raíz del repo y, en Unity, **aprueba la conexión** en *Pending Connections*.
-- [ ] Comprobación: `claude mcp list` debe mostrar el servidor de Unity como conectado, y dentro de Claude Code `/mcp` lo lista.
-- [ ] Prueba final: pídeme "lee la consola de Unity y dime cuántos errores hay".
+Para usarlo:
+- [ ] Abrir el proyecto en el editor (no basta el modo batch) y comprobar en *Edit > Project Settings > AI > Unity MCP Server*
+  que **Unity Bridge** está *Running*.
+- [ ] Abrir una sesión **nueva** de Claude Code en el repo (los servidores MCP se cargan al empezar) y aceptar el servidor `unity-mcp`.
+- [ ] La primera vez, en esa misma página de Unity, aprobar la conexión en **Pending Connections** (*Allow*).
+- [ ] Prueba: pedir a Claude "lee la consola de Unity y dime cuántos errores hay".
 
-> Una guía de septiembre de 2026 menciona además un camino por línea de comandos
-> (`unity mcp configure claude-code`) y un plugin oficial para Claude Code. No he podido
-> confirmarlo; si en el panel ves esa opción, úsala y me cuentas.
+El MCP sirve para la consola, la escena y el Play/Stop del editor. Para **jugar** (mover, construir, cavar) está el
+**puente de depuración** (D-023, `tools/gamebridge/README.md`), que también funciona con la build de desarrollo
+(menú *Cepa Cero > Build de desarrollo (Windows)*, sale en `devbuild/`).
 
 ## 6. Al terminar, pásame
 1. La versión exacta de Unity (`6000.3.xxf1`).
