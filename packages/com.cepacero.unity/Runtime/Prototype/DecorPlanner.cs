@@ -121,7 +121,7 @@ namespace CepaCero.Unity.Prototype
                             case GroundType.Sidewalk:
                                 Pick(x, y, p, 0.05, "decor_lamp", 0.08, Any("decor_bin_0", "decor_bin_1", "decor_trash_bag"),
                                     0.092, "decor_hydrant", 0.104, "decor_bench", 0.114, "decor_mailbox", 0.124, "decor_cone",
-                                    0.134, Any("decor_boxes_0", "decor_boxes_1"));
+                                    0.134, Any("decor_boxes_0", "decor_boxes_1"), 0.1375, "decor_barrel_fire_0");
                                 break;
                             case GroundType.Grass:
                                 Pick(x, y, p, 0.05, Any("decor_tree_0", "decor_tree_1", "decor_tree_0", "decor_tree_dead"),
@@ -129,7 +129,7 @@ namespace CepaCero.Unity.Prototype
                                 break;
                             case GroundType.Dirt:
                                 Pick(x, y, p, 0.012, "decor_bush_dead", 0.02, "decor_tree_dead", 0.026, "decor_barrel",
-                                    0.032, Any("decor_boxes_0", "decor_boxes_1"));
+                                    0.032, Any("decor_boxes_0", "decor_boxes_1"), 0.0345, "decor_barrel_fire_0");
                                 break;
                         }
                     }

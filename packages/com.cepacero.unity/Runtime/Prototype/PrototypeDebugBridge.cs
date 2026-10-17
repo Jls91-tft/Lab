@@ -396,6 +396,7 @@ namespace CepaCero.Unity.Prototype
                 case "load": input.Load = true; break;
                 case "cost": input.CycleCost = true; break;
                 case "help": input.ShowHelp = !input.ShowHelp; break;
+                case "light": input.ToggleFlashlight = true; break;
             }
         }
 
@@ -470,6 +471,7 @@ namespace CepaCero.Unity.Prototype
                 {
                     File.Delete(_pendingShot);
                 }
+                PrototypeLighting.DumpPath = _pendingShot.Replace(".png", "_light.png");
                 ScreenCapture.CaptureScreenshot(_pendingShot);
                 _phase = 1;
                 return;

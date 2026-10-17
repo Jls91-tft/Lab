@@ -76,6 +76,9 @@ namespace CepaCero.Unity.Prototype
 
         /// <summary>F6: building costs normal, cheap (half) or free (creative).</summary>
         public bool CycleCost;
+
+        /// <summary>L: torch on or off (a cone of light toward the cursor).</summary>
+        public bool ToggleFlashlight;
         public bool Load;
         public int Hotbar = -1;
 
@@ -109,6 +112,7 @@ namespace CepaCero.Unity.Prototype
             LoadPlan |= Ctrl && kb.lKey.wasPressedThisFrame;
             Save |= kb.f5Key.wasPressedThisFrame;
             CycleCost |= kb.f6Key.wasPressedThisFrame;
+            ToggleFlashlight |= !Ctrl && kb.lKey.wasPressedThisFrame;
             Load |= kb.f9Key.wasPressedThisFrame;
             ShapeStep += (kb.eKey.wasPressedThisFrame ? 1 : 0) - (kb.qKey.wasPressedThisFrame ? 1 : 0);
             ColorStep += (kb.rightBracketKey.wasPressedThisFrame || kb.periodKey.wasPressedThisFrame ? 1 : 0)
@@ -148,7 +152,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Clears the latched presses once the simulation tick has used them.</summary>
         public void ClearPresses()
         {
-            Attack = Secondary = Pick = Take = PickUp = EquipFromBag = CraftBandage = Save = Load = CycleCost = false;
+            Attack = Secondary = Pick = Take = PickUp = EquipFromBag = CraftBandage = Save = Load = CycleCost = ToggleFlashlight = false;
             Rotate = Undo = AttackReleased = Cancel = CopyPlan = PastePlan = SavePlan = LoadPlan = false;
             ShapeStep = ColorStep = ClimbStep = 0;
             Hotbar = -1;

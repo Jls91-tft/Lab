@@ -133,7 +133,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Host mode: reads the authoritative simulation. Returns how many zombies were drawn.</summary>
         public int Draw(GameSession session, int me, float ambient)
         {
-            float light = Mathf.Lerp(0.45f, 1f, ambient);
+            float light = 1f;                                    // the light overlay does the darkening (D-024)
             ZombieSimulation zombies = session.Zombies;
             _used = 0;
             for (int i = 0; i < zombies.Capacity; i++)
@@ -154,7 +154,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Loopback/client mode: reads only what arrived through the protocol. Returns zombies drawn.</summary>
         public int Draw(ClientMatchState client, double renderTime, float ambient)
         {
-            float light = Mathf.Lerp(0.45f, 1f, ambient);
+            float light = 1f;                                    // the light overlay does the darkening (D-024)
             _used = 0;
             foreach (ushort id in client.Zombies.Ids)
             {

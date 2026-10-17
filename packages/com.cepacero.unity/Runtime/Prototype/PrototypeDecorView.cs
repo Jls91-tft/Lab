@@ -18,6 +18,7 @@ namespace CepaCero.Unity.Prototype
         private readonly List<SpriteRenderer> _renderers = new List<SpriteRenderer>();
         private readonly List<Float2> _centres = new List<Float2>();
         private float _ambient = -1f;
+        private readonly List<(SpriteRenderer renderer, Sprite[] frames)> _animated = new List<(SpriteRenderer, Sprite[])>();
         private bool _visible = true;
         private int _roofVersion = -1;
 
@@ -45,6 +46,15 @@ namespace CepaCero.Unity.Prototype
                 go.transform.localPosition = new Vector3(x, y, 0f);
                 r.sortingOrder = item.Flat ? FlatOrder : PrototypeEntityView.SortingOrder(item.Y + 0.3f, PrototypeEntityView.DecorBias);
                 _renderers.Add(r);
+                if (item.Sprite.EndsWith("_fire_0"))
+                {
+                    var frames = new Sprite[4];
+                    for (int f = 0; f < 4; f++)
+                    {
+                        frames[f] = art.TryGet(item.Sprite.Substring(0, item.Sprite.Length - 1) + f, out Sprite fs) ? fs : sprite;
+                    }
+                    _animated.Add((r, frames));
+                }
                 _centres.Add(new Float2(item.X + item.Width / 2f, item.Y + item.Height / 2f));
             }
         }
@@ -73,6 +83,18 @@ namespace CepaCero.Unity.Prototype
             for (int i = 0; i < _renderers.Count; i++)
             {
                 _renderers[i].enabled = _visible && !world.IsHiddenByRoof(_centres[i]);
+            }
+        }
+
+        /// <summary>Burning barrels and the like: about five frames a second, each out of step with the others.</summary>
+        public void Animate(float time)
+        {
+            foreach ((SpriteRenderer renderer, Sprite[] frames) in _animated)
+            {
+                if (renderer.enabled)
+                {
+                    renderer.sprite = frames[((int)(time * 5f + renderer.transform.localPosition.x * 0.7f)) & 3];
+                }
             }
         }
 

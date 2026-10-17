@@ -69,6 +69,7 @@ namespace CepaCero.Unity.Prototype
         private PrototypeWorldView _world;
         private PrototypeEntityView _entities;
         private PrototypeDecorView _decor;
+        private PrototypeLighting _lighting;
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
@@ -174,6 +175,10 @@ namespace CepaCero.Unity.Prototype
             // Same map + same seed = the same street for every player, with nothing sent.
             List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
             _decor = new PrototypeDecorView(decor, _art, _viewRoot);
+            // Real light (D-024): street lamps and fires from the decoration, and some houses with their lights on.
+            _lighting = new PrototypeLighting(_viewRoot, viewBlocks);
+            _lighting.AddFromDecor(decor);
+            _lighting.AddHouses(_map.Buildings, viewGround, DecorPlanner.SeedFor(_map.Name));
             Debug.Log($"Cepa Cero prototype: {_decor.Count} pieces of decoration.");
             _entities = new PrototypeEntityView(_viewRoot, _data.Zombies, _art);
             SetupCamera();
@@ -253,7 +258,6 @@ namespace CepaCero.Unity.Prototype
             float ambient = Remote ? _client.Clock.AmbientLight : _session.Clock.AmbientLight;
             _world.Refresh();
             _world.SetAmbient(ambient);
-            _decor.SetAmbient(ambient);
             // Clients render one snapshot interval in the past to interpolate smoothly.
             _zombiesShown = Remote
                 ? _entities.Draw(_client, _netTime - 2.0 / _settings.TickRate, ambient)
@@ -263,12 +267,15 @@ namespace CepaCero.Unity.Prototype
             _entities.ViewLevel = MyState.Level;
             _decor.SetVisible(MyState.Level == 0);
             _decor.ApplyRoofs(_world);
+            _decor.Animate(Time.time);
             _entities.Roofs = _world;
             _builder.SetHand(MyInventory.EquippedDefinition);
             _builder.UpdatePreview(_input.MouseWorld.Tile, BuildContext());
             _buildView.Draw(_builder);
             UpdateCursor();
             PlaceCamera(MyState.Position);
+            Float2 toCursor = _input.MouseWorld - MyState.Position;
+            _lighting.Update(_camera, MyState.Level, ambient, MyState.Position, toCursor.LengthSquared > 0.01f ? toCursor.Normalized : default, Time.time);
         }
 
         /// <summary>Same reach rule as the host (tile centre within PlayerSettings.Reach).</summary>
@@ -779,6 +786,11 @@ namespace CepaCero.Unity.Prototype
 
         private void HandleMetaKeys()
         {
+            if (_input.ToggleFlashlight && _lighting != null)
+            {
+                _lighting.FlashlightOn = !_lighting.FlashlightOn;
+                Say(_lighting.FlashlightOn ? "Linterna encendida" : "Linterna apagada");
+            }
             if (_input.CycleCost)
             {
                 // The host's setting, read by every client through the match options; in this prototype both share it.

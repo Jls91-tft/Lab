@@ -360,8 +360,9 @@ namespace CepaCero.Unity.Prototype
         public void SetAmbient(float light)
         {
             _ambient = light;
-            float v = Mathf.Lerp(0.3f, 1f, light) * (_level != 0 ? 0.75f : 1f);          // other levels read a little darker
-            _tint = new Color(v, v, Mathf.Min(1f, v * 1.1f), 1f);
+            // The night is done by the light overlay (PrototypeLighting); here other levels only read a little darker.
+            float v = _level != 0 ? 0.85f : 1f;
+            _tint = new Color(v, v, v, 1f);
             _groundMap.color = _level > 0 ? new Color(_tint.r * 0.6f, _tint.g * 0.6f, _tint.b * 0.6f, 1f) : _tint;
             _blockMap.color = _tint;
             _floorMap.color = _tint;

@@ -28,7 +28,7 @@ Coordenadas en casillas del mapa (las de `state.player.tile`).
 | `hold X Y SEG` | Mantener el clic izquierdo (cavar, talar) |
 | `rclick [X Y]` / `mclick [X Y]` | Clic derecho (abrir, quitar pieza) / central (copiar pieza) |
 | `drag X1 Y1 X2 Y2 [line\|outline\|room\|select]` | Arrastrar con clic izquierdo; `outline` = Mayús, `room` = Ctrl, `select` = Alt (planos) |
-| `key K` | `up`/`down` (Re Pág / Av Pág), `shape+`/`shape-` (E/Q), `color+`/`color-`, `rotate` (R), `undo` (Ctrl+Z), `copy`/`paste`/`saveplan`/`loadplan` (Ctrl+C/V/S/L), `esc`, `take` (T), `pickup` (G), `equip` (V), `bandage` (C), `save`/`load` (F5/F9), `cost` (F6), `help` (H) |
+| `key K` | `up`/`down` (Re Pág / Av Pág), `shape+`/`shape-` (E/Q), `color+`/`color-`, `rotate` (R), `undo` (Ctrl+Z), `copy`/`paste`/`saveplan`/`loadplan` (Ctrl+C/V/S/L), `esc`, `take` (T), `pickup` (G), `equip` (V), `bandage` (C), `save`/`load` (F5/F9), `cost` (F6), `help` (H), `light` (L, linterna) |
 | `move DX DY SEG [run]` | Mantener WASD en esa dirección |
 | `walk X Y [run]` | Caminar hasta la casilla por un camino calculado con la regla de colisión del jugador |
 | `wait SEG` | Esperar |
