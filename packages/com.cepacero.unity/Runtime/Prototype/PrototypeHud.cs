@@ -23,7 +23,7 @@ namespace CepaCero.Unity.Prototype
 
         private static readonly string[] Controls =
         {
-            "WASD moverse · Shift correr · 1-9 o rueda: elegir de la barra",
+            "WASD moverse · Shift correr · Tab mochila · 1-9 o rueda: elegir de la barra",
             "El clic izquierdo hace lo que pida lo que llevas en la mano: arma ataca, hacha o pico rompen, pala cava, vendas se usan",
             "Con un material: clic pone · arrastra línea · Mayús contorno · Ctrl habitación · clic der. quita · clic central copia",
             "Q/E forma · R girar · [ ] (o , .) color · Ctrl+Z deshacer · martillo: desmonta y devuelve la mitad",
@@ -73,13 +73,16 @@ namespace CepaCero.Unity.Prototype
                 {
                     DrawBuildPanel(m);
                 }
-                DrawBag(m.Inventory);
+                if (m.ShowBag || m.OpenContainer != null)
+                {
+                    DrawBag(m.Inventory);
+                }
                 if (m.OpenContainer != null)
                 {
                     DrawContainer(m.OpenContainer);
                 }
             }
-            DrawMessage(m.Message);
+            DrawMessage(m.Message, m.MessageAlpha);
             DrawDiary(m.Diary);
             DrawHelp(m.ShowHelp, m.Inventory != null ? m.Inventory.BagSlots : 0);
             GUI.color = previous;
@@ -243,16 +246,18 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
-        private void DrawMessage(string message)
+        // A line of text over the world, no box, fading out at the end: it should not hold the eye (D-024).
+        private void DrawMessage(string message, float alpha)
         {
-            if (string.IsNullOrEmpty(message))
+            if (string.IsNullOrEmpty(message) || alpha <= 0f)
             {
                 return;
             }
-            float w = Math.Min(300f, Width - 240f);
-            float x = (Width - w) / 2f;
-            Panel(x, 4f, w, 18f);
-            Text(x + 4f, 7f, w - 8f, 11f, message, PrototypePalette.Yellow, _smallCenter);
+            Color previous = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            float w = Math.Min(360f, Width - 240f);
+            Text((Width - w) / 2f, 10f, w, 11f, message, PrototypePalette.Yellow, _smallCenter);
+            GUI.color = previous;
         }
 
         private void DrawDiary(string diary)
@@ -273,9 +278,7 @@ namespace CepaCero.Unity.Prototype
         {
             if (!show)
             {
-                int rows = Math.Max(1, (bagSlots + BagColumns - 1) / BagColumns);
-                float bagTop = Height - (4f + 12f + rows * (Slot + Gap) - Gap + 4f) - 4f;
-                Text(6f, bagTop - 13f, 120f, 11f, "H: ver controles", PrototypePalette.Pale, _small);
+                Text(6f, Height - 14f, 220f, 11f, "Tab: mochila · H: controles", PrototypePalette.Pale, _small);
                 return;
             }
             float w = Math.Min(330f, Width - 8f);

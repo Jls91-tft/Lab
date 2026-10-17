@@ -35,6 +35,12 @@ namespace CepaCero.Unity.Prototype
         public Inventory Inventory;
         public Inventory OpenContainer;
         public string Message;
+
+        /// <summary>1 while a message is fresh, fading to 0 in its last second.</summary>
+        public float MessageAlpha;
+
+        /// <summary>The backpack panel is open (Tab); it also opens by itself next to an open container.</summary>
+        public bool ShowBag;
         public string Diary;
 
         /// <summary>Network line for the loopback mode ("" otherwise).</summary>

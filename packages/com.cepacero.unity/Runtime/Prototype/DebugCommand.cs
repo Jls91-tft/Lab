@@ -19,7 +19,7 @@ namespace CepaCero.Unity.Prototype
         public static readonly string[] Keys =
         {
             "up", "down", "shape+", "shape-", "color+", "color-", "rotate", "undo", "copy", "paste", "saveplan", "loadplan",
-            "esc", "take", "pickup", "equip", "bandage", "save", "load", "cost", "help", "light",
+            "esc", "take", "pickup", "equip", "bandage", "save", "load", "cost", "help", "light", "bag",
         };
 
         public DebugCommand(string verb, string[] args, string line)

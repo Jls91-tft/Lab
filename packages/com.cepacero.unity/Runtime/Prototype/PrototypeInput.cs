@@ -85,6 +85,9 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Controls panel on screen; H toggles it (not a simulation action).</summary>
         public bool ShowHelp;
 
+        /// <summary>Tab: show or hide the backpack (not a simulation action).</summary>
+        public bool ShowBag;
+
         public void Poll(Camera camera)
         {
             Keyboard kb = Keyboard.current;
@@ -120,6 +123,10 @@ namespace CepaCero.Unity.Prototype
             ClimbStep += (kb.pageUpKey.wasPressedThisFrame ? 1 : 0) - (kb.pageDownKey.wasPressedThisFrame ? 1 : 0);
             Undo |= Ctrl && kb.zKey.wasPressedThisFrame;
             Rotate |= !Ctrl && kb.rKey.wasPressedThisFrame;
+            if (kb.tabKey.wasPressedThisFrame)
+            {
+                ShowBag = !ShowBag;
+            }
             if (kb.hKey.wasPressedThisFrame)
             {
                 ShowHelp = !ShowHelp;

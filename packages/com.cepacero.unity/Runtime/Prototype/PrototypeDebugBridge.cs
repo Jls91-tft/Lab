@@ -396,6 +396,7 @@ namespace CepaCero.Unity.Prototype
                 case "load": input.Load = true; break;
                 case "cost": input.CycleCost = true; break;
                 case "help": input.ShowHelp = !input.ShowHelp; break;
+                case "bag": input.ShowBag = !input.ShowBag; break;
                 case "light": input.ToggleFlashlight = true; break;
             }
         }

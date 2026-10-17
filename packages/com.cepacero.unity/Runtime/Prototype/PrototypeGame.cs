@@ -331,6 +331,7 @@ namespace CepaCero.Unity.Prototype
                 MaxHealth = _playerSettings.MaxHealth,
                 MaxStamina = _playerSettings.MaxStamina,
                 ShowHelp = _input.ShowHelp,
+                ShowBag = _input.ShowBag,
                 Food = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyFood : Messages.QuantizeBar(MyState.Food),
                 Water = _settings.Survival == SurvivalMode.Off ? -1 : Remote ? _client.MyWater : Messages.QuantizeBar(MyState.Water),
                 Inventory = MyInventory,
@@ -339,6 +340,7 @@ namespace CepaCero.Unity.Prototype
                 BuildTitle = BuildTitle(),
                 BuildHint = BuildHint(),
                 Message = Time.time < _messageUntil ? _message : "",
+                MessageAlpha = Mathf.Clamp01(_messageUntil - Time.time),
                 Diary = Time.time < _diaryUntil ? _diaryText : "",
                 Network = Remote
                     ? $"Cliente en bucle: ↓ {_bytesDown / seconds / 1024.0:0.0} KB/s · ↑ {_bytesUp / seconds / 1024.0:0.00} KB/s"
@@ -906,7 +908,7 @@ namespace CepaCero.Unity.Prototype
         private void Say(string text)
         {
             _message = text;
-            _messageUntil = Time.time + 4f;
+            _messageUntil = Time.time + 3.5f;
             _bridge?.Log(text);
             Debug.Log($"Cepa Cero: {text}");
         }

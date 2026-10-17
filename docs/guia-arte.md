@@ -63,5 +63,5 @@ cuidado; para un aspecto propio y memorable se necesitará un artista (decisión
 | Luz por casillas con sombras | Hecho (primera pasada: farolas, hogueras, casas, linterna con L; falta calibrar y lámparas construibles) |
 | Jerarquía de valor y suelos limpios | En curso (zombis brillan en verde en la oscuridad; faltan contornos y suelos más limpios) |
 | Golpes, partículas, cámara | Hecho (destello al golpear, sangre y manchas, sacudida al recibir daño; faltan polvo y niebla) |
-| Interfaz compacta y fuente pixel | Pendiente |
+| Interfaz compacta y fuente pixel | En curso (mochila con Tab, mensajes sin caja que se desvanecen; falta fuente pixel) |
 | Sonido | Pendiente |
