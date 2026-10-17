@@ -203,3 +203,8 @@ antigua como **Sustituida por D-XXX**.
 - **Estado:** Aceptada (heredada del documento de contexto)
 - **Decisión:** supervivencia zombi cooperativa cenital en pixel art, con bloques y mapas OSM. MVP: 2 especiales + 1 minijefe, 2 jugadores por Steam, 100 zombis en red y un barrio de Zaragoza.
 - **Motivo:** hueco de mercado entre Project Zomboid y Core Keeper (ver contexto, §2).
+
+### D-024 (adenda 17/10): perspectiva tipo Project Zomboid
+- **Decisión:** los tejados se dibujan una casilla más arriba (`RoofLift`) para que la fachada sur muestre su frente; las paredes exteriores de planta baja reciben ventanas (una de cada dos casillas, nunca junto a la puerta ni en esquinas ni entre edificios); cada edificio tiene su tono de tejado y un contorno con alero; las puertas de muros norte, este y oeste dejan un hueco en el tejado; los edificios sin puerta o sin interior hallado también llevan tejado.
+- **Motivo:** el mapa era un mar de tejados rojos sin entradas legibles; Javier pidió la perspectiva de Project Zomboid, con ventanas y puertas integradas en las casas.
+- **Coste / límites:** las ventanas son bloques reales (los zombis las rompen). Quien está justo al norte de un edificio se dibuja sobre su tejado elevado. Sin probar aún entrar en casas con el nuevo tejado.

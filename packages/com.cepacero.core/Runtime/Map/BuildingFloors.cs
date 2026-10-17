@@ -53,6 +53,7 @@ namespace CepaCero.Map
                 {
                     BuildBasement(world, set, down, below, floor, stairs);
                 }
+                PlaceGroundWindows(world, ground, b, set, walls, legacyWall, reg);
                 PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
@@ -158,7 +159,7 @@ namespace CepaCero.Map
             return walls;
         }
 
-        /// <summary>A roof over the interior and its walls, on the top storey (the ground floor for a single-storey building); doors are left uncovered.</summary>
+        /// <summary>A roof over the interior and its walls, on the top storey (the ground floor for a single-storey building).</summary>
         private static void PlaceRoof(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, int top, BlockRegistry reg)
         {
             string kind = string.IsNullOrEmpty(b.Roof) ? "tile" : b.Roof;
@@ -172,13 +173,58 @@ namespace CepaCero.Map
             }
             foreach (Int2 w in walls)
             {
-                if (IsDoor(b, w))
-                {
-                    continue;                                          // the doorway stays open to the sky: the way in is seen from outside
-                }
                 world.SetBlock(w.X, w.Y, top, BuildLayer.Roof, roof.Id);
             }
         }
+
+        /// <summary>
+        /// Windows in the ground-floor walls (Project Zomboid look, D-024): every other cell of an outer wall that has room inside and street
+        /// (not another building) outside, never next to a door. They are real blocks: zombies break them, players barricade them.
+        /// </summary>
+        private static void PlaceGroundWindows(BlockWorld world, GroundLayer ground, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, BlockType legacyWall, BlockRegistry reg)
+        {
+            if (!reg.TryGet("window_" + WallMaterial(b.Kind), out BlockType window))
+            {
+                return;
+            }
+            foreach (Int2 w in walls)
+            {
+                if ((w.X + w.Y) % 2 != 0 || world.GetTypeId(w.X, w.Y) != legacyWall.Id || NextToDoor(w, b.Doors) || NextToWindow(world, w, window))
+                {
+                    continue;
+                }
+                for (int k = 0; k < 4; k++)
+                {
+                    var inside = new Int2(w.X + Dx4[k], w.Y + Dy4[k]);
+                    var outside = new Int2(w.X - Dx4[k], w.Y - Dy4[k]);
+                    var along1 = new Int2(w.X + Dy4[k], w.Y + Dx4[k]);                 // the two cells along the wall
+                    var along2 = new Int2(w.X - Dy4[k], w.Y - Dx4[k]);
+                    if (interior.Contains(inside) && world.InBounds(outside.X, outside.Y) && ground.Get(outside.X, outside.Y) != GroundType.Floor
+                        && world.GetTypeId(outside.X, outside.Y) != legacyWall.Id
+                        && (IsWallCell(world, along1, legacyWall) || IsWallCell(world, along2, legacyWall)))
+                    {
+                        world.SetBlock(w.X, w.Y, 0, BuildLayer.Structure, window.Id);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static bool NextToWindow(BlockWorld world, Int2 c, BlockType window)
+        {
+            for (int k = 0; k < 4; k++)
+            {
+                int x = c.X + Dx4[k];
+                int y = c.Y + Dy4[k];
+                if (world.InBounds(x, y) && world.GetTypeId(x, y) == window.Id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsWallCell(BlockWorld world, Int2 p, BlockType legacyWall) => world.InBounds(p.X, p.Y) && world.GetTypeId(p.X, p.Y) == legacyWall.Id;
 
         /// <summary>A building with no usable interior (no door, tiny): its floor cells and the walls around them get a roof at street level.</summary>
         private static void RoofBareFootprint(BlockWorld world, GroundLayer ground, BuildingInfo b, BlockType wall, BlockType door, BlockRegistry reg)
@@ -199,18 +245,6 @@ namespace CepaCero.Map
             {
                 PlaceRoof(world, b, set, FindWalls(world, set, wall, door), 0, reg);
             }
-        }
-
-        private static bool IsDoor(BuildingInfo b, Int2 cell)
-        {
-            for (int i = 0; i < b.Doors.Count; i++)
-            {
-                if (b.Doors[i] == cell)
-                {
-                    return true;
-                }
-            }
-            return false;
         }
 
         private static void BuildUpstairs(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, List<Int2> walls, Int2 stairwell, int above, BlockRegistry reg,

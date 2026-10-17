@@ -160,7 +160,16 @@ namespace CepaCero.Tests.Map
             Assert.That(w.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "over the interior");
             Assert.That(w.GetBlock(5, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "and over its walls");
             Assert.That(w.GetBlock(2, 2, 0, BuildLayer.Roof).IsAir, Is.True, "but not over the street");
-            Assert.That(w.GetBlock(10, 4, 0, BuildLayer.Roof).IsAir, Is.True, "the doorway stays uncovered so the way in is seen from outside");
+        }
+
+        [Test]
+        public void GroundFloorWallsGetWindowsButNotNextToTheDoor()
+        {
+            BlockWorld w = Import(Map(1, 0, "tile")).Blocks;
+            Assert.That(w.GetBlock(7, 11, 0, BuildLayer.Structure).Key, Does.StartWith("window_"), "every other cell of an outer wall");
+            Assert.That(w.GetBlock(10, 4, 0, BuildLayer.Structure).Key, Is.EqualTo("door"), "the door stays");
+            Assert.That(w.GetBlock(9, 4, 0, BuildLayer.Structure).Key, Does.Not.StartWith("window_"), "nothing next to the door");
+            Assert.That(w.GetBlock(5, 4, 0, BuildLayer.Structure).Key, Does.Not.StartWith("window_"), "nor on a corner");
         }
 
         [Test]

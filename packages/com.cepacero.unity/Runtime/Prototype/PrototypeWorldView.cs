@@ -21,6 +21,9 @@ namespace CepaCero.Unity.Prototype
     public sealed class PrototypeWorldView
     {
         private const float FadeSpeed = 3.5f;
+
+        /// <summary>Walls are one tile tall: the roof is drawn that much higher on screen, so the south wall shows its front (windows, doors) like in Project Zomboid.</summary>
+        public const float RoofLift = 1f;
         private const int MaxHouseCells = 6000;
         private static readonly Int2[] Neighbours = { new Int2(1, 0), new Int2(-1, 0), new Int2(0, 1), new Int2(0, -1) };
 
@@ -93,6 +96,10 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap = CreateLayer(grid.transform, "Roof of your house (fading)", PrototypeDecorView.FlatOrder + 2);
             _edgeMap = CreateLayer(grid.transform, "Roof edges", PrototypeDecorView.FlatOrder + 3);
             _edgeFadeMap = CreateLayer(grid.transform, "Roof edges of your house (fading)", PrototypeDecorView.FlatOrder + 3);
+            foreach (Tilemap lifted in new[] { _roofMap, _roofFadeMap, _edgeMap, _edgeFadeMap })
+            {
+                lifted.transform.localPosition = new Vector3(0f, RoofLift, 0f);
+            }
 
             RepaintAll();
         }
@@ -500,7 +507,7 @@ namespace CepaCero.Unity.Prototype
             BlockType type = TopRoof(x, y, out int level);
             TileBase tile = null;
             TileBase edge = null;
-            if (!type.IsAir && _level >= 0)
+            if (!type.IsAir && _level >= 0 && !CoversADoor(x, y))
             {
                 edge = EdgeTile(x, y);
                 RoofShape shape = RoofShapes.At((px, py) => HasRoofOver(px, py), x, y);
@@ -539,6 +546,17 @@ namespace CepaCero.Unity.Prototype
                 _edgeTiles[mask] = tile;
             }
             return _edgeTiles[mask];
+        }
+
+        /// <summary>The lifted roof of this cell would hide the door right above it (a door on a north, east or west wall): leave a gap so the way in shows.</summary>
+        private bool CoversADoor(int x, int y)
+        {
+            if (!_blocks.InBounds(x, y + 1))
+            {
+                return false;
+            }
+            BlockType t = _blocks.GetBlock(x, y + 1, 0, BuildLayer.Structure);
+            return !t.IsAir && (t.Key == "door" || t.Key == "door_open" || (t.Build != null && t.Build.Shape == "door"));
         }
 
         private int OwnerAt(int x, int y) => _owner != null && _blocks.InBounds(x, y) ? _owner[y * _blocks.Width + x] : 0;
