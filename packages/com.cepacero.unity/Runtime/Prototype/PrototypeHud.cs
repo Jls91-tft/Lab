@@ -30,7 +30,7 @@ namespace CepaCero.Unity.Prototype
             "Planos: Alt + arrastrar elige · Ctrl+C copia · Ctrl+V pega (R gira, clic confirma) · Ctrl+S guarda · Ctrl+L carga el siguiente",
             "Niveles: Re Pág sube y Av Pág baja por escaleras, trampillas o fosas · pala y pico: clic cava (lateral bajo tierra, o hacia abajo en suelo libre)",
             "Clic der. abre puertas y contenedores · T coger del contenedor · G recoger del suelo · V equipar 1.º de la mochila",
-            "C hacer vendas · L linterna · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · F6 coste de construir (normal, barato, gratis) · H ocultar esta ayuda",
+            "C hacer vendas · L linterna · F (mantener) levantar a un compañero · F5 guardar · F9 cargar · F6 coste (normal, barato, gratis) · H ocultar",
             "El recuadro verde marca la casilla a tu alcance; rojo, demasiado lejos. Lo lejano espera en cola a que te acerques.",
         };
 
@@ -38,6 +38,7 @@ namespace CepaCero.Unity.Prototype
         private GUIStyle _text;
         private GUIStyle _small;
         private GUIStyle _smallRight;
+        private GUIStyle _number;
         private GUIStyle _smallCenter;
         private GUIStyle _wrap;
         private int _styleScale = -1;
@@ -118,7 +119,7 @@ namespace CepaCero.Unity.Prototype
             float bx = x + 18f;
             Fill(bx, y + 3f, 60f, 5f, PrototypePalette.Black);
             Fill(bx, y + 3f, 60f * Mathf.Clamp01(fraction), 5f, color);
-            Text(bx + 64f, y, 26f, 11f, value, PrototypePalette.White, _small);
+            Text(bx + 64f, y, 26f, 11f, value, PrototypePalette.White, _number);
             y += 12f;
         }
 
@@ -135,11 +136,11 @@ namespace CepaCero.Unity.Prototype
             Fill(x + 4f, y + 17f, (w - 8f) * Mathf.Clamp01(m.PhaseProgress), 3f, PhaseColor(m.Phase));
             float row = y + 23f;
             Sprite("icon_zombie", x + 4f, row);
-            Text(x + 18f, row, 34f, 11f, m.ZombiesShown.ToString(), PrototypePalette.White, _small);
+            Text(x + 18f, row, 34f, 11f, m.ZombiesShown.ToString(), PrototypePalette.White, _number);
             if (m.ZombiesKilled >= 0)
             {
                 Sprite("icon_skull", x + 56f, row);
-                Text(x + 70f, row, 40f, 11f, m.ZombiesKilled.ToString(), PrototypePalette.White, _small);
+                Text(x + 70f, row, 40f, 11f, m.ZombiesKilled.ToString(), PrototypePalette.White, _number);
             }
             if (nights)
             {
@@ -281,7 +282,7 @@ namespace CepaCero.Unity.Prototype
                 Text(6f, Height - 14f, 220f, 11f, "Tab: mochila · H: controles", PrototypePalette.Pale, _small);
                 return;
             }
-            float w = Math.Min(330f, Width - 8f);
+            float w = Width - 8f;
             float h = 10f + Controls.Length * 12f;
             float x = (Width - w) / 2f;
             float y = (Height - h) / 2f;
@@ -354,17 +355,23 @@ namespace CepaCero.Unity.Prototype
         private void BuildStyles()
         {
             _styleScale = _s;
-            _text = Style(Math.Max(11, 7 * _s), TextAnchor.MiddleLeft, false);
-            _small = Style(Math.Max(10, 6 * _s), TextAnchor.MiddleLeft, false);
-            _smallRight = Style(Math.Max(10, 6 * _s), TextAnchor.LowerRight, false);
-            _smallCenter = Style(Math.Max(10, 6 * _s), TextAnchor.MiddleCenter, false);
-            _wrap = Style(Math.Max(10, 6 * _s), TextAnchor.UpperLeft, true);
+            // Public Pixel (CC0) is drawn on an 8 px grid: sizes that are whole multiples of 8 keep it crisp.
+            Font font = Resources.Load<Font>("Cepa/PublicPixel");
+            int size = font != null ? 8 * ((_s + 1) / 2) : 0;          // long text: half the UI scale, still a whole multiple of 8
+            int big = font != null ? 8 * _s : 0;                        // short numbers: full size
+            _text = Style(font, size > 0 ? size : Math.Max(11, 7 * _s), TextAnchor.MiddleLeft, false);
+            _small = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.MiddleLeft, false);
+            _smallRight = Style(font, big > 0 ? big : Math.Max(10, 6 * _s), TextAnchor.LowerRight, false);
+            _number = Style(font, big > 0 ? big : Math.Max(10, 6 * _s), TextAnchor.MiddleLeft, false);
+            _smallCenter = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.MiddleCenter, false);
+            _wrap = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.UpperLeft, true);
         }
 
-        private static GUIStyle Style(int size, TextAnchor anchor, bool wrap)
+        private static GUIStyle Style(Font font, int size, TextAnchor anchor, bool wrap)
         {
             var style = new GUIStyle(GUI.skin.label)
             {
+                font = font,
                 fontSize = size,
                 alignment = anchor,
                 wordWrap = wrap,

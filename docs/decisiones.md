@@ -19,7 +19,7 @@ antigua como **Sustituida por D-XXX**.
 | Resolución base | **Decidida: 960×540** con escalado entero (D-021, OK de Javier 16/10/2026); la de D-018, 640×360, era para 16 px |
 | ~~Direcciones de animación~~ | Cerrado: 4 (D-018) |
 | ~~Paleta del mundo~~ | Cerrada: 81 colores diseñados a mano para el mundo a 32 px (D-021). Iconos e interfaz siguen con los 32 de D-018 |
-| Fuente de la interfaz | El texto del prototipo usa la fuente por defecto de Unity; falta una fuente pixel |
+| Fuente de la interfaz | Public Pixel (CC0, GGBotNet) en `Resources/Cepa/PublicPixel.ttf`, tamaños múltiplos de 8; decidido en D-024 |
 | ~~Versión exacta de Unity~~ | Cerrado: 6000.3.26f1 (D-016) |
 | Nombre definitivo | Comprobar marca, Steam y redes |
 
