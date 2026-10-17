@@ -176,6 +176,7 @@ namespace CepaCero.Tests.Map
             MapImportResult map = Import(Map(3, 0, "tile", withDoor: false));
             Assert.That(map.Blocks.GetBlock(8, 7, 1, BuildLayer.Floor).IsAir, Is.True);
             Assert.That(map.Warnings.Any(m => m.Contains("no usable interior")), Is.True);
+            Assert.That(map.Blocks.GetBlock(8, 7, 0, BuildLayer.Roof).Key, Is.EqualTo("roof_tile"), "a building without a door is roofed too");
         }
 
         [Test]

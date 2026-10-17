@@ -36,8 +36,9 @@ namespace CepaCero.Map
                 {
                     if (storeys)
                     {
-                        skipped++;                                           // single-storey buildings with no interior just stay as they are
+                        skipped++;                                           // several storeys need an interior; they stay one
                     }
+                    RoofBareFootprint(world, ground, b, legacyWall, legacyDoor, reg);   // no door or no room found: still roof it, so nothing is seen from outside
                     continue;
                 }
                 Int2 up = PickStairs(interior, b.Doors, null);
@@ -176,6 +177,27 @@ namespace CepaCero.Map
                     continue;                                          // the doorway stays open to the sky: the way in is seen from outside
                 }
                 world.SetBlock(w.X, w.Y, top, BuildLayer.Roof, roof.Id);
+            }
+        }
+
+        /// <summary>A building with no usable interior (no door, tiny): its floor cells and the walls around them get a roof at street level.</summary>
+        private static void RoofBareFootprint(BlockWorld world, GroundLayer ground, BuildingInfo b, BlockType wall, BlockType door, BlockRegistry reg)
+        {
+            var set = new HashSet<Int2>();
+            for (int y = b.Min.Y; y <= b.Max.Y; y++)
+            {
+                for (int x = b.Min.X; x <= b.Max.X; x++)
+                {
+                    if (world.InBounds(x, y) && ground.Get(x, y) == GroundType.Floor && world.GetBlock(x, y).IsAir
+                        && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    {
+                        set.Add(new Int2(x, y));
+                    }
+                }
+            }
+            if (set.Count > 0)
+            {
+                PlaceRoof(world, b, set, FindWalls(world, set, wall, door), 0, reg);
             }
         }
 
