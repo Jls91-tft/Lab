@@ -3,13 +3,13 @@
 Rama: `claude/lucid-mayer-vdw0gl` (todo subido; los tests del núcleo y de las herramientas pasan desde la sesión de la nube). Decisión de referencia: **D-022** y `docs/propuesta-construccion-avanzada.md`, `docs/propuesta-zombis-multinivel.md`.
 
 ## Qué trae la rama
-Construcción avanzada completa (fases A-H): 14 materiales y pintura, capas y niveles −3..+3, construir con la mano (hotbar de 9, Q/E forma, R girar, `[` `]` color, clic central copia, Ctrl+Z), planos `.cepaplan` (Alt+arrastrar, Ctrl+C/V/S/L), subir/bajar (Re Pág / Av Pág), caídas, cavar con pala y pico, zombis multinivel, `cepacero.map` v2 con plantas y sótanos. Protocolo de red v5, guardado v6 (lee v3-v5). Núcleo: 267 tests.
+Construcción avanzada completa (fases A-H): 14 materiales y pintura, capas y niveles −3..+3, construir con la mano (hotbar de 9, Q/E forma, R girar, `[` `]` color, clic central copia, Ctrl+Z), planos `.cepaplan` (Alt+arrastrar, Ctrl+C/V/S/L), subir/bajar (Re Pág / Av Pág), caídas, cavar con pala y pico, zombis multinivel, `cepacero.map` v2 con plantas y sótanos. Protocolo de red v5, guardado v6 (lee v3-v5). Núcleo: 276 tests.
 
 ## Lo que NO está en el repo y hay que hacer en local
 1. **Atlas con LFS** (desde la nube no se puede subir): `cd tools/artgen && python -m artgen` (iconos e interfaz, 16 px; hoy `scripts/check.sh` falla en ese paso hasta que se suba) y `cd tools/spritegen && python -m spritegen` (mundo a 32 px, sale a `CepaCero/Assets/Resources/Cepa/Art32/`). Subirlos con `git lfs`.
 2. **Ficheros `.meta`** de los `.cs` nuevos (Unity los genera al abrir el proyecto): `Runtime/Building/*` (incluida la carpeta), `BuildingFloors`, `BuildCostMode`, `BlockBuildInfo`, `BlockVariant`, `LevelRules`, `PrototypePlaceholders` y los tests nuevos. Commitearlos.
 3. **Mapa real v2:** `python -m osm2tiles --zone delicias-test` (necesita OSM o la caché) y copiar el `.map.json` donde lo lea `RepoData`.
-4. **Probar en el editor** (nada de esto se ha ejecutado en Unity, solo compilado contra firmas imitadas): Test Runner (267 tests), y el recorrido de abajo.
+4. **Probar en el editor** (nada de esto se ha ejecutado en Unity, solo compilado contra firmas imitadas): Test Runner (276 tests), y el recorrido de abajo.
 
 ## Recorrido de prueba en Unity
 1. Hotbar: 1 bate, 2 hacha, 3 pistola, 4 vendas, 5 comida, 6 martillo, 7 pala, 8 pico, 9 madera. Clic izquierdo hace lo que pida la mano.
@@ -28,4 +28,14 @@ Construcción avanzada completa (fases A-H): 14 materiales y pintura, capas y ni
 Novedades de última hora para probar: techos que se desvanecen al entrar, nivel de abajo visible por los huecos desde una planta alta, alcantarillas bajo las calles largas (bocas de acero, bajar con Re Pág tras abrirla con clic derecho) y F6 para el coste.
 
 ## Prompt para pegar en la sesión local
-> Estás en el proyecto Cepa Cero. Haz `git fetch` y `git checkout claude/lucid-mayer-vdw0gl`. Lee `CLAUDE.md` y `docs/traspaso-sesion-local.md`. Haz, en este orden: (1) abre Unity, deja que genere los `.meta` y commitéalos; (2) regenera y sube con LFS los atlas de artgen y spritegen; (3) pasa `scripts/check.sh` entero y el Test Runner de Unity (267 tests) y dime qué falla; (4) haz el recorrido de prueba y pásame los errores de consola. No empieces trabajo nuevo sin proponerlo antes.
+> Estás en el proyecto Cepa Cero (Unity 6000.3.26f1, repo con Git LFS). Haz `git fetch` y `git checkout claude/lucid-mayer-vdw0gl`; ahí está todo el trabajo de la sesión de la nube. Lee `CLAUDE.md` y `docs/traspaso-sesion-local.md` (qué trae la rama, qué falta y el recorrido de prueba). Nada de lo nuevo (construcción avanzada, niveles, zombis multinivel, alcantarillas, planos, mapa v2) se ha ejecutado en Unity: solo compila contra firmas imitadas y pasa 276 tests del núcleo fuera de Unity.
+>
+> Haz, en este orden, y dime el resultado de cada paso antes del siguiente:
+> 1. Abre el proyecto, deja que Unity genere los `.meta` de los `.cs` nuevos (carpeta `packages/com.cepacero.core/Runtime/Building` incluida) y commitéalos.
+> 2. Regenera y sube con LFS los atlas: `cd tools/artgen && python -m artgen` y `cd tools/spritegen && python -m spritegen` (este escribe en `CepaCero/Assets/Resources/Cepa/Art32/`).
+> 3. Pasa `scripts/check.sh` entero y el Test Runner de Unity (deben salir 276 tests); lista lo que falle.
+> 4. Genera el mapa real con `python -m osm2tiles --zone delicias-test` (formato v2: plantas, sótanos y tejado por edificio) y haz que `RepoData` lo lea.
+> 5. Haz el recorrido de prueba del traspaso (hotbar 1-9, construir con la mano, pala y pico, fosas, escaleras con Re Pág / Av Pág, planos con Alt+arrastrar y Ctrl+C/V/S/L, F6 coste, alcantarillas, zombis que bajan por fosas y suben por escaleras) y pásame los errores de consola y lo que se vea raro.
+> 6. Solo después, cablea el arte: cargar el atlas de `Art32` (`ppu` 32, pivote en los pies con `pivot_y`), pasar la resolución base a 960×540 (`PrototypeArt.BaseHeight` 360 → 540) y sustituir `PrototypePlaceholders` por los sprites de `spritegen` (muros con uniones `wall_<material>_top_N`, tejados `roof_<material>_<forma>`, escaleras, subsuelo).
+>
+> Reglas del proyecto: commits pequeños con mensaje claro, `scripts/check.sh` antes de cada commit, nada de dependencias ni servicios de pago sin preguntar, y antes de cambios grandes de arquitectura propón y espera mi OK. No empieces trabajo nuevo sin proponerlo.
