@@ -17,6 +17,8 @@ python -m osm2tiles --zone delicias-test --input export.osm   # sin red: un .osm
 python -m pytest                                       # tests
 ```
 Salida en `out/` (ignorada por Git): `<nombre>.map.json` y `<nombre>.preview.png`.
+El prototipo lee una **copia fijada** en `data/maps/delicias-test.map.json` (`RepoData.DeliciasMap`): así no necesita red
+y la foto de OSM no cambia sola. Para actualizarla: regenerar y copiar `out/delicias-test.map.json` encima (17/10/2026: 374×334, 1136 edificios).
 La descarga se guarda en `cache/<nombre>.osm`; `--refresh` fuerza otra descarga.
 
 **Sin red** (o si Overpass está saturado): en [openstreetmap.org](https://www.openstreetmap.org)

@@ -19,6 +19,15 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Repository root: the Unity project lives in &lt;repo&gt;/CepaCero, so two levels above Assets.</summary>
         public static string RepoRoot => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
 
+        /// <summary>
+        /// Real map of the prototype: Delicias (Zaragoza), cepacero.map v2 with floors, basements and
+        /// roofs per building. A pinned copy of `python -m osm2tiles --zone delicias-test` (ODbL).
+        /// </summary>
+        public const string DeliciasMap = "data/maps/delicias-test.map.json";
+
+        /// <summary>Tiny hand-made map of the core tests: quick to load, one street.</summary>
+        public const string SyntheticMap = "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json";
+
         public static string PathOf(string relative) => Path.Combine(RepoRoot, relative);
 
         public static T LoadJson<T>(string relative)

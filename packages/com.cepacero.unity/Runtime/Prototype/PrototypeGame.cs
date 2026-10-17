@@ -33,8 +33,8 @@ namespace CepaCero.Unity.Prototype
         private const string SaveFile = "prototype.sav";
 
 
-        [Tooltip("Map relative to the repository root: an osm2tiles output or the test fixture.")]
-        [SerializeField] private string _mapPath = "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json";
+        [Tooltip("Map relative to the repository root: data/maps/delicias-test.map.json (real, default) or the test fixture packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json.")]
+        [SerializeField] private string _mapPath = RepoData.DeliciasMap;
 
         [Tooltip("Match options. Short days by default so a night comes quickly.")]
         [SerializeField] private GameSettings _settings = new GameSettings { DaySeconds = 90, DuskSeconds = 15, NightSeconds = 90, DawnSeconds = 10 };
