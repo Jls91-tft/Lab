@@ -606,6 +606,25 @@ namespace CepaCero.Unity.Prototype
             }
             j.Append(']');
 
+            // Building with the hand: what the ghost says, so a script can see why a placement is refused.
+            PrototypeBuilder builder = _host.Builder;
+            j.Append(",\"build\":{\"active\":").Append(builder != null && builder.Active ? "true" : "false")
+                .Append(",\"piece\":").Append(Quote(builder?.Piece != null ? builder.Piece.Value.Name : ""))
+                .Append(",\"cost\":").Append(Quote(_host.BuildCost.ToString()))
+                .Append(",\"queued\":").Append(builder != null ? builder.Queue.Count : 0)
+                .Append(",\"hint\":").Append(Quote(_host.BuildHint ?? ""))
+                .Append(",\"ghost\":[");
+            if (builder != null)
+            {
+                for (int i = 0; i < builder.Preview.Count && i < 20; i++)
+                {
+                    PrototypeBuilder.Placement p = builder.Preview[i];
+                    j.Append(i > 0 ? "," : "").Append("{\"x\":").Append(p.Cell.X).Append(",\"y\":").Append(p.Cell.Y)
+                        .Append(",\"verdict\":").Append(Quote(p.Verdict.ToString())).Append('}');
+                }
+            }
+            j.Append("]}");
+
             // What is around, on the player's level: only cells with something built or dug.
             BlockWorld blocks = _host.ViewBlocks;
             j.Append(",\"around\":[");

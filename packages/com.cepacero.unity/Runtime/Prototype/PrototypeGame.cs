@@ -198,6 +198,7 @@ namespace CepaCero.Unity.Prototype
             {
                 return;
             }
+            _bridge?.Step(_input); // debug bridge (D-023): its presses go in before the game reads any of them
             HandleMetaKeys();
             if (_session == null)
             {
@@ -213,7 +214,6 @@ namespace CepaCero.Unity.Prototype
             {
                 _session.SetInput(_me, PlayerInput.FromVector(_input.Move, _input.Sprint));
             }
-            _bridge?.Step(_input); // debug bridge (D-023): its presses go in before the game reads them
             QueueActions();
             _input.ClearPresses();
 
@@ -356,6 +356,9 @@ namespace CepaCero.Unity.Prototype
         GameSession IPrototypeDebugHost.HostSession => _session;
         PlayerSettings IPrototypeDebugHost.PlayerSettings => _playerSettings;
         bool IPrototypeDebugHost.IsRemoteClient => Remote;
+        PrototypeBuilder IPrototypeDebugHost.Builder => _builder;
+        string IPrototypeDebugHost.BuildHint => _builder != null && (_builder.Active || _builder.Pasting) ? BuildHint() : "";
+        BuildCostMode IPrototypeDebugHost.BuildCost => _settings.BuildCost;
 
         private void Send(PlayerIntent intent)
         {

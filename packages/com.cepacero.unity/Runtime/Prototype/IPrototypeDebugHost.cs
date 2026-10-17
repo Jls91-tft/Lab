@@ -29,5 +29,13 @@ namespace CepaCero.Unity.Prototype
         PlayerSettings PlayerSettings { get; }
 
         bool IsRemoteClient { get; }
+
+        /// <summary>Building with the hand: piece, queue and the ghost's verdicts.</summary>
+        PrototypeBuilder Builder { get; }
+
+        /// <summary>What the building ghost says right now ("" when the hand does not build).</summary>
+        string BuildHint { get; }
+
+        BuildCostMode BuildCost { get; }
     }
 }
