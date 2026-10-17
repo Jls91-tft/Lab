@@ -161,6 +161,9 @@ namespace CepaCero.Unity.Prototype
             {
                 Fail($"{_job.Commands[_index].Line}: {e.Message}");
             }
+            // Again after the command: what it just aimed at or pressed must already count in this tick.
+            // Without this, the first tick of a click read the real mouse and started the drag far away.
+            ApplyContinuous(input);
         }
 
         public void Dispose()

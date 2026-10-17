@@ -83,6 +83,17 @@ namespace CepaCero.Unity.Tests
                 Assert.That(host.Me.Position.Tile, Is.EqualTo(goal));
             }
 
+            // One click with wood in hand builds exactly that cell, whatever the real mouse is doing.
+            // (Regression: the first tick of a click used the real mouse and drew a line from far away.)
+            Int2 site = new Int2(start.X + 2, start.Y);
+            if (DebugPathfinder.Walkable(host.ViewBlocks, host.ViewGround, 0, 0.35f, site))
+            {
+                yield return Post($"key cost; key cost; select 9; click {site.X} {site.Y}; wait 1.5; state", r => reply = r);
+                StringAssert.Contains("\"ok\":true", reply);
+                StringAssert.Contains("\"queued\":0", reply);
+                Assert.That(host.ViewBlocks.GetBlock(site.X, site.Y, 0, BuildLayer.Structure).IsAir, Is.False, "the wall was not built");
+            }
+
             yield return Post("fly away", r => reply = r);
             StringAssert.Contains("unknown verb", reply);
 
