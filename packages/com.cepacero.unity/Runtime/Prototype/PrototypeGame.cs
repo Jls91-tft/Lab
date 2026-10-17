@@ -71,6 +71,8 @@ namespace CepaCero.Unity.Prototype
         private PrototypeDecorView _decor;
         private PrototypeLighting _lighting;
         private PrototypeEffects _effects;
+        private PrototypeAudio _audio;
+        private Float2 _audioLast;
         private Transform _viewRoot;
         private Camera _camera;
         private int _me;
@@ -184,6 +186,9 @@ namespace CepaCero.Unity.Prototype
             _effects = new PrototypeEffects(_viewRoot, _art);
             _entities.Effects = _effects;
             _entities.Lighting = _lighting;
+            _audio = new PrototypeAudio(_viewRoot);
+            _effects.Audio = _audio;
+            _entities.Audio = _audio;
             Debug.Log($"Cepa Cero prototype: {_decor.Count} pieces of decoration.");
             SetupCamera();
             Say(loadSave ? "Partida cargada" : $"Mapa: {_map.Name} ({_map.Blocks.Width}×{_map.Blocks.Height}). {_map.Attribution}");
@@ -280,6 +285,10 @@ namespace CepaCero.Unity.Prototype
             PlaceCamera(MyState.Position);
             Float2 toCursor = _input.MouseWorld - MyState.Position;
             _effects.Update(Time.deltaTime);
+            Float2 here = MyState.Position;
+            Float2 step = here - _audioLast;
+            _audioLast = here;
+            _audio.Update(here, MyState.Level, step.LengthSquared > 1e-6f && step.LengthSquared < 4f, _input.Sprint, 1f - ambient);
             _lighting.Update(_camera, MyState.Level, ambient, MyState.Position, toCursor.LengthSquared > 0.01f ? toCursor.Normalized : default, Time.time);
         }
 
@@ -676,12 +685,15 @@ namespace CepaCero.Unity.Prototype
                     switch (action)
                     {
                         case HandAction.MeleeAttack when aim.LengthSquared > 0f:
+                            _audio?.Swing(me.Position);
                             Send(PlayerIntent.Melee(aim));
                             break;
                         case HandAction.RangedAttack when aim.LengthSquared > 0f:
+                            _audio?.Shot(me.Position);
                             Send(PlayerIntent.Ranged(aim));
                             break;
                         case HandAction.HitBlock:
+                            _audio?.Thud(me.Position);
                             Send(PlayerIntent.Hit(tile.X, tile.Y, me.Level));
                             break;
                         case HandAction.Dismantle:
@@ -838,12 +850,14 @@ namespace CepaCero.Unity.Prototype
                     Say(ResultText(e.Result));
                     break;
                 case SessionEventType.PlayerHurt when e.Player == _me:
+                    _audio?.Hurt(MyState.Position);
                     _effects?.Shake(Mathf.Clamp(0.04f + e.Value * 0.006f, 0.05f, 0.25f));
                     break;
                 case SessionEventType.PlayerFell when e.Player == _me:
                     Say($"¡Caes {e.Value} nivel{(e.Value > 1 ? "es" : "")}!");
                     break;
                 case SessionEventType.NightStarted:
+                    _audio?.NightHorn();
                     Say($"¡Noche {e.Value}! Llega la horda");
                     break;
                 case SessionEventType.PhaseChanged when e.Phase == DayPhase.Dawn:

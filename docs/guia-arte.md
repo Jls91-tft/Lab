@@ -64,4 +64,4 @@ cuidado; para un aspecto propio y memorable se necesitará un artista (decisión
 | Jerarquía de valor y suelos limpios | En curso (zombis brillan en verde en la oscuridad; faltan contornos y suelos más limpios) |
 | Golpes, partículas, cámara | Hecho (destello al golpear, sangre y manchas, sacudida al recibir daño; faltan polvo y niebla) |
 | Interfaz compacta y fuente pixel | Hecho (mochila con Tab, mensajes sin caja que se desvanecen, fuente Public Pixel CC0)
-| Sonido | Pendiente |
+| Sonido | Hecho en código (primera pasada, sin oír: pasos, golpes, disparo, gruñidos, viento, cuerno de noche); falta ajustarlo de oído |

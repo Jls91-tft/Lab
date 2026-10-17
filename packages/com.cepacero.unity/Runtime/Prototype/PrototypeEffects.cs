@@ -50,6 +50,9 @@ namespace CepaCero.Unity.Prototype
         private float _shake;
         private readonly int _ppu;
 
+        /// <summary>Sound for hits and deaths. Optional.</summary>
+        public PrototypeAudio Audio { get; set; }
+
         public PrototypeEffects(Transform parent, PrototypeArt art)
         {
             var go = new GameObject("Effects (prototype)");
@@ -72,6 +75,7 @@ namespace CepaCero.Unity.Prototype
             if (_seen.TryGetValue(key, out Seen s) && health >= 0 && s.Health >= 0 && health < s.Health)
             {
                 _flash[key] = Time.time + FlashSeconds;
+                Audio?.Hit(position);
                 Burst(position, 5 + (s.Health - health) / 4, 2.6f, new Color(0.55f, 0.04f, 0.05f, 1f));
                 if (_rng.NextDouble() < 0.5)
                 {
@@ -105,6 +109,7 @@ namespace CepaCero.Unity.Prototype
                 if (dx * dx + dy * dy < 14f * 14f)
                 {
                     Burst(s.Position, 14, 3.4f, new Color(0.5f, 0.03f, 0.04f, 1f));
+                    Audio?.Splat(s.Position);
                     Stain(s.Position, 1f);
                 }
             }

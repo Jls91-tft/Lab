@@ -46,6 +46,8 @@ namespace UnityEngine
     public enum TextAnchor { UpperLeft, MiddleLeft, MiddleCenter, LowerRight }
     public class GUIStyleState { public Color textColor; }
     public class Font : Object { }
+    public class AudioClip : Object { public static AudioClip Create(string n, int len, int ch, int rate, bool stream) => null; public bool SetData(float[] d, int off) => true; }
+    public class AudioSource : Behaviour { public AudioClip clip; public bool playOnAwake; public bool loop; public float spatialBlend; public float volume; public float pitch; public float panStereo; public bool isPlaying => false; public void Play() {} }
     public class GUIStyle { public GUIStyle(GUIStyle o) {} public Font font; public int fontSize; public bool richText; public TextAnchor alignment; public bool wordWrap; public RectOffset padding; public RectOffset margin; public GUIStyleState normal => null; }
     public class GUISkin { public GUIStyle label; public GUIStyle box; }
     public static class GUI { public static GUISkin skin; public static Color color; public static void Box(Rect r, string t, GUIStyle s) {} public static void Label(Rect r, string t, GUIStyle s) {} public static void DrawTextureWithTexCoords(Rect r, Texture t, Rect uv) {} }

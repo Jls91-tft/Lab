@@ -74,6 +74,9 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Light on the map: mutants glow green where it is dark.</summary>
         public PrototypeLighting Lighting { get; set; }
 
+        /// <summary>Growls of the zombies you can hear. Optional.</summary>
+        public PrototypeAudio Audio { get; set; }
+
         /// <summary>The characters' pivot is at their feet; the entity position is the middle of the body, a little above.</summary>
         private const float FootOffset = -0.25f;
 
@@ -189,6 +192,7 @@ namespace CepaCero.Unity.Prototype
                 return;                                              // inside a closed house: you cannot see it
             }
             Effects?.Observe(key, position, health);
+            Audio?.ZombieNear(key, position, state != ZombieState.Idle);
             Animate(_zombieWalk, key, position, out int facing, out int frame);
             // Mutants glow at night (docs/lore.md): never darker than half their colour.
             Color c = Color.Lerp(Dim(Color.white, light), Color.white, 0.5f);

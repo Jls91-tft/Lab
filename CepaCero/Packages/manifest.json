@@ -20,6 +20,7 @@
     "com.cepacero.core": "file:../../packages/com.cepacero.core",
     "com.cepacero.unity": "file:../../packages/com.cepacero.unity",
     "com.unity.ai.assistant": "2.20.0-pre.2",
+    "com.unity.modules.audio": "1.0.0",
     "com.unity.modules.screencapture": "1.0.0"
   },
   "testables": [
