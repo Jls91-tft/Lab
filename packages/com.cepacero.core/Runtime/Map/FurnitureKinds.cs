@@ -12,12 +12,20 @@ namespace CepaCero.Map
             public readonly int Height;
             public readonly string Loot;
 
-            public Info(string sprite, int width, int height, string loot)
+            /// <summary>Lies on the floor (a rug): drawn flat, under people and furniture.</summary>
+            public readonly bool Flat;
+
+            /// <summary>Hangs on a wall (a picture, a curtain): its cell is the wall, and it shows on the face toward the room.</summary>
+            public readonly bool OnWall;
+
+            public Info(string sprite, int width, int height, string loot, bool flat = false, bool onWall = false)
             {
                 Sprite = sprite;
                 Width = width;
                 Height = height;
                 Loot = loot;
+                Flat = flat;
+                OnWall = onWall;
             }
         }
 
@@ -44,6 +52,15 @@ namespace CepaCero.Map
             { "shelf", new Info("decor_shelf_0", 1, 1, "") },
             { "counter", new Info("decor_counter_2", 1, 1, "") },
             { "desk", new Info("decor_table_long", 1, 1, "") },
+            // Floor and walls (D-027): rugs lie flat; pictures, a clock and curtains hang on the wall facing the room. The view adds _s or _w
+            // to the sprite: the south face of a wall north of the room, or the west face of a wall east of it.
+            { "rug", new Info("decal_rug_0", 3, 1, null, flat: true) },
+            { "rug_small", new Info("decal_rug_1", 3, 1, null, flat: true) },
+            { "picture", new Info("iso_deco_picture", 1, 1, null, onWall: true) },
+            { "picture_tall", new Info("iso_deco_picture2", 1, 1, null, onWall: true) },
+            { "clock", new Info("iso_deco_clock", 1, 1, null, onWall: true) },
+            { "wall_shelf", new Info("iso_deco_shelf", 1, 1, null, onWall: true) },
+            { "curtain", new Info("iso_deco_curtain", 1, 1, null, onWall: true) },
             // Storage.
             { "boxes", new Info("decor_boxes_0", 1, 1, "storage") },
             { "crate", new Info("decor_boxes_1", 1, 1, "storage") },

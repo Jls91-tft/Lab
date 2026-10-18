@@ -8,10 +8,11 @@ namespace CepaCero.Map
         public readonly Int2 Cell;
         public readonly string Kind;
 
-        public Furniture(Int2 cell, string kind)
+        public Furniture(Int2 cell, string kind, char face = ' ')
         {
             Cell = cell;
             Kind = kind;
+            Face = face;
         }
 
         /// <summary>Sprite name in the world atlas (the view falls back to a plain box when it is missing).</summary>
@@ -21,5 +22,13 @@ namespace CepaCero.Map
         public string Loot => FurnitureKinds.Of(Kind).Loot;
 
         public bool IsContainer => Loot != null;
+
+        /// <summary>Hangs on a wall: <see cref="Cell"/> is the wall, <see cref="Face"/> the side it shows on.</summary>
+        public bool OnWall => FurnitureKinds.Of(Kind).OnWall;
+
+        public bool IsFlat => FurnitureKinds.Of(Kind).Flat;
+
+        /// <summary>For wall pieces: 's' (south face: the wall is north of the room) or 'w' (west face: the wall is east of it).</summary>
+        public readonly char Face;
     }
 }

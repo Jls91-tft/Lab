@@ -74,7 +74,9 @@ namespace CepaCero.Unity.Prototype
 
         private byte[] _roofTint;
         private bool[] _tall;                                       // a building of three storeys or more is drawn two storeys tall (D-026)
-        private readonly Tilemap _upperWallMap;                     // the second storey of the walls of tall buildings
+        private readonly Tilemap _upperWallMap;
+        private readonly Tilemap _decoMap;                          // pictures, clocks and curtains on the walls of the house you are in (D-027)
+        private readonly Dictionary<int, string> _wallDeco = new Dictionary<int, string>();                     // the second storey of the walls of tall buildings
         private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
@@ -120,6 +122,9 @@ namespace CepaCero.Unity.Prototype
             _floorMap = CreateLayer(isoGrid.transform, "Floors", 0);                           // you walk on it
             _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
             _upperWallMap = CreateLayer(isoGrid.transform, "Walls, second storey", PrototypeIso.UprightOrder);
+            _decoMap = CreateLayer(isoGrid.transform, "Wall decoration", PrototypeIso.UprightOrder);
+            _decoMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+            _decoMap.tileAnchor = new Vector3(0.5f, 0.49f, 0f);                // a hair in front of its wall
             _upperWallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             _upperWallMap.transform.localPosition = new Vector3(0f, PrototypeIso.WallHeight, 0f);
             _wallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
@@ -211,6 +216,17 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             _owner = owner;
+            _wallDeco.Clear();
+            foreach (BuildingInfo b in buildings)
+            {
+                foreach (Furniture f in b.Furniture)
+                {
+                    if (f.OnWall && _blocks.InBounds(f.Cell.X, f.Cell.Y))
+                    {
+                        _wallDeco[Key(f.Cell.X, f.Cell.Y)] = f.Sprite + "_" + f.Face;
+                    }
+                }
+            }
             SpreadFacades();
             ComputePitch();
             RepaintAll();
@@ -376,6 +392,7 @@ namespace CepaCero.Unity.Prototype
             _groundMap.gameObject.SetActive(level >= 0);
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
             _upperWallMap.gameObject.SetActive(level == 0);
+            _decoMap.gameObject.SetActive(level == 0);
             _roofFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
@@ -705,6 +722,7 @@ namespace CepaCero.Unity.Prototype
             _groundMap.color = _level > 0 ? new Color(_tint.r * 0.6f, _tint.g * 0.6f, _tint.b * 0.6f, 1f) : _tint;
             _blockMap.color = _tint;
             _wallMap.color = _tint;
+            _decoMap.color = _tint;
             _upperWallMap.color = _tint;
             _floorMap.color = _tint;
             _objectMap.color = _tint;
@@ -734,6 +752,12 @@ namespace CepaCero.Unity.Prototype
             Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y)), facade) : null;
             _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
             PaintUpperWall(x, y, s);
+            int key = Key(x, y);
+            if (_wallDeco.TryGetValue(key, out string deco))
+            {
+                bool show = s != null && _level == 0 && _houseOpen && _house.Contains(key) && !_cut.Contains(key);
+                _decoMap.SetTile(new Vector3Int(x, y, 0), show && _art.TryGet(deco, out Sprite d) ? TileFor(d) : null);
+            }
         }
 
         /// <summary>The second storey of a tall building's wall: the same material, with a window on every other cell; gone while you are inside or the wall is in front of you.</summary>

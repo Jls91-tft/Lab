@@ -45,7 +45,7 @@ namespace CepaCero.Tests.Map
             Assert.That(furnished, Is.GreaterThan(map.Buildings.Count / 2));
             foreach (BuildingInfo b in map.Buildings)
             {
-                foreach (Furniture f in b.Furniture)
+                foreach (Furniture f in b.Furniture.Where(x => !x.OnWall))
                 {
                     Assert.That(map.Blocks.GetBlock(f.Cell.X, f.Cell.Y).IsAir, Is.True, $"building {b.Id}: {f.Kind} at {f.Cell} is in a wall");
                 }

@@ -147,8 +147,12 @@ namespace CepaCero.Unity.Prototype
             {
                 foreach (Furniture f in b.Furniture)
                 {
+                    if (f.OnWall)
+                    {
+                        continue;                                 // pictures and curtains hang on the walls (PrototypeWorldView)
+                    }
                     FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
-                    Items.Add(new DecorItem(info.Sprite, f.Cell.X, f.Cell.Y, info.Width, info.Height, false, ((f.Cell.X + f.Cell.Y) & 1) == 0));
+                    Items.Add(new DecorItem(info.Sprite, f.Cell.X, f.Cell.Y, info.Width, info.Height, info.Flat, !info.Flat && ((f.Cell.X + f.Cell.Y) & 1) == 0));
                     for (int dy = 0; dy < info.Height; dy++)
                     {
                         for (int dx = 0; dx < info.Width; dx++)

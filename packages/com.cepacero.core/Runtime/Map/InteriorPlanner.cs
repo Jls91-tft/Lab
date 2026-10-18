@@ -80,6 +80,8 @@ namespace CepaCero.Map
             {
                 Floor(world, r);
                 Place(world, interior, taken, rng, r, furniture, b);
+                DecorateWalls(world, rng, r, furniture, home);
+                PutRug(interior, taken, rng, r, furniture);
             }
             return furniture;
         }
@@ -377,6 +379,99 @@ namespace CepaCero.Map
             {
                 Put(into, taken, wallCells, "shelf", 1);
             }
+        }
+
+        /// <summary>
+        /// The walls you see from inside a room (north and east: the faces turned to the camera): curtains on every window, and in homes one to
+        /// three pictures, a clock or a shelf on the plain wall (D-027).
+        /// </summary>
+        private static void DecorateWalls(BlockWorld world, DeterministicRandom rng, Room room, List<Furniture> into, bool home)
+        {
+            var plain = new List<Furniture>();
+            var used = new HashSet<Int2>();
+            foreach (Int2 c in room.Cells)
+            {
+                for (int side = 0; side < 2; side++)
+                {
+                    Int2 wall = side == 0 ? new Int2(c.X, c.Y + 1) : new Int2(c.X + 1, c.Y);
+                    char face = side == 0 ? 's' : 'w';
+                    if (!world.InBounds(wall.X, wall.Y) || used.Contains(wall))
+                    {
+                        continue;
+                    }
+                    string key = world.GetBlock(wall.X, wall.Y).Key;
+                    if (key.StartsWith("window"))
+                    {
+                        used.Add(wall);
+                        into.Add(new Furniture(wall, "curtain", face));
+                    }
+                    else if (key == "building_wall" || key.StartsWith("wall_"))
+                    {
+                        plain.Add(new Furniture(wall, "picture", face));
+                    }
+                }
+            }
+            if (!home || plain.Count == 0)
+            {
+                return;
+            }
+            string[] pieces = room.Kind == RoomKind.Kitchen ? new[] { "clock", "wall_shelf" }
+                : room.Kind == RoomKind.Bathroom ? new[] { "wall_shelf" }
+                : new[] { "picture", "picture_tall", "picture", "clock" };
+            int count = Math.Min(plain.Count / 3 + 1, room.Kind == RoomKind.Living ? 3 : 2);
+            for (int k = 0; k < count && plain.Count > 0; k++)
+            {
+                int i = rng.Range(0, plain.Count);
+                Furniture spot = plain[i];
+                plain.RemoveAt(i);
+                if (used.Add(spot.Cell))
+                {
+                    into.Add(new Furniture(spot.Cell, pieces[rng.Range(0, pieces.Length)], spot.Face));
+                }
+            }
+        }
+
+        /// <summary>A rug near the middle of living rooms and bedrooms, where three free cells in a row are left.</summary>
+        private static void PutRug(HashSet<Int2> interior, HashSet<Int2> taken, DeterministicRandom rng, Room room, List<Furniture> into)
+        {
+            if (room.Kind != RoomKind.Living && room.Kind != RoomKind.Bedroom)
+            {
+                return;
+            }
+            int cx = 0, cy = 0;
+            foreach (Int2 c in room.Cells)
+            {
+                cx += c.X;
+                cy += c.Y;
+            }
+            cx /= room.Cells.Count;
+            cy /= room.Cells.Count;
+            Int2 best = default;
+            int bestDist = int.MaxValue;
+            foreach (Int2 c in room.Cells)
+            {
+                bool free = true;
+                for (int dx = 0; dx < 3 && free; dx++)
+                {
+                    var k = new Int2(c.X + dx, c.Y);
+                    free = interior.Contains(k) && !taken.Contains(k);
+                }
+                int d = Math.Abs(c.X + 1 - cx) + Math.Abs(c.Y - cy);
+                if (free && d < bestDist)
+                {
+                    best = c;
+                    bestDist = d;
+                }
+            }
+            if (bestDist == int.MaxValue)
+            {
+                return;
+            }
+            for (int dx = 0; dx < 3; dx++)
+            {
+                taken.Add(new Int2(best.X + dx, best.Y));                 // nothing stands on it
+            }
+            into.Add(new Furniture(best, rng.Range(0, 2) == 0 ? "rug" : "rug_small"));
         }
 
         private static void Put(List<Furniture> into, HashSet<Int2> taken, List<Int2> cells, string kind, int count)

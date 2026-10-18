@@ -93,7 +93,7 @@ namespace CepaCero.Tests.Map
         {
             MapImportResult map = Import(Map(24, 14, "residential"));
             var seen = new HashSet<Int2>();
-            foreach (Furniture f in map.Buildings[0].Furniture)
+            foreach (Furniture f in map.Buildings[0].Furniture.Where(x => !x.OnWall))
             {
                 FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
                 for (int dy = 0; dy < info.Height; dy++)
@@ -108,7 +108,21 @@ namespace CepaCero.Tests.Map
                 }
             }
             var door = new Int2(4 + 12, 4);
-            Assert.That(map.Buildings[0].Furniture.Any(f => Math.Abs(f.Cell.X - door.X) + Math.Abs(f.Cell.Y - door.Y) <= 1), Is.False, "the way in is clear");
+            Assert.That(map.Buildings[0].Furniture.Where(f => !f.OnWall).Any(f => Math.Abs(f.Cell.X - door.X) + Math.Abs(f.Cell.Y - door.Y) <= 1), Is.False, "the way in is clear");
+        }
+
+        [Test]
+        public void RoomsGetRugsAndTheirWallsPicturesAndCurtains()
+        {
+            MapImportResult map = Import(Map(24, 14, "residential"));
+            IReadOnlyList<Furniture> f = map.Buildings[0].Furniture;
+            Assert.That(f.Any(x => x.IsFlat), "a rug");
+            Assert.That(f.Any(x => x.OnWall && x.Kind != "curtain"), "something on a wall");
+            foreach (Furniture w in f.Where(x => x.OnWall))
+            {
+                Assert.That(map.Blocks.GetBlock(w.Cell.X, w.Cell.Y).IsAir, Is.False, $"{w.Kind} hangs on a wall");
+                Assert.That(w.Face == 's' || w.Face == 'w', Is.True);
+            }
         }
 
         [Test]

@@ -173,8 +173,99 @@ def roof(piece: Image.Image) -> Image.Image:
     return img
 
 
+# ------------------------------------------------------------------ things hung on walls (D-027)
+DECO_LOW, DECO_HIGH = 18, 70
+
+
+def _front(draw) -> Image.Image:
+    """A 32 px wide front picture of a wall piece; rows FACE_TOP.. map to the wall between DECO_LOW and DECO_HIGH."""
+    img = Image.new("RGBA", (32, 40), (0, 0, 0, 0))
+    draw(img.load())
+    return img
+
+
+def _rect(px, x0, y0, x1, y1, c):
+    for y in range(y0, y1 + 1):
+        for x in range(x0, x1 + 1):
+            px[x, y] = c
+
+
+def _picture(px):
+    _rect(px, 9, 13, 22, 29, (70, 46, 30, 255))                         # frame
+    _rect(px, 10, 14, 21, 21, (126, 168, 196, 255))                      # sky
+    _rect(px, 10, 22, 21, 28, (92, 128, 76, 255))                        # field
+    _rect(px, 13, 19, 16, 23, (210, 196, 150, 255))                      # a house far away
+    _rect(px, 18, 16, 19, 17, (240, 226, 160, 255))                      # sun
+
+
+def _picture2(px):
+    _rect(px, 11, 11, 20, 32, (150, 116, 54, 255))
+    _rect(px, 12, 12, 19, 31, (60, 50, 62, 255))
+    _rect(px, 14, 15, 17, 19, (206, 168, 140, 255))                      # a face
+    _rect(px, 13, 20, 18, 30, (96, 48, 52, 255))                         # in red
+
+
+def _clock(px):
+    for y in range(14, 30):
+        for x in range(8, 24):
+            d = ((x - 15.5) ** 2 + (y - 21.5) ** 2) ** .5
+            if d <= 7.5:
+                px[x, y] = (40, 36, 40, 255) if d > 6.4 else (232, 228, 214, 255)
+    _rect(px, 15, 17, 16, 21, (30, 30, 34, 255))
+    _rect(px, 16, 21, 19, 22, (30, 30, 34, 255))
+
+
+def _shelf(px):
+    _rect(px, 4, 30, 27, 31, (112, 76, 46, 255))
+    for i, (x, h, c) in enumerate(((6, 7, (150, 52, 48)), (9, 8, (52, 92, 140)), (12, 6, (204, 174, 70)), (15, 8, (70, 120, 80)),
+                                    (21, 5, (230, 230, 230)), (24, 4, (160, 120, 80)))):
+        _rect(px, x, 30 - h, x + 2, 29, c + (255,))
+
+
+def _curtain(px):
+    _rect(px, 1, 8, 30, 8, (90, 70, 50, 255))                            # rod
+    for x0 in (2, 22):
+        for x in range(x0, x0 + 8):
+            fold = (x - x0) % 3
+            c = (156, 54, 50) if fold == 0 else (186, 70, 62) if fold == 1 else (132, 44, 42)
+            for y in range(9, 40):
+                px[x, y] = c + (255,)
+
+
+DECO = {"picture": _picture, "picture2": _picture2, "clock": _clock, "shelf": _shelf, "curtain": _curtain}
+
+
+def face_only(piece: Image.Image, side: str, low: int, high: int) -> Image.Image:
+    """Only the piece, laid on the south or west face of a wall block (same geometry as `block`)."""
+    img = Image.new("RGBA", (W, D + WALL_H), (0, 0, 0, 0))
+    px = img.load()
+    base = D + WALL_H
+    for X in range(W):
+        u = (X + .5) / (W / 2)
+        west = X < W // 2
+        if west != (side == "w"):
+            continue
+        if west:
+            ground = base - D / 2 + u * D / 2
+            tx, k = int(u * 32) % 32, -.24
+        else:
+            u -= 1
+            ground = base - u * D / 2
+            tx, k = int(u * 32) % 32, 0.0
+        for Y in range(img.height):
+            h = int(ground - (Y + .5))
+            c = _overlay(piece, tx, h, low, high)
+            if c is not None:
+                px[X, Y] = _shade(c, k) if k else c
+    return img
+
+
 def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
+    for name, draw in DECO.items():
+        front = _front(draw)
+        for side in ("s", "w"):
+            out[f"iso_deco_{name}_{side}"] = face_only(front, side, DECO_LOW, DECO_HIGH)
     for name, piece in list(images.items()):
         if (name.startswith("ground_") or name.startswith("floor_")) and piece.size == (32, 32):
             out["iso_" + name] = ground_diamond(piece)
