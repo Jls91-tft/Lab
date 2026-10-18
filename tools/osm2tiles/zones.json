@@ -15,6 +15,7 @@
       41.6525,
       -0.9055
     ],
-    "description": "Zaragoza, centro de Delicias (~350 x 335 m) a 1 m por casilla: casas el doble de grandes por lado. Mapa del prototipo (D-026)."
+    "description": "Zaragoza, centro de Delicias (~350 x 335 m) a 1 m por casilla: casas el doble de grandes por lado. Mapa del prototipo (D-026).",
+    "rotate": "auto"
   }
 }

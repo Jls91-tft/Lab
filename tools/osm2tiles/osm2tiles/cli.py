@@ -12,7 +12,7 @@ from pathlib import Path
 from . import rules
 from .export import to_document, write_json, write_preview
 from .fetch import DEFAULT_ENDPOINT, fetch
-from .geo import BBox, Projector
+from .geo import BBox, Projector, dominant_rotation
 from .osm import parse_osm
 from .rasterize import build_map
 
@@ -33,6 +33,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--name", help="output name (default: zone name or 'map')")
     p.add_argument("--input", type=Path, help="read a local .osm file instead of downloading")
     p.add_argument("--meters-per-tile", type=float, default=2.0, help="tile size in metres (default 2)")
+    p.add_argument("--rotate", default=None, help="turn the map this many degrees, or 'auto' to put the main building grid along the axes (D-027)")
     p.add_argument("--out", type=Path, default=TOOL_DIR / "out", help="output folder")
     p.add_argument("--cache", type=Path, default=TOOL_DIR / "cache", help="download cache folder")
     p.add_argument("--refresh", action="store_true", help="ignore the cache and download again")
@@ -67,7 +68,13 @@ def main(argv: list[str] | None = None) -> int:
         bbox = BBox.parse(args.bbox)
         name = args.name or "map"
 
-    proj = Projector(bbox, args.meters_per_tile)
+    rotate_arg = args.rotate if args.rotate is not None else (zones[args.zone].get("rotate") if args.zone else None)
+    rotation = 0.0
+    if rotate_arg == "auto":
+        rotation = None                                        # worked out below, once the data is parsed
+    elif rotate_arg is not None:
+        rotation = float(rotate_arg)
+    proj = Projector(bbox, args.meters_per_tile, rotation or 0.0)
     if proj.area_km2 > MAX_AREA_KM2 and not args.force:
         print(f"error: area is {proj.area_km2:.2f} km² (> {MAX_AREA_KM2}). Use --force if you mean it.", file=sys.stderr)
         return 2
@@ -90,6 +97,10 @@ def main(argv: list[str] | None = None) -> int:
 
     t0 = time.perf_counter()
     data = parse_osm(osm_path)
+    if rotation is None:
+        rotation = dominant_rotation(data, bbox)
+        proj = Projector(bbox, args.meters_per_tile, rotation)
+        print(f"Turning the map {rotation:.0f} degrees so the main street grid runs along the axes.")
     tm = build_map(data, proj)
     doc = to_document(tm, name, bbox, args.meters_per_tile, data.timestamp)
     json_path = args.out / f"{name}.map.json"

@@ -78,6 +78,7 @@ namespace CepaCero.Map
             var taken = new HashSet<Int2>(clear);
             foreach (Room r in rooms)
             {
+                Floor(world, r);
                 Place(world, interior, taken, rng, r, furniture, b);
             }
             return furniture;
@@ -276,6 +277,30 @@ namespace CepaCero.Map
         }
 
         // ------------------------------------------------------------------ furniture
+
+        /// <summary>Each room its own floor, as in Project Zomboid: boards in the living areas, tiles in kitchens and bathrooms, concrete in shops and stores.</summary>
+        private static void Floor(BlockWorld world, Room room)
+        {
+            string material;
+            switch (room.Kind)
+            {
+                case RoomKind.Kitchen:
+                case RoomKind.Bathroom: material = "stone"; break;
+                case RoomKind.Shop:
+                case RoomKind.Storage:
+                case RoomKind.Hall: material = "concrete"; break;
+                case RoomKind.Office: material = "brick"; break;
+                default: material = "wood"; break;
+            }
+            if (!world.Registry.TryGet("floor_" + material, out BlockType floor))
+            {
+                return;
+            }
+            foreach (Int2 c in room.Cells)
+            {
+                world.SetBlock(c.X, c.Y, 0, BuildLayer.Floor, floor.Id);
+            }
+        }
 
         private static void Place(BlockWorld world, HashSet<Int2> interior, HashSet<Int2> taken, DeterministicRandom rng, Room room, List<Furniture> into, BuildingInfo b)
         {

@@ -56,6 +56,132 @@ class _Area:
     inners: list[list[int]]
 
 
+MIN_SIDE = 4              # a rectangle of a regular building is at least this many tiles on a side
+KEEP_FRACTION = 0.93      # stop adding rectangles once this part of the footprint is covered
+MAX_RECTS = 6
+
+
+def _best_rectangle(mask: list[list[bool]], w: int, h: int) -> tuple[int, int, int, int] | None:
+    """Largest axis-aligned rectangle of True cells (x0, y0, x1, y1 inclusive), by the histogram method."""
+    heights = [0] * w
+    best = (0, None)
+    for y in range(h):
+        for x in range(w):
+            heights[x] = heights[x] + 1 if mask[y][x] else 0
+        stack: list[tuple[int, int]] = []                      # (start x, height)
+        for x in range(w + 1):
+            cur = heights[x] if x < w else 0
+            start = x
+            while stack and stack[-1][1] >= cur:
+                sx, sh = stack.pop()
+                area = sh * (x - sx)
+                if area > best[0] and sh >= MIN_SIDE and (x - sx) >= MIN_SIDE:
+                    best = (area, (sx, y - sh + 1, x - 1, y))
+                start = sx
+            stack.append((start, cur))
+    return best[1]
+
+
+def _oriented_rectangle(points: list[tuple[int, int]]) -> tuple[float, float, float, float, float]:
+    """Minimum-area bounding rectangle of the cells, trying turns of 0..90 degrees: (angle in degrees folded to -45..45, side a, side b, centre x, centre y)."""
+    best = None
+    for deg in range(0, 90, 3):
+        a = math.radians(deg)
+        ca, sa = math.cos(a), math.sin(a)
+        us = [x * ca + y * sa for x, y in points]
+        vs = [-x * sa + y * ca for x, y in points]
+        du, dv = max(us) - min(us) + 1, max(vs) - min(vs) + 1
+        if best is None or du * dv < best[0]:
+            cu, cv = (max(us) + min(us)) / 2, (max(vs) + min(vs)) / 2
+            best = (du * dv, deg, du, dv, cu * ca - cv * sa, cu * sa + cv * ca)
+    _, deg, du, dv, cx, cy = best
+    if deg > 45:
+        deg -= 90
+        du, dv = dv, du                                       # a quarter turn swaps the sides
+    return deg, du, dv, cx, cy
+
+
+def _regularize(bid_at: list[int], gnd: list[int], w: int, h: int) -> None:
+    """Tidies every footprint (D-027) so houses are the clean volumes of Project Zomboid, not the staircases an OSM outline makes on the grid.
+    A building that is nearly a rectangle (its area fills 75% of its oriented bounding box) becomes an axis-aligned rectangle of the same
+    size and centre, turned to the nearest axis; one that is axis-aligned already, or an L, T or U, becomes the union of its biggest
+    rectangles. A building never grows over another one, a road, water or a railway."""
+    original = bid_at[:]
+    cells: dict[int, list[int]] = {}
+    for i, b in enumerate(original):
+        if b:
+            cells.setdefault(b, []).append(i)
+    blocked = (G["asphalt"], G["water"], G["rail"])
+    result: dict[int, set[int]] = {}
+    for b, idx in cells.items():
+        xs = [i % w for i in idx]
+        ys = [i // w for i in idx]
+        pts = list(zip(xs, ys))
+        total = len(idx)
+        deg, du, dv, cx, cy = _oriented_rectangle(pts)
+        fill = total / max(1.0, du * dv)
+        shape: set[int] = set()
+        if abs(deg) >= 12 and fill >= 0.75 and min(du, dv) >= MIN_SIDE:
+            half_w, half_h = round(du) / 2, round(dv) / 2
+            x0, x1 = math.floor(cx - half_w + 0.5), math.floor(cx + half_w - 0.5)
+            y0, y1 = math.floor(cy - half_h + 0.5), math.floor(cy + half_h - 0.5)
+            for y in range(max(0, y0), min(h - 1, y1) + 1):
+                for x in range(max(0, x0), min(w - 1, x1) + 1):
+                    i = y * w + x
+                    if original[i] in (0, b) and gnd[i] not in blocked:
+                        shape.add(i)
+        if shape:
+            shape = _largest_rectangle(shape, w)           # where a neighbour or a street cut a corner off, shrink to a clean rectangle
+        if len(shape) < 0.55 * total:
+            shape = _rectangle_union(idx, w, total)
+        result[b] = shape
+    for i, b in enumerate(original):
+        if b:
+            bid_at[i] = 0
+    for b in sorted(result):
+        for i in result[b]:
+            if bid_at[i] == 0:
+                bid_at[i] = b
+
+
+def _largest_rectangle(cells: set[int], w: int) -> set[int]:
+    xs = [i % w for i in cells]
+    ys = [i // w for i in cells]
+    x0, y0 = min(xs), min(ys)
+    bw, bh = max(xs) - x0 + 1, max(ys) - y0 + 1
+    mask = [[False] * bw for _ in range(bh)]
+    for i in cells:
+        mask[i // w - y0][i % w - x0] = True
+    rect = _best_rectangle(mask, bw, bh)
+    if rect is None:
+        return set()
+    rx0, ry0, rx1, ry1 = rect
+    return {(yy + y0) * w + xx + x0 for yy in range(ry0, ry1 + 1) for xx in range(rx0, rx1 + 1)}
+
+
+def _rectangle_union(idx: list[int], w: int, total: int) -> set[int]:
+    xs = [i % w for i in idx]
+    ys = [i // w for i in idx]
+    x0, y0, x1, y1 = min(xs), min(ys), max(xs), max(ys)
+    bw, bh = x1 - x0 + 1, y1 - y0 + 1
+    remaining = [[False] * bw for _ in range(bh)]
+    for i in idx:
+        remaining[i // w - y0][i % w - x0] = True
+    keep: set[int] = set()
+    for _ in range(MAX_RECTS):
+        rect = _best_rectangle(remaining, bw, bh)
+        if rect is None:
+            break
+        rx0, ry0, rx1, ry1 = rect
+        for yy in range(ry0, ry1 + 1):
+            for xx in range(rx0, rx1 + 1):
+                keep.add((yy + y0) * w + xx + x0)
+                remaining[yy][xx] = False
+        if len(keep) >= KEEP_FRACTION * total:
+            break
+    return keep if len(keep) >= 0.5 * total else set(idx)           # too irregular to tidy: as OSM drew it
+
+
 def _collect_areas(data: OsmData) -> list[_Area]:
     areas: list[_Area] = []
     used_as_outer: set[int] = set()
@@ -234,6 +360,7 @@ def build_map(data: OsmData, proj: Projector) -> TileMap:
     # ---- Per-cell post-processing (image space: row 0 = north) ----
     gnd = _pixels(ground)
     bid_at = _pixels(ids)
+    _regularize(bid_at, gnd, w, h)
     wood_at = _pixels(wood)
     fence_at = _pixels(fences)
     kind_hint = _pixels(kinds_img)
