@@ -33,7 +33,8 @@ namespace CepaCero.Unity.Prototype
             public int Frame;
         }
 
-        private readonly Transform _root;
+        private readonly Transform _root;                         // particles stand up: screen coordinates (D-025)
+        private readonly Transform _flatRoot;                      // stains lie on the ground: grid coordinates
         private readonly Sprite _dot;
         private readonly Sprite[] _blood = new Sprite[3];
         private readonly Particle[] _particles = new Particle[MaxParticles];
@@ -53,11 +54,14 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Sound for hits and deaths. Optional.</summary>
         public PrototypeAudio Audio { get; set; }
 
-        public PrototypeEffects(Transform parent, PrototypeArt art)
+        public PrototypeEffects(Transform parent, Transform upright, PrototypeArt art)
         {
             var go = new GameObject("Effects (prototype)");
-            go.transform.SetParent(parent, false);
+            go.transform.SetParent(upright, false);
             _root = go.transform;
+            var flat = new GameObject("Stains (prototype)");
+            flat.transform.SetParent(parent, false);
+            _flatRoot = flat.transform;
             _ppu = art.PixelsPerUnit;
             var tex = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             tex.SetPixel(0, 0, Color.white);
@@ -149,7 +153,8 @@ namespace CepaCero.Unity.Prototype
                 p.Position = new Float2(p.Position.X + p.Velocity.X * dt, p.Position.Y + p.Velocity.Y * dt);
                 _particles[i] = p;
                 SpriteRenderer r = _renderers[i];
-                r.transform.localPosition = new Vector3(Mathf.Round(p.Position.X * _ppu) / _ppu, Mathf.Round(p.Position.Y * _ppu) / _ppu, 0f);
+                Vector3 on = PrototypeIso.ToScreen(p.Position);
+                r.transform.localPosition = new Vector3(Mathf.Round(on.x * _ppu) / _ppu, Mathf.Round(on.y * _ppu) / _ppu, 0f);
                 Color c = p.Color;
                 c.a = 1f - p.Age / p.Life;
                 r.color = c;
@@ -204,7 +209,7 @@ namespace CepaCero.Unity.Prototype
                 float size = 1f / 16f * (1f + (float)_rng.NextDouble() * 1.5f);
                 r.gameObject.SetActive(true);
                 r.transform.localScale = new Vector3(size, size, 1f);
-                r.sortingOrder = short.MaxValue - 3;
+                r.sortingOrder = PrototypeIso.RoofOrder;
                 _particles[_count] = new Particle
                 {
                     Position = at,
@@ -227,7 +232,7 @@ namespace CepaCero.Unity.Prototype
             if (s == null)
             {
                 var go = new GameObject("blood");
-                go.transform.SetParent(_root, false);
+                go.transform.SetParent(_flatRoot, false);
                 s = go.AddComponent<SpriteRenderer>();
                 PrototypeMaterials.Apply(s);
                 s.sortingOrder = PrototypeDecorView.FlatOrder;

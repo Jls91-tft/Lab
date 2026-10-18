@@ -98,7 +98,9 @@ namespace CepaCero.Unity.Prototype
             }
             float x = (kb.dKey.isPressed || kb.rightArrowKey.isPressed ? 1f : 0f) - (kb.aKey.isPressed || kb.leftArrowKey.isPressed ? 1f : 0f);
             float y = (kb.wKey.isPressed || kb.upArrowKey.isPressed ? 1f : 0f) - (kb.sKey.isPressed || kb.downArrowKey.isPressed ? 1f : 0f);
-            Move = new Float2(x, y);
+            // D-025: the keys are relative to the screen (W goes up the screen), and the grid is turned 45 degrees to it.
+            var onGrid = new Float2(x + y, y - x);
+            Move = onGrid.LengthSquared > 1f ? onGrid.Normalized : onGrid;
             Sprint = kb.leftShiftKey.isPressed;
             Ctrl = kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed;
             Revive = kb.fKey.isPressed;

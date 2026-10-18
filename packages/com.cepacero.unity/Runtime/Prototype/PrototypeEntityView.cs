@@ -287,7 +287,11 @@ namespace CepaCero.Unity.Prototype
             bool moving = dx * dx + dy * dy > 1e-6f;
             if (moving)
             {
-                w.Facing = Math.Abs(dx) > Math.Abs(dy) ? (dx < 0f ? Left : Right) : (dy > 0f ? Up : Down);
+                // Facing is read on the screen (D-025): a step along the grid goes diagonally there, so most steps show the side view
+                // and only a straight walk up or down the screen shows the back or the front (true diagonal art comes later).
+                float sx = dx - dy;
+                float sy = (dx + dy) * 0.5f;
+                w.Facing = Math.Abs(sx) > Math.Abs(sy) * 1.2f ? (sx < 0f ? Left : Right) : (sy > 0f ? Up : Down);
                 w.Phase += Time.deltaTime * WalkFps;
             }
             else

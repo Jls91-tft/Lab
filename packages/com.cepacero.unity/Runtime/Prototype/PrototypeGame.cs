@@ -186,7 +186,7 @@ namespace CepaCero.Unity.Prototype
             _lighting.AddFromDecor(decor);
             _lighting.AddHouses(_map.Buildings, viewGround, DecorPlanner.SeedFor(_map.Name));
             _entities = new PrototypeEntityView(_upright, _viewRoot, _data.Zombies, _art);
-            _effects = new PrototypeEffects(_viewRoot, _art);
+            _effects = new PrototypeEffects(_viewRoot, _upright, _art);
             _entities.Effects = _effects;
             _entities.Lighting = _lighting;
             _audio = new PrototypeAudio(_viewRoot);

@@ -23,7 +23,7 @@ namespace CepaCero.Unity.Prototype
 
         private static readonly string[] Controls =
         {
-            "WASD moverse · Shift correr · Tab mochila · 1-9 o rueda: elegir de la barra",
+            "WASD moverse (W = arriba en pantalla) · Shift correr · Tab mochila · 1-9 o rueda: elegir de la barra",
             "El clic izquierdo hace lo que pida lo que llevas en la mano: arma ataca, hacha o pico rompen, pala cava, vendas se usan",
             "Con un material: clic pone · arrastra línea · Mayús contorno · Ctrl habitación · clic der. quita · clic central copia",
             "Q/E forma · R girar · [ ] (o , .) color · Ctrl+Z deshacer · martillo: desmonta y devuelve la mitad",

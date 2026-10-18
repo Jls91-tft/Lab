@@ -169,7 +169,7 @@ namespace CepaCero.Unity.Prototype
             _grid.Resolve(_ambient.x, _ambient.y, _ambient.z, _buffer);
             _texture.LoadRawTextureData(_buffer);
             _texture.Apply(false);
-            _overlay.transform.position = new Vector3(x0, y0, 0f);
+            _overlay.transform.localPosition = new Vector3(x0, y0, 0f);            // local: the flat root is the rotated isometric one (D-025)
             if (DumpPath != null)
             {
                 System.IO.File.WriteAllBytes(DumpPath, _texture.EncodeToPNG());
