@@ -373,7 +373,7 @@ namespace CepaCero.Map
                     PutBed(world, interior, into, taken, wallCells, openCells);
                     Put(into, taken, Free(wallCells, taken), "wardrobe", 1);
                     Put(into, taken, Free(wallCells, taken), "nightstand", 1);
-                    Put(into, taken, Free(wallCells, taken), "plant", size / 20);
+                    Put(into, taken, Free(wallCells, taken), "plant", size / 45);
                     break;
                 case RoomKind.Bathroom:
                     Put(into, taken, wallCells, "toilet", 1);
@@ -394,7 +394,7 @@ namespace CepaCero.Map
                     Put(into, taken, Free(wallCells, taken), "lamp", 1);
                     PutRun(world, room, taken, into, "tv");
                     Put(into, taken, Free(wallCells, taken), "bookshelf", 1);
-                    Put(into, taken, Free(wallCells, taken), "plant", 1 + size / 30);
+                    Put(into, taken, Free(wallCells, taken), "plant", size / 40);
                     break;
                 case RoomKind.Shop:
                     PutRun(world, room, taken, into, Repeat("shelf", Math.Max(2, size / 6)));

@@ -147,6 +147,23 @@ def roof_cell(piece: Image.Image, level: int, rising: str | None) -> Image.Image
     return img
 
 
+def _weathered(piece: Image.Image) -> Image.Image:
+    """The same roof piece aged: moss and dark patches, a few tiles lighter, so a big roof is not one flat colour."""
+    out = piece.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            n = ((x * 73 + y * 151) * 2654435761 >> 8) & 255
+            if n < 22:
+                px[x, y] = (int(r * .55 + 60 * .45), int(g * .55 + 92 * .45), int(b * .55 + 48 * .45), a)      # moss
+            elif n < 40:
+                px[x, y] = (int(r * .75), int(g * .75), int(b * .75), a)
+            elif n > 238:
+                px[x, y] = (min(255, int(r * 1.15)), min(255, int(g * 1.15)), min(255, int(b * 1.15)), a)
+    return out
+
+
 def ground_diamond(src: Image.Image) -> Image.Image:
     """A flat 32 px tile as a 64x32 diamond, drawn a hair larger than its cell so neighbouring diamonds leave no seam."""
     img = Image.new("RGBA", (W, D), (0, 0, 0, 0))
@@ -374,6 +391,7 @@ def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
             kind = name[len("roof_"):-len("_flat")]
             for level in range(ROOF_LEVELS):
                 out[f"iso_roof_{kind}_f{level}"] = roof_cell(piece, level, None)
+                out[f"iso_roof_{kind}_f{level}_x"] = roof_cell(_weathered(piece), level, None)
                 if level < ROOF_LEVELS - 1:
                     for d in ("n", "e", "s", "w"):
                         out[f"iso_roof_{kind}_s{level}_{d}"] = roof_cell(piece, level, d)

@@ -48,7 +48,8 @@ namespace CepaCero.Unity.Prototype
         private readonly HashSet<int> _roofCut = new HashSet<int>();  // roofs in front of you, see-through (PZ)
         private readonly HashSet<int> _roofCutNext = new HashSet<int>();
         private readonly Tilemap _roofCutMap;
-        private readonly Tilemap _roofLineMap;                       // the outline of each building's roof
+        private readonly Tilemap _roofLineMap;
+        private readonly Tilemap _roofDetailMap;                     // chimneys, aerials, air conditioners on the roofs (D-027)                       // the outline of each building's roof
         private Tile[] _lineTiles;
         private int[] _owner;                                       // building index + 1 per cell, 0 = none
         private readonly Tilemap _belowFloorMap;
@@ -149,6 +150,9 @@ namespace CepaCero.Unity.Prototype
             _objectMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             _objectMap.tileAnchor = new Vector3(0.5f, 0.97f, 0f);
             _roofLineMap = CreateLayer(isoGrid.transform, "Roof outlines", PrototypeIso.UprightOrder);
+            _roofDetailMap = CreateLayer(isoGrid.transform, "Roof details", PrototypeIso.UprightOrder);
+            _roofDetailMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+            _roofDetailMap.tileAnchor = new Vector3(0.46f, 0.46f, 0f);             // in front of its roof piece
             foreach (Tilemap roof in new[] { _roofMap, _roofFadeMap, _roofCutMap, _roofLineMap })
             {
                 roof.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
@@ -406,6 +410,7 @@ namespace CepaCero.Unity.Prototype
             _level = level;
             _groundMap.gameObject.SetActive(level >= 0);
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
+            _roofDetailMap.gameObject.SetActive(level >= 0);
             _upperWallMap.gameObject.SetActive(level == 0);
             _decoMap.gameObject.SetActive(level == 0);
             _paperSouthMap.gameObject.SetActive(level == 0);
@@ -454,6 +459,7 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap.ClearAllTiles();
             _roofCutMap.ClearAllTiles();
             _roofLineMap.ClearAllTiles();
+            _roofDetailMap.ClearAllTiles();
             _roofCut.Clear();
             _edgeMap.ClearAllTiles();
             _edgeFadeMap.ClearAllTiles();
@@ -953,21 +959,41 @@ namespace CepaCero.Unity.Prototype
         }
 
         /// <summary>The roof of a cell goes to the fading map when the cell belongs to the house you are in.</summary>
+        private static readonly string[] FlatRoofDetails = { "ac", "tank", "skylight", "antenna", "ac" };
+        private static readonly string[] PitchedRoofDetails = { "chimney", "chimney", "antenna" };
+
         private void PaintRoofCell(int x, int y)
         {
             var cell = new Vector3Int(x, y, 0);
             BlockType type = TopRoof(x, y, out int level);
             TileBase tile = null;
             TileBase edge = null;
+            TileBase detail = null;
             if (!type.IsAir && _level >= 0)
             {
                 edge = EdgeTile(x, y);
                 byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
                 int pitch = _roofLevel != null ? _roofLevel[y * _blocks.Width + x] : 0;
-                Sprite roofSprite = _sprites.IsoRoof(type, pitch, Rising(x, y, pitch));
-                if (_tall != null && _tall[y * _blocks.Width + x])
+                string rising = Rising(x, y, pitch);
+                uint h = unchecked((uint)(x * 73856093) ^ (uint)(y * 19349663));
+                Sprite roofSprite = _sprites.IsoRoof(type, pitch, rising);
+                if (rising == null && h % 4 == 0 && _art.TryGet(roofSprite.name + "_x", out Sprite aged))
+                {
+                    roofSprite = aged;                                                         // moss and patches here and there
+                }
+                bool tall = _tall != null && _tall[y * _blocks.Width + x];
+                if (tall)
                 {
                     roofSprite = _art.Lifted(roofSprite, PrototypeIso.WallHeight);              // on top of the second storey
+                }
+                if (rising == null && (h >> 8) % 29 == 0)
+                {
+                    bool flat = type.Build != null && type.Build.MaterialId == "flat";
+                    string[] pool = flat ? FlatRoofDetails : PitchedRoofDetails;
+                    if (_art.TryGet("iso_rdet_" + pool[(h >> 16) % (uint)pool.Length], out Sprite d))
+                    {
+                        detail = TileFor(_art.Lifted(d, PrototypeIso.WallHeight * (tall ? 2f : 1f) + pitch * 10f / 32f));
+                    }
                 }
                 tile = TileFor(roofSprite, _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
             }
@@ -977,6 +1003,7 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap.SetTile(cell, fading ? tile : null);
             _roofCutMap.SetTile(cell, cut ? tile : null);
             _roofMap.SetTile(cell, fading || cut ? null : tile);
+            _roofDetailMap.SetTile(cell, fading || cut ? null : detail);
             _roofLineMap.SetTile(cell, fading || cut || tile == null ? null : LineTile(x, y, _tall != null && _tall[y * _blocks.Width + x]));
             (fading ? _edgeFadeMap : _edgeMap).SetTile(cell, edge);
             (fading ? _edgeMap : _edgeFadeMap).SetTile(cell, null);

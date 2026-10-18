@@ -652,10 +652,10 @@ def decal_glass(i: int) -> Sprite:
 
 def decal_rug(i: int) -> Sprite:
     S = Sprite(96, 32, salt=240 + i)
-    base = [(150, 60, 56), (60, 96, 140)][i % 2]
+    base = [(150, 60, 56), (170, 132, 88)][i % 2]                        # a red rug and a sandy one (a blue one read as water)
     S.paint(rect(1, 1, 94, 30), ramp5(base), grain=.18)
-    S.paint(rect(5, 5, 90, 26), ramp5(mix(base, (0, 0, 0), .25)), grain=.12)
-    S.paint(rect(10, 10, 85, 21), ramp5(mix(base, (255, 230, 180), .25)), grain=.12)
+    S.paint(rect(5, 5, 90, 26), ramp5(mix(base, (255, 230, 180), .12)), grain=.12)
+    S.paint(rect(10, 10, 85, 21), ramp5(mix(base, (255, 230, 180), .3)), grain=.12)
     for x in range(14, 82, 8):
         S.set(x, 15, (230, 210, 150)); S.set(x + 1, 16, (230, 210, 150))
     for y in range(1, 31, 2):

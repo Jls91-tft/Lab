@@ -355,6 +355,32 @@ def bed(orient: str, variant: int = 0) -> Image.Image:
     return c.finish()
 
 
+def roof_detail(kind: str) -> Image.Image:
+    """Things on roofs (D-027), drawn standing on their cell; the game lifts them to the roof's height."""
+    c = Canvas(1, 50)
+    if kind == "chimney":
+        c.box(0.35, 0.65, 0.35, 0.65, 0, 30, (120, 64, 50), (150, 80, 62))
+        c.box(0.32, 0.68, 0.32, 0.68, 30, 34, (90, 90, 96), (110, 110, 116))
+    elif kind == "ac":
+        c.box(0.2, 0.8, 0.25, 0.75, 0, 14, (196, 198, 202), (170, 172, 178),
+              lambda u, v: (90, 92, 98) if (u * 10) % 1 < 0.4 and 3 < v < 11 else (184, 186, 190), "s")
+    elif kind == "tank":
+        for k in range(10):
+            r = 0.25
+            c.box(0.5 - r, 0.5 + r, 0.5 - r, 0.5 + r, 6 + k * 2, 8 + k * 2, (210, 212, 216), (180, 184, 190))
+        c.box(0.3, 0.32, 0.3, 0.32, 0, 6, (90, 90, 96), (90, 90, 96))
+        c.box(0.68, 0.7, 0.68, 0.7, 0, 6, (90, 90, 96), (90, 90, 96))
+    elif kind == "skylight":
+        c.box(0.2, 0.8, 0.2, 0.8, 0, 4, lambda u, w: (150, 190, 214) if (u + w) % 0.5 < 0.35 else (200, 226, 240), (110, 114, 122))
+    elif kind == "antenna":
+        c.box(0.48, 0.52, 0.48, 0.52, 0, 40, (80, 80, 86), (70, 70, 76))
+        c.box(0.2, 0.8, 0.48, 0.52, 30, 32, (80, 80, 86), (70, 70, 76))
+        c.box(0.3, 0.7, 0.48, 0.52, 36, 38, (80, 80, 86), (70, 70, 76))
+    return c.finish()
+
+
+ROOF_DETAILS = ("chimney", "ac", "tank", "skylight", "antenna")
+
 KINDS = ("counter", "stove", "fridge", "wardrobe", "bookshelf", "shelf", "nightstand", "bathroom_cabinet", "toilet", "desk",
          "sofa", "boxes", "sink", "washer", "tv", "plant", "lamp")
 VARIED = ("wardrobe", "bookshelf", "nightstand", "desk", "sofa", "tv", "dining_table", "coffee_table", "chair")   # wood or fabric per house
@@ -372,6 +398,8 @@ def build() -> dict[str, Image.Image]:
         out[f"iso_furn_{kind}_c"] = piece(kind, "c")
         for v in range(1, VARIANTS):
             out[f"iso_furn_{kind}_c_v{v}"] = piece(kind, "c", v)
+    for d in ROOF_DETAILS:
+        out[f"iso_rdet_{d}"] = roof_detail(d)
     for o in ORIENTS:
         out[f"iso_furn_bed_{o}_2x2"] = bed(o)
         for v in range(1, VARIANTS):
