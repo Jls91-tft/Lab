@@ -441,6 +441,12 @@ namespace CepaCero.Unity.Prototype
                 {
                     ReleaseHouse();
                 }
+                if (player != _lastPlayer || _roofDirty)
+                {
+                    _lastPlayer = player;
+                    _roofDirty = false;
+                    UpdateCut(player, false);                          // underground too: the walls in front of you are drawn low (D-025)
+                }
                 return;
             }
             if (player != _lastPlayer || _roofDirty)
