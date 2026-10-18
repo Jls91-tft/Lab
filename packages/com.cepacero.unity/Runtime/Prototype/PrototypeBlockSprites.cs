@@ -112,10 +112,10 @@ namespace CepaCero.Unity.Prototype
         /// The standing block of a wall-like cell in the isometric view (D-025): its material, a door or a window on the face that runs along
         /// the wall (south when the wall goes east-west, west when it goes north-south), or the low cut-away block.
         /// </summary>
-        public Sprite IsoWall(int x, int y, int level, bool low)
+        public Sprite IsoWall(int x, int y, int level, bool low, string facade = null)
         {
             BlockType t = _blocks.GetBlock(x, y, level, BuildLayer.Structure);
-            string m = t.Build != null ? t.Build.MaterialId : "brick";       // the map's own walls are brick
+            string m = t.Build != null ? t.Build.MaterialId : facade ?? "brick";       // the map's own walls take their building's facade
             if (t.IsAir)
             {
                 m = level <= -3 ? "rock" : "earth";

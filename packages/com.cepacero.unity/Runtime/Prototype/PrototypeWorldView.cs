@@ -57,13 +57,20 @@ namespace CepaCero.Unity.Prototype
         private static readonly Color[] RoofTints =
         {
             Color.white,
-            new Color(0.80f, 0.86f, 1.00f),
-            new Color(1.00f, 0.90f, 0.70f),
-            new Color(0.74f, 0.68f, 0.66f),
-            new Color(0.86f, 0.98f, 0.84f),
-            new Color(1.00f, 0.76f, 0.68f),
-            new Color(0.66f, 0.74f, 0.88f),
+            new Color(0.60f, 0.66f, 0.80f),                  // slate
+            new Color(1.00f, 0.86f, 0.52f),                  // ochre
+            new Color(0.62f, 0.52f, 0.50f),                  // dark brown
+            new Color(0.70f, 0.84f, 0.66f),                  // mossy green
+            new Color(1.00f, 0.66f, 0.58f),                  // salmon
+            new Color(0.50f, 0.56f, 0.68f),                  // blue grey
+            new Color(0.84f, 0.80f, 0.76f),                  // pale clay
         };
+
+        // The facade material of each building (D-025): plaster, ochre, brick, stone, concrete, so a street is not one brown wall.
+        private static readonly string[] ResidentialFacades = { "drywall", "drywall", "drywall", "drywall", "adobe", "adobe", "adobe", "brick", "brick", "stone" };
+        private static readonly string[] OtherFacades = { "concrete", "concrete", "concrete", "drywall", "drywall", "stone", "stone", "brick", "brick" };
+        private string[] _facadeNames;
+        private byte[] _facade;                                    // index into _facadeNames per cell, 0 = the map's own (brick)
 
         private byte[] _roofTint;
         private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
@@ -149,6 +156,8 @@ namespace CepaCero.Unity.Prototype
             }
             int w = _blocks.Width;
             _roofTint = new byte[w * _blocks.Height];
+            _facade = new byte[w * _blocks.Height];
+            _facadeNames = new[] { null, "drywall", "adobe", "brick", "stone", "concrete" };
             var owner = new int[w * _blocks.Height];                       // building index + 1, 0 = none
             var queue = new Queue<Int2>();
             var cells = new List<Int2>();
@@ -186,6 +195,7 @@ namespace CepaCero.Unity.Prototype
                             {
                                 owner[y * w + x] = bi + 1;                 // its walls
                                 _roofTint[y * w + x] = (byte)shade;
+                                _facade[y * w + x] = FacadeIndex(b);
                             }
                         }
                     }
@@ -193,6 +203,7 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             _owner = owner;
+            SpreadFacades();
             ComputePitch();
             RepaintAll();
         }
@@ -285,6 +296,45 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             return best;
+        }
+
+        /// <summary>Wall cells that belong to no building's interior (the ends and stubs of walls) take the facade of the wall next to them.</summary>
+        private void SpreadFacades()
+        {
+            int w = _blocks.Width;
+            for (int pass = 0; pass < 3; pass++)
+            {
+                for (int y = 0; y < _blocks.Height; y++)
+                {
+                    for (int x = 0; x < w; x++)
+                    {
+                        if (_facade[y * w + x] != 0 || !_sprites.IsWallLike(x, y, 0))
+                        {
+                            continue;
+                        }
+                        for (int dy = -1; dy <= 1 && _facade[y * w + x] == 0; dy++)
+                        {
+                            for (int dx = -1; dx <= 1; dx++)
+                            {
+                                int nx = x + dx;
+                                int ny = y + dy;
+                                if (_blocks.InBounds(nx, ny) && _facade[ny * w + nx] != 0)
+                                {
+                                    _facade[y * w + x] = _facade[ny * w + nx];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private byte FacadeIndex(BuildingInfo b)
+        {
+            string[] pool = b.Kind == "residential" ? ResidentialFacades : OtherFacades;
+            string name = pool[(int)(((uint)(b.Id * 2246822519u + 7u)) >> 12) % pool.Length];
+            return (byte)System.Array.IndexOf(_facadeNames, name);
         }
 
         private void Enqueue(BuildingInfo b, Int2 p, int[] owner, int id, Queue<Int2> queue, List<Int2> cells)
@@ -650,7 +700,8 @@ namespace CepaCero.Unity.Prototype
 
         private void PaintWall(int x, int y)
         {
-            Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y))) : null;
+            string facade = _facade != null && _level == 0 ? _facadeNames[_facade[y * _blocks.Width + x]] : null;
+            Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y)), facade) : null;
             _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
         }
 
