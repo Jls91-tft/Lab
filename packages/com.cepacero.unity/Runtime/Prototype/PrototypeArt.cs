@@ -149,6 +149,28 @@ namespace CepaCero.Unity.Prototype
             return _ground[(int)type][h % GroundVariants];
         }
 
+        private readonly Dictionary<(Sprite, int), Sprite> _lifted = new Dictionary<(Sprite, int), Sprite>();
+
+        /// <summary>The same sprite drawn <paramref name="units"/> higher on screen (its pivot moved down): roofs of taller buildings (D-026).</summary>
+        public Sprite Lifted(Sprite sprite, float units)
+        {
+            if (sprite == null || units <= 0f)
+            {
+                return sprite;
+            }
+            int key = (int)(units * 100f);
+            if (!_lifted.TryGetValue((sprite, key), out Sprite lifted))
+            {
+                Rect rect = sprite.rect;
+                Vector2 pivot = sprite.pivot;
+                var normalised = new Vector2(pivot.x / rect.width, (pivot.y - units * sprite.pixelsPerUnit) / rect.height);
+                lifted = Sprite.Create(sprite.texture, rect, normalised, sprite.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+                lifted.name = sprite.name + "+" + key;
+                _lifted[(sprite, key)] = lifted;
+            }
+            return lifted;
+        }
+
         /// <summary>The isometric diamond of a flat tile (D-025: ground and floors drawn as 64x32 diamonds), or the sprite itself when the atlas has none.</summary>
         public Sprite IsoFlat(Sprite flat)
         {

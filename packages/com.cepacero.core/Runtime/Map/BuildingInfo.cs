@@ -40,5 +40,12 @@ namespace CepaCero.Map
 
         /// <summary>tile, sheet, thatch, flat or glasshouse; empty when the map does not say.</summary>
         public string Roof { get; }
+
+        /// <summary>The furniture planned inside (D-026); empty until the map importer furnishes the building.</summary>
+        public IReadOnlyList<Furniture> Furniture => _furniture;
+
+        private List<Furniture> _furniture = new List<Furniture>();
+
+        internal void SetFurniture(List<Furniture> furniture) => _furniture = furniture ?? new List<Furniture>();
     }
 }

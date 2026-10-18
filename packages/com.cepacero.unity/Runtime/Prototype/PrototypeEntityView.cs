@@ -118,6 +118,9 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Growls of the zombies you can hear. Optional.</summary>
         public PrototypeAudio Audio { get; set; }
 
+        /// <summary>Cells whose container is a piece of furniture already drawn by the decoration (fridges, wardrobes…): no chest on top of them.</summary>
+        public HashSet<Int2> FurnitureCells { get; set; }
+
         /// <summary>The characters' pivot is at their feet; the entity position is the middle of the body, a little above.</summary>
         private const float FootOffset = -0.25f;
 
@@ -307,6 +310,10 @@ namespace CepaCero.Unity.Prototype
             {
                 foreach (Int2 cell in cells)
                 {
+                    if (FurnitureCells != null && FurnitureCells.Contains(cell))
+                    {
+                        continue;
+                    }
                     if (Roofs != null && Roofs.IsHiddenByRoof(new Float2(cell.X + 0.5f, cell.Y + 0.5f)))
                     {
                         continue;

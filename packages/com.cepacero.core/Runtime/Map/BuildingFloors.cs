@@ -45,6 +45,16 @@ namespace CepaCero.Map
                 Int2 down = PickStairs(interior, b.Doors, up);
                 var set = new HashSet<Int2>(interior);
                 List<Int2> walls = FindWalls(world, set, legacyWall, legacyDoor);
+                var keepClear = new List<Int2>();
+                foreach (Int2 st in new[] { up, down })
+                {
+                    keepClear.Add(st);
+                    for (int k = 0; k < 4; k++)
+                    {
+                        keepClear.Add(new Int2(st.X + Dx4[k], st.Y + Dy4[k]));
+                    }
+                }
+                b.SetFurniture(InteriorPlanner.Furnish(world, b, new HashSet<Int2>(set), keepClear));
                 if (above > 0)
                 {
                     BuildUpstairs(world, b, set, walls, up, above, reg, floor, stairs, legacyDoor);

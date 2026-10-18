@@ -491,6 +491,45 @@ def stove() -> Sprite:
     return S
 
 
+def fridge() -> Sprite:
+    S = Sprite(22, 44, salt=91)
+    S.shadow = ellipse(11, 41, 10, 2.4)
+    S.paint(rect(2, 3, 19, 40), ramp5((214, 218, 224)), grain=.08, edge=True, reach=6)
+    S.paint(rect(3, 4, 18, 16), ramp5((226, 230, 236)), edge=True)
+    S.paint(rect(3, 18, 18, 39), ramp5((206, 210, 216)), edge=True)
+    S.paint(rect(15, 7, 16, 12), ramp5((110, 114, 122)))
+    S.paint(rect(15, 22, 16, 30), ramp5((110, 114, 122)))
+    for x in range(4, 18):
+        S.set(x, 17, (150, 154, 162))
+    S.outline()
+    return S
+
+
+def wardrobe() -> Sprite:
+    S = Sprite(28, 46, salt=92)
+    S.shadow = ellipse(14, 43, 13, 2.4)
+    S.paint(rect(1, 2, 26, 42), ramp5((138, 96, 62)), grain=.2, edge=True, reach=8)
+    S.paint(rect(3, 5, 12, 39), ramp5((158, 112, 74)), edge=True)
+    S.paint(rect(15, 5, 24, 39), ramp5((158, 112, 74)), edge=True)
+    S.paint(rect(11, 20, 12, 25), ramp5((220, 190, 110)))
+    S.paint(rect(15, 20, 16, 25), ramp5((220, 190, 110)))
+    S.paint(rect(1, 1, 26, 3), ramp5((176, 128, 84)))
+    S.outline()
+    return S
+
+
+def toilet() -> Sprite:
+    S = Sprite(20, 28, salt=93)
+    S.shadow = ellipse(10, 25, 9, 2)
+    S.paint(rect(3, 3, 16, 12), ramp5((230, 232, 236)), edge=True)
+    S.paint(rect(4, 13, 15, 19), ramp5((240, 242, 246)), edge=True)
+    S.paint(ellipse(10, 21, 6.5, 3.2), ramp5((236, 238, 242)), edge=True)
+    S.paint(ellipse(10, 21, 4, 1.8), ramp5((90, 110, 130)))
+    S.paint(rect(14, 4, 15, 5), ramp5((160, 164, 170)))
+    S.outline()
+    return S
+
+
 def plant(kind: int) -> Sprite:
     rng = random.Random(100 + kind)
     S = Sprite(18, 30 if kind == 0 else 24, salt=100 + kind)
@@ -636,7 +675,7 @@ def build() -> dict[str, Sprite]:
         "decor_boxes_0": boxes(0), "decor_boxes_1": boxes(1), "decor_bush_0": bush(0), "decor_bush_1": bush(1), "decor_bush_dead": bush(2),
         "decor_tree_0": tree(0), "decor_tree_1": tree(1), "decor_tree_dead": tree(2),
         "decor_table_long": table(3), "decor_table_oval": table_oval(), "decor_table_round": table(1, True),
-        "decor_chair_0": chair(0), "decor_chair_1": chair(1), "decor_stove": stove(),
+        "decor_chair_0": chair(0), "decor_chair_1": chair(1), "decor_stove": stove(), "decor_fridge": fridge(), "decor_wardrobe": wardrobe(), "decor_toilet": toilet(),
         "decor_plant_0": plant(0), "decor_plant_1": plant(1), "decor_shelf_0": shelf(0), "decor_shelf_1": shelf(1),
         "decor_armchair": armchair(), "decor_bed_0": bed(0), "decor_bed_1": bed(1),
     })

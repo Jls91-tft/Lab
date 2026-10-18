@@ -29,7 +29,7 @@ namespace UnityEngine
     public enum TextureWrapMode { Clamp }
     public class Texture : Object { public int width, height; public FilterMode filterMode; public TextureWrapMode wrapMode; }
     public class Texture2D : Texture { public Texture2D(int w, int h, TextureFormat f, bool m) {} public Texture2D(int w, int h, TextureFormat f, bool m, bool linear) {} public void LoadRawTextureData(byte[] d) {} public byte[] EncodeToPNG() => null; public static Texture2D whiteTexture => null; public void SetPixels32(Color32[] p) {} public void SetPixel(int x, int y, Color c) {} public void Apply(bool m) {} }
-    public class Sprite : Object { public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu) => null; public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu, uint extrude, SpriteMeshType mesh) => null; }
+    public class Sprite : Object { public Rect rect; public Vector2 pivot; public float pixelsPerUnit; public Texture2D texture; public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu) => null; public static Sprite Create(Texture2D t, Rect r, Vector2 p, float ppu, uint extrude, SpriteMeshType mesh) => null; }
     public class Shader : Object { public static Shader Find(string n) => null; }
     public class Material : Object { public Material(Shader s) {} }
     public class Renderer : Component { public Material sharedMaterial; public int sortingOrder; public bool enabled; }

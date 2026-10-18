@@ -39,6 +39,7 @@ Coordenadas en casillas del mapa (las de `state.player.tile`).
 | Orden | Hace |
 | --- | --- |
 | `give ITEM [N]` | Mete objetos en tu mochila (ids de `data/generated/items.json`) |
+| `tp X Y` | Teletransporta al jugador (para mirar interiores sin pasar por la calle) |
 | `spawn ZOMBI X Y [NIVEL]` | Suelta un zombi despierto (ids del bestiario) |
 | `time day\|night\|dawn` | Salta al principio del día, de la noche o del amanecer actual (el amanecer hace reaparecer a los muertos) |
 | `clear` | Retira todos los zombis |

@@ -57,7 +57,14 @@ namespace CepaCero.Unity.Prototype
             {
                 foreach (BuildingInfo b in buildings)
                 {
-                    plan.Interior(b);
+                    if (b.Furniture.Count > 0)
+                    {
+                        plan.Furnished(b);                    // rooms and furniture of the importer (D-026)
+                    }
+                    else
+                    {
+                        plan.Interior(b);
+                    }
                 }
             }
             plan.Wear();
@@ -131,6 +138,25 @@ namespace CepaCero.Unity.Prototype
                                 Pick(x, y, p, 0.012, "decor_bush_dead", 0.02, "decor_tree_dead", 0.026, "decor_barrel",
                                     0.032, Any("decor_boxes_0", "decor_boxes_1"), 0.0345, "decor_barrel_fire_0");
                                 break;
+                        }
+                    }
+                }
+            }
+
+            public void Furnished(BuildingInfo b)
+            {
+                foreach (Furniture f in b.Furniture)
+                {
+                    FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
+                    Items.Add(new DecorItem(info.Sprite, f.Cell.X, f.Cell.Y, info.Width, info.Height, false, ((f.Cell.X + f.Cell.Y) & 1) == 0));
+                    for (int dy = 0; dy < info.Height; dy++)
+                    {
+                        for (int dx = 0; dx < info.Width; dx++)
+                        {
+                            if (In(f.Cell.X + dx, f.Cell.Y + dy))
+                            {
+                                _taken[(f.Cell.Y + dy) * _w + f.Cell.X + dx] = true;
+                            }
                         }
                     }
                 }

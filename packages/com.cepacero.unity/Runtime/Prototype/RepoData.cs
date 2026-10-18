@@ -21,9 +21,9 @@ namespace CepaCero.Unity.Prototype
 
         /// <summary>
         /// Real map of the prototype: Delicias (Zaragoza), cepacero.map v2 with floors, basements and
-        /// roofs per building. A pinned copy of `python -m osm2tiles --zone delicias-test` (ODbL).
+        /// roofs per building. A pinned copy of `python -m osm2tiles --zone delicias-centro --meters-per-tile 1` (ODbL).
         /// </summary>
-        public const string DeliciasMap = "data/maps/delicias-test.map.json";
+        public const string DeliciasMap = "data/maps/delicias-centro.map.json";
 
         /// <summary>Tiny hand-made map of the core tests: quick to load, one street.</summary>
         public const string SyntheticMap = "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json";

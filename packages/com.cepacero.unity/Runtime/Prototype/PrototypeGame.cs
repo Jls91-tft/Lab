@@ -188,6 +188,17 @@ namespace CepaCero.Unity.Prototype
             _entities = new PrototypeEntityView(_upright, _viewRoot, _data.Zombies, _art);
             _effects = new PrototypeEffects(_viewRoot, _upright, _art);
             _entities.Effects = _effects;
+            _entities.FurnitureCells = new HashSet<Int2>();
+            foreach (BuildingInfo furnished in _map.Buildings)
+            {
+                foreach (Furniture f in furnished.Furniture)
+                {
+                    if (f.IsContainer)
+                    {
+                        _entities.FurnitureCells.Add(f.Cell);
+                    }
+                }
+            }
             _entities.Lighting = _lighting;
             _audio = new PrototypeAudio(_viewRoot);
             _effects.Audio = _audio;

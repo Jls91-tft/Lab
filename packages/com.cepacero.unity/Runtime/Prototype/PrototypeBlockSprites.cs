@@ -143,6 +143,17 @@ namespace CepaCero.Unity.Prototype
             return _art.TryGet("iso_wall_brick" + (low ? "_low" : ""), out s) ? s : null;
         }
 
+        /// <summary>The second storey of a wall (D-026): its material, with a window on every other cell of a plain wall; doors and windows below stay a plain wall above.</summary>
+        public Sprite IsoUpperWall(int x, int y, int level, string facade, Sprite below)
+        {
+            BlockType t = _blocks.GetBlock(x, y, level, BuildLayer.Structure);
+            string m = t.Build != null ? t.Build.MaterialId : facade ?? "brick";
+            bool eastWest = IsWallLike(x + 1, y, level) || IsWallLike(x - 1, y, level);
+            bool window = ((x + y) & 1) == 0 && (t.Build == null || t.Build.Shape == "wall");
+            string name = window ? $"iso_wall_{m}_window_{(eastWest ? "s" : "w")}" : $"iso_wall_{m}";
+            return _art.TryGet(name, out Sprite s) ? s : below;
+        }
+
         /// <summary>The roof piece as a diamond lifted onto the walls (D-025, spritegen iso.roof); the flat one if the atlas is older.</summary>
         public Sprite IsoRoof(BlockType type, int level, string rising)
         {

@@ -210,6 +210,14 @@ namespace CepaCero.Core
 
         public IReadOnlyList<PlayerState> Players => _players;
 
+        /// <summary>Puts a player somewhere (debug and tests only: a real move goes through intents).</summary>
+        public void Teleport(int player, Float2 position)
+        {
+            PlayerState state = _players[player];
+            state.Position = position;
+            _players[player] = state;
+        }
+
         /// <summary>Players' inventories, same order as <see cref="Players"/> (empty without items).</summary>
         public IReadOnlyList<Inventory> Inventories => _inventories;
 

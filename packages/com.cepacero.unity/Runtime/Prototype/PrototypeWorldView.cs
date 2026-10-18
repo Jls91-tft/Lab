@@ -73,6 +73,8 @@ namespace CepaCero.Unity.Prototype
         private byte[] _facade;                                    // index into _facadeNames per cell, 0 = the map's own (brick)
 
         private byte[] _roofTint;
+        private bool[] _tall;                                       // a building of three storeys or more is drawn two storeys tall (D-026)
+        private readonly Tilemap _upperWallMap;                     // the second storey of the walls of tall buildings
         private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
@@ -117,6 +119,9 @@ namespace CepaCero.Unity.Prototype
             _belowFloorMap = CreateLayer(isoGrid.transform, "Level below (floors)", -1);       // seen through holes in the floor (level cut)
             _floorMap = CreateLayer(isoGrid.transform, "Floors", 0);                           // you walk on it
             _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
+            _upperWallMap = CreateLayer(isoGrid.transform, "Walls, second storey", PrototypeIso.UprightOrder);
+            _upperWallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+            _upperWallMap.transform.localPosition = new Vector3(0f, PrototypeIso.WallHeight, 0f);
             _wallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             // A roof piece is drawn on top of the walls (its sprite pivot lifts it) but sorts at the ground of its cell, a hair in front of the
             // wall of the same cell: whoever is behind the house is covered, whoever is in front is not.
@@ -156,6 +161,7 @@ namespace CepaCero.Unity.Prototype
             }
             int w = _blocks.Width;
             _roofTint = new byte[w * _blocks.Height];
+            _tall = new bool[w * _blocks.Height];
             _facade = new byte[w * _blocks.Height];
             _facadeNames = new[] { null, "drywall", "adobe", "brick", "stone", "concrete" };
             var owner = new int[w * _blocks.Height];                       // building index + 1, 0 = none
@@ -195,11 +201,13 @@ namespace CepaCero.Unity.Prototype
                             {
                                 owner[y * w + x] = bi + 1;                 // its walls
                                 _roofTint[y * w + x] = (byte)shade;
+                                _tall[y * w + x] = b.Levels >= 3;
                                 _facade[y * w + x] = FacadeIndex(b);
                             }
                         }
                     }
                     _roofTint[c.Y * w + c.X] = (byte)shade;
+                    _tall[c.Y * w + c.X] = b.Levels >= 3;
                 }
             }
             _owner = owner;
@@ -321,6 +329,8 @@ namespace CepaCero.Unity.Prototype
                                 if (_blocks.InBounds(nx, ny) && _facade[ny * w + nx] != 0)
                                 {
                                     _facade[y * w + x] = _facade[ny * w + nx];
+                                    _tall[y * w + x] = _tall[ny * w + nx];
+                                    _roofTint[y * w + x] = _roofTint[ny * w + nx];
                                     break;
                                 }
                             }
@@ -344,7 +354,9 @@ namespace CepaCero.Unity.Prototype
                 return;
             }
             int i = p.Y * _blocks.Width + p.X;
-            if (owner[i] != 0 || _ground.Get(p.X, p.Y) != GroundType.Floor || !_blocks.GetBlock(p.X, p.Y).IsAir)
+            BlockType here = _blocks.GetBlock(p.X, p.Y);
+            bool passable = here.IsAir || here.Key.StartsWith("wall_drywall") || here.Key.StartsWith("door_drywall");      // the rooms' own walls and doors (D-026)
+            if (owner[i] != 0 || _ground.Get(p.X, p.Y) != GroundType.Floor || !passable)
             {
                 return;
             }
@@ -363,6 +375,7 @@ namespace CepaCero.Unity.Prototype
             _level = level;
             _groundMap.gameObject.SetActive(level >= 0);
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
+            _upperWallMap.gameObject.SetActive(level == 0);
             _roofFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
@@ -389,6 +402,7 @@ namespace CepaCero.Unity.Prototype
             _groundMap.SetTilesBlock(area, groundTiles);
             _blockMap.SetTilesBlock(area, blockTiles);
             _wallMap.ClearAllTiles();
+            _upperWallMap.ClearAllTiles();
             _cut.Clear();
             for (int y = 0; y < h; y++)
             {
@@ -564,13 +578,24 @@ namespace CepaCero.Unity.Prototype
                     {
                         continue;
                     }
-                    if (!_sprites.IsWallLike(n.X, n.Y, _level))
+                    // The outline is part of the house but does not lead into the next one; the walls inside it (rooms) do not stop it (D-026).
+                    if (!_sprites.IsWallLike(n.X, n.Y, _level) || (_owner != null && _owner[Key(n.X, n.Y)] != 0 && _owner[Key(n.X, n.Y)] == _owner[Key(start.X, start.Y)] && HasInteriorSide(n)))
                     {
-                        _queue.Enqueue(n);                       // the outline is part of the house but does not lead into the next one
+                        _queue.Enqueue(n);
                     }
                 }
             }
             return true;
+        }
+
+        /// <summary>An inner wall: the cell next to it on both sides is under the same roof (an outer wall has the street on one side).</summary>
+        private bool HasInteriorSide(Int2 w)
+        {
+            bool east = HasRoofOver(w.X + 1, w.Y) && !_sprites.IsWallLike(w.X + 1, w.Y, _level);
+            bool west = HasRoofOver(w.X - 1, w.Y) && !_sprites.IsWallLike(w.X - 1, w.Y, _level);
+            bool north = HasRoofOver(w.X, w.Y + 1) && !_sprites.IsWallLike(w.X, w.Y + 1, _level);
+            bool south = HasRoofOver(w.X, w.Y - 1) && !_sprites.IsWallLike(w.X, w.Y - 1, _level);
+            return (east && west) || (north && south);
         }
 
         private void ReleaseHouse()
@@ -582,6 +607,10 @@ namespace CepaCero.Unity.Prototype
             {
                 PaintRoofCell(key % _blocks.Width, key / _blocks.Width);
                 PaintObject(key % _blocks.Width, key / _blocks.Width);
+                if (_sprites.IsWallLike(key % _blocks.Width, key / _blocks.Width, _level))
+                {
+                    PaintWall(key % _blocks.Width, key / _blocks.Width);
+                }
             }
             _fade = _fadeTarget = 1f;
             _roofFadeMap.ClearAllTiles();
@@ -676,6 +705,7 @@ namespace CepaCero.Unity.Prototype
             _groundMap.color = _level > 0 ? new Color(_tint.r * 0.6f, _tint.g * 0.6f, _tint.b * 0.6f, 1f) : _tint;
             _blockMap.color = _tint;
             _wallMap.color = _tint;
+            _upperWallMap.color = _tint;
             _floorMap.color = _tint;
             _objectMap.color = _tint;
             _roofMap.color = _tint;
@@ -703,6 +733,20 @@ namespace CepaCero.Unity.Prototype
             string facade = _facade != null && _level == 0 ? _facadeNames[_facade[y * _blocks.Width + x]] : null;
             Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y)), facade) : null;
             _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
+            PaintUpperWall(x, y, s);
+        }
+
+        /// <summary>The second storey of a tall building's wall: the same material, with a window on every other cell; gone while you are inside or the wall is in front of you.</summary>
+        private void PaintUpperWall(int x, int y, Sprite ground)
+        {
+            Sprite upper = null;
+            int key = Key(x, y);
+            if (ground != null && _level == 0 && _tall != null && _tall[key] && !_cut.Contains(key) && !(_houseOpen && _house.Contains(key)) && !_roofCut.Contains(key))
+            {
+                string facade = _facade != null ? _facadeNames[_facade[key]] : null;
+                upper = _sprites.IsoUpperWall(x, y, _level, facade, ground);
+            }
+            _upperWallMap.SetTile(new Vector3Int(x, y, 0), TileFor(upper));
         }
 
         /// <summary>
@@ -771,6 +815,10 @@ namespace CepaCero.Unity.Prototype
             foreach (int k in roofChanged)
             {
                 PaintRoofCell(k % _blocks.Width, k / _blocks.Width);
+                if (_sprites.IsWallLike(k % _blocks.Width, k / _blocks.Width, _level))
+                {
+                    PaintWall(k % _blocks.Width, k / _blocks.Width);
+                }
             }
 
             _cutChanged.Clear();
@@ -808,6 +856,10 @@ namespace CepaCero.Unity.Prototype
             foreach (int key in _house)
             {
                 PaintObject(key % _blocks.Width, key / _blocks.Width);
+                if (_sprites.IsWallLike(key % _blocks.Width, key / _blocks.Width, _level))
+                {
+                    PaintWall(key % _blocks.Width, key / _blocks.Width);
+                }
             }
         }
 
@@ -831,7 +883,12 @@ namespace CepaCero.Unity.Prototype
                 edge = EdgeTile(x, y);
                 byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
                 int pitch = _roofLevel != null ? _roofLevel[y * _blocks.Width + x] : 0;
-                tile = TileFor(_sprites.IsoRoof(type, pitch, Rising(x, y, pitch)), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
+                Sprite roofSprite = _sprites.IsoRoof(type, pitch, Rising(x, y, pitch));
+                if (_tall != null && _tall[y * _blocks.Width + x])
+                {
+                    roofSprite = _art.Lifted(roofSprite, PrototypeIso.WallHeight);              // on top of the second storey
+                }
+                tile = TileFor(roofSprite, _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
             }
             // One map per state: your house (fading), in front of you (see-through) or the rest.
             bool fading = _house.Contains(Key(x, y));
@@ -839,7 +896,7 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap.SetTile(cell, fading ? tile : null);
             _roofCutMap.SetTile(cell, cut ? tile : null);
             _roofMap.SetTile(cell, fading || cut ? null : tile);
-            _roofLineMap.SetTile(cell, fading || cut || tile == null ? null : LineTile(x, y));
+            _roofLineMap.SetTile(cell, fading || cut || tile == null ? null : LineTile(x, y, _tall != null && _tall[y * _blocks.Width + x]));
             (fading ? _edgeFadeMap : _edgeMap).SetTile(cell, edge);
             (fading ? _edgeMap : _edgeFadeMap).SetTile(cell, null);
         }
@@ -883,7 +940,7 @@ namespace CepaCero.Unity.Prototype
         }
 
         /// <summary>Dark lines along the sides of a roof piece where the building ends (iso diamond: N up-left, E up-right, S down-right, W down-left).</summary>
-        private TileBase LineTile(int x, int y)
+        private TileBase LineTile(int x, int y, bool tall)
         {
             int self = OwnerAt(x, y);
             int mask = (SameRoof(x, y + 1, self) ? 0 : 1) | (SameRoof(x + 1, y, self) ? 0 : 2) | (SameRoof(x, y - 1, self) ? 0 : 4) | (SameRoof(x - 1, y, self) ? 0 : 8);
@@ -893,9 +950,10 @@ namespace CepaCero.Unity.Prototype
             }
             if (_lineTiles == null)
             {
-                _lineTiles = new Tile[16];
+                _lineTiles = new Tile[32];
             }
-            if (_lineTiles[mask] == null)
+            int slot = mask + (tall ? 16 : 0);
+            if (_lineTiles[slot] == null)
             {
                 const int Wd = 64, Hd = 32;
                 var tex = new Texture2D(Wd, Hd, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
@@ -926,10 +984,10 @@ namespace CepaCero.Unity.Prototype
                 }
                 tex.Apply(false);
                 var tile = ScriptableObject.CreateInstance<Tile>();
-                tile.sprite = Sprite.Create(tex, new Rect(0, 0, Wd, Hd), new Vector2(0.5f, (16f - PrototypeIso.WallHeight * 32f) / Hd), 32f);
-                _lineTiles[mask] = tile;
+                tile.sprite = Sprite.Create(tex, new Rect(0, 0, Wd, Hd), new Vector2(0.5f, (16f - PrototypeIso.WallHeight * 32f * (tall ? 2f : 1f)) / Hd), 32f);
+                _lineTiles[slot] = tile;
             }
-            return _lineTiles[mask];
+            return _lineTiles[slot];
         }
 
         private int OwnerAt(int x, int y) => _owner != null && _blocks.InBounds(x, y) ? _owner[y * _blocks.Width + x] : 0;

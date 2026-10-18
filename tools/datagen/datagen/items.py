@@ -18,6 +18,8 @@ BUILDABLE_BLOCKS = ("wood_wall", "metal_wall", "concrete_wall", "door", "fence",
 # Building kinds produced by tools/osm2tiles (rules.BUILDING_KINDS).
 BUILDING_KINDS = ("generic", "residential", "commercial", "food", "hardware", "medical",
                   "police", "school", "religious", "office", "industrial", "garage")
+# Tables of the furniture of a home (D-026, core FurnitureKinds).
+FURNITURE_LOOT = ("kitchen", "bedroom", "bathroom", "living", "storage")
 WEAPON_KEYS = {"damage", "damage_type", "range", "cooldown", "noise", "arc", "ammo"}
 TOOL_KINDS = ("axe", "pickaxe", "shovel", "hammer")
 ITEM_KEYS = {"id", "name", "category", "stack", "size", "weapon", "tool_power", "durability", "heal", "food", "water", "tool_kind"}
@@ -145,8 +147,8 @@ def loot_to_runtime(entries: list[dict]) -> dict:
                 "max_containers": int(_number(entry, "max_containers", 6, "_placement", 1)),
             }
             continue
-        if kind not in BUILDING_KINDS:
-            raise DataError(f"loot: kind '{kind}' is not a building kind of osm2tiles {BUILDING_KINDS}")
+        if kind not in BUILDING_KINDS and kind not in FURNITURE_LOOT:
+            raise DataError(f"loot: kind '{kind}' is not a building kind of osm2tiles {BUILDING_KINDS} nor a furniture table {FURNITURE_LOOT}")
         if kind in seen:
             raise DataError(f"loot: duplicate kind '{kind}'")
         seen.add(kind)

@@ -149,6 +149,55 @@ loot:
   metal_plate: [1, 1, 0.08]
 ```
 
+## Muebles de casa (D-026)
+Los muebles contenedor de las casas usan la tabla de **su estancia**; en tiendas y oficinas los estantes y mostradores usan la tabla del edificio (`kind` arriba).
+```yaml
+kind: kitchen
+rolls: 2
+loot:
+  food_can: [1, 3, 0.7]
+  water_bottle: [1, 2, 0.5]
+  knife: [1, 1, 0.12]
+  scrap_cloth: [1, 1, 0.1]
+```
+```yaml
+kind: bedroom
+rolls: 2
+loot:
+  scrap_cloth: [1, 3, 0.6]
+  bandage: [1, 1, 0.1]
+  tape: [1, 1, 0.1]
+  bat: [1, 1, 0.03]
+```
+```yaml
+kind: bathroom
+rolls: 2
+loot:
+  bandage: [1, 2, 0.45]
+  medkit: [1, 1, 0.08]
+  water_bottle: [1, 1, 0.2]
+  scrap_cloth: [1, 1, 0.2]
+```
+```yaml
+kind: living
+rolls: 1
+loot:
+  scrap_cloth: [1, 2, 0.3]
+  water_bottle: [1, 1, 0.15]
+  food_can: [1, 1, 0.1]
+  tape: [1, 1, 0.1]
+```
+```yaml
+kind: storage
+rolls: 2
+loot:
+  wood: [1, 3, 0.4]
+  nails: [2, 6, 0.4]
+  tape: [1, 2, 0.3]
+  metal_scrap: [1, 3, 0.3]
+  hammer: [1, 1, 0.04]
+```
+
 ## Parámetros de colocación
 ```yaml
 kind: _placement

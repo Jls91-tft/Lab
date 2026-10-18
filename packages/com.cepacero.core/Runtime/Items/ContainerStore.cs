@@ -50,6 +50,18 @@ namespace CepaCero.Items
             var candidates = new List<Int2>();
             foreach (BuildingInfo b in buildings)
             {
+                if (b.Furniture.Count > 0)
+                {
+                    // Furnished (D-026): the containers are its fridges, cupboards, wardrobes, shelves, each with the loot of its room.
+                    foreach (Furniture f in b.Furniture)
+                    {
+                        if (f.IsContainer)
+                        {
+                            _containers[f.Cell] = new Entry { Kind = f.Loot.Length > 0 ? f.Loot : b.Kind, Contents = new Inventory(_items, ContainerSlots) };
+                        }
+                    }
+                    continue;
+                }
                 candidates.Clear();
                 for (int y = b.Min.Y + 1; y < b.Max.Y; y++)
                 {
