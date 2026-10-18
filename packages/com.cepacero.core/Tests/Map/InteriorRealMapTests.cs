@@ -18,7 +18,7 @@ namespace CepaCero.Tests.Map
             string dir = TestContext.CurrentContext.TestDirectory;
             for (int i = 0; i < 10 && dir != null; i++, dir = Path.GetDirectoryName(dir))
             {
-                string p = Path.Combine(dir, "data", "maps", "delicias-centro.map.json");
+                string p = Path.Combine(dir, "data", "maps", Environment.GetEnvironmentVariable("CEPA_MAP") ?? "delicias-centro.map.json");
                 if (File.Exists(p))
                 {
                     return p;

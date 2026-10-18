@@ -289,6 +289,18 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             SpreadFacades();
+            // Which cells are drawn two storeys tall comes from the roof itself (its level in the world), not from which building the door flood
+            // gave the cell to: a cell given to the wrong neighbour had its roof drawn low inside tall walls and showed as a hole (D-029).
+            for (int y = 0; y < _blocks.Height; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if (!TopRoof(x, y, out int roofLevel).IsAir)
+                    {
+                        _tall[y * w + x] = roofLevel >= 2;
+                    }
+                }
+            }
             ComputePitch();
             RepaintAll();
         }
@@ -851,7 +863,9 @@ namespace CepaCero.Unity.Prototype
             _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
             PaintUpperWall(x, y, s);
             int key = Key(x, y);
-            PaintInside(x, y, s != null && !_cut.Contains(key));
+            // The inside of the walls only shows in the house you are in: elsewhere the roof hides it, and drawn there it showed through the
+            // roofs as holes (paper sorts with its wall, in front of the roofs further back) (D-029).
+            PaintInside(x, y, s != null && !_cut.Contains(key) && _houseOpen && _house.Contains(key));
             if (_wallDeco.TryGetValue(key, out string deco))
             {
                 bool show = s != null && _level == 0 && _houseOpen && _house.Contains(key) && !_cut.Contains(key);
