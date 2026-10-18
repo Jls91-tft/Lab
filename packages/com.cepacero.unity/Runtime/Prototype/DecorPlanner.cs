@@ -58,7 +58,13 @@ namespace CepaCero.Unity.Prototype
 
         public static List<DecorItem> Plan(BlockWorld blocks, GroundLayer ground, IReadOnlyList<BuildingInfo> buildings, int seed)
         {
-            var plan = new Planner(blocks, ground, new Random(seed));
+            return Plan(blocks, ground, buildings, seed, null);
+        }
+
+        /// <summary>As above; <paramref name="hasSprite"/> says which isometric furniture the atlas has (null: none, the flat pieces are used).</summary>
+        public static List<DecorItem> Plan(BlockWorld blocks, GroundLayer ground, IReadOnlyList<BuildingInfo> buildings, int seed, Func<string, bool> hasSprite)
+        {
+            var plan = new Planner(blocks, ground, new Random(seed)) { HasSprite = hasSprite };
             plan.Outdoors();
             if (buildings != null)
             {
@@ -97,6 +103,8 @@ namespace CepaCero.Unity.Prototype
             private readonly BlockWorld _blocks;
             private readonly GroundLayer _ground;
             private readonly Random _rng;
+
+            public Func<string, bool> HasSprite;
             private readonly bool[] _taken;
             private readonly int _w;
             private readonly int _h;
@@ -159,6 +167,14 @@ namespace CepaCero.Unity.Prototype
                         continue;                                 // pictures and curtains hang on the walls (PrototypeWorldView)
                     }
                     FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
+                    string iso = IsoFurniture(f, info);
+                    if (iso != null)
+                    {
+                        // A real isometric piece (spritegen isofurn): already drawn against its wall, front into the room (D-027).
+                        Items.Add(new DecorItem(iso, f.Cell.X, f.Cell.Y, info.Width, info.Height, false, false));
+                        Mark(f.Cell, info);
+                        continue;
+                    }
                     float sx = 0f, sy = 0f;
                     bool flip = false;
                     if (!info.Flat && info.Width == 1 && info.Height == 1)
@@ -182,6 +198,58 @@ namespace CepaCero.Unity.Prototype
                         }
                     }
                 }
+            }
+
+            private void Mark(Int2 cell, FurnitureKinds.Info info)
+            {
+                for (int dy = 0; dy < info.Height; dy++)
+                {
+                    for (int dx = 0; dx < info.Width; dx++)
+                    {
+                        if (In(cell.X + dx, cell.Y + dy))
+                        {
+                            _taken[(cell.Y + dy) * _w + cell.X + dx] = true;
+                        }
+                    }
+                }
+            }
+
+            /// <summary>The isometric sprite of a piece and which way it stands: s/w/n/e against the north/east/south/west wall, c free.</summary>
+            private string IsoFurniture(Furniture f, FurnitureKinds.Info info)
+            {
+                if (info.Flat)
+                {
+                    return null;
+                }
+                string kind = f.Kind == "cupboard" ? "counter" : f.Kind == "crate" ? "boxes" : f.Kind;
+                int w = info.Width, h = info.Height;
+                int x = f.Cell.X, y = f.Cell.Y;
+                string o = WallAlong(x, y + h, w, true) ? "s" : WallAlong(x + w, y, h, false) ? "w"
+                    : WallAlong(x, y - 1, w, true) ? "n" : WallAlong(x - 1, y, h, false) ? "e" : "c";
+                string name = w == 2 && h == 2 ? $"iso_furn_{kind}_{(o == "c" ? "s" : o)}_2x2" : $"iso_furn_{kind}_{o}";
+                if (HasSprite != null && HasSprite(name))
+                {
+                    return name;
+                }
+                name = $"iso_furn_{kind}_c";
+                if (HasSprite != null && HasSprite(name))
+                {
+                    return name;
+                }
+                name = $"iso_furn_{kind}_s";
+                return HasSprite != null && HasSprite(name) ? name : null;
+            }
+
+            private bool WallAlong(int x, int y, int length, bool alongX)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    if (!Solid(alongX ? x + i : x, alongX ? y : y + i))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             private bool Solid(int x, int y)

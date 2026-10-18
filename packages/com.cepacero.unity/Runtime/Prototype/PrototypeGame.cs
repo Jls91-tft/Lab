@@ -179,7 +179,7 @@ namespace CepaCero.Unity.Prototype
             _world.SetBuildings(_map.Buildings);
             _buildView = new PrototypeBuildView(_viewRoot, _world, _art, viewBlocks.Registry);
             // Same map + same seed = the same street for every player, with nothing sent.
-            List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name));
+            List<DecorItem> decor = DecorPlanner.Plan(viewBlocks, viewGround, _map.Buildings, DecorPlanner.SeedFor(_map.Name), _art.HasWorld);
             _decor = new PrototypeDecorView(decor, _art, _viewRoot, _upright);
             // Real light (D-024): street lamps and fires from the decoration, and some houses with their lights on.
             _lighting = new PrototypeLighting(_viewRoot, viewBlocks);

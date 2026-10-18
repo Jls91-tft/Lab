@@ -75,7 +75,10 @@ namespace CepaCero.Unity.Prototype
         private byte[] _roofTint;
         private bool[] _tall;                                       // a building of three storeys or more is drawn two storeys tall (D-026)
         private readonly Tilemap _upperWallMap;
-        private readonly Tilemap _decoMap;                          // pictures, clocks and curtains on the walls of the house you are in (D-027)
+        private readonly Tilemap _decoMap;
+        private readonly Tilemap _paperSouthMap;                    // the inside of the walls (D-027): paper, paint or tiles of the room in front
+        private readonly Tilemap _paperWestMap;
+        private readonly Dictionary<int, string> _paint = new Dictionary<int, string>();                          // pictures, clocks and curtains on the walls of the house you are in (D-027)
         private readonly Dictionary<int, string> _wallDeco = new Dictionary<int, string>();                     // the second storey of the walls of tall buildings
         private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
@@ -122,6 +125,13 @@ namespace CepaCero.Unity.Prototype
             _floorMap = CreateLayer(isoGrid.transform, "Floors", 0);                           // you walk on it
             _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
             _upperWallMap = CreateLayer(isoGrid.transform, "Walls, second storey", PrototypeIso.UprightOrder);
+            _paperSouthMap = CreateLayer(isoGrid.transform, "Inside of the walls (south faces)", PrototypeIso.UprightOrder);
+            _paperWestMap = CreateLayer(isoGrid.transform, "Inside of the walls (west faces)", PrototypeIso.UprightOrder);
+            foreach (Tilemap paper in new[] { _paperSouthMap, _paperWestMap })
+            {
+                paper.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+                paper.tileAnchor = new Vector3(0.5f, 0.495f, 0f);              // over its own wall, under what hangs on it
+            }
             _decoMap = CreateLayer(isoGrid.transform, "Wall decoration", PrototypeIso.UprightOrder);
             _decoMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             _decoMap.tileAnchor = new Vector3(0.5f, 0.49f, 0f);                // a hair in front of its wall
@@ -217,8 +227,13 @@ namespace CepaCero.Unity.Prototype
             }
             _owner = owner;
             _wallDeco.Clear();
+            _paint.Clear();
             foreach (BuildingInfo b in buildings)
             {
+                foreach (KeyValuePair<Int2, string> kv in b.WallPaint)
+                {
+                    _paint[Key(kv.Key.X, kv.Key.Y)] = kv.Value;
+                }
                 foreach (Furniture f in b.Furniture)
                 {
                     if (f.OnWall && _blocks.InBounds(f.Cell.X, f.Cell.Y))
@@ -393,6 +408,8 @@ namespace CepaCero.Unity.Prototype
             _roofMap.gameObject.SetActive(level >= 0);                  // underground you do not see the roofs above
             _upperWallMap.gameObject.SetActive(level == 0);
             _decoMap.gameObject.SetActive(level == 0);
+            _paperSouthMap.gameObject.SetActive(level == 0);
+            _paperWestMap.gameObject.SetActive(level == 0);
             _roofFadeMap.gameObject.SetActive(level >= 0);
             RepaintAll();
             SetAmbient(_ambient);
@@ -723,6 +740,8 @@ namespace CepaCero.Unity.Prototype
             _blockMap.color = _tint;
             _wallMap.color = _tint;
             _decoMap.color = _tint;
+            _paperSouthMap.color = _tint;
+            _paperWestMap.color = _tint;
             _upperWallMap.color = _tint;
             _floorMap.color = _tint;
             _objectMap.color = _tint;
@@ -753,6 +772,7 @@ namespace CepaCero.Unity.Prototype
             _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
             PaintUpperWall(x, y, s);
             int key = Key(x, y);
+            PaintInside(x, y, s != null && !_cut.Contains(key));
             if (_wallDeco.TryGetValue(key, out string deco))
             {
                 bool show = s != null && _level == 0 && _houseOpen && _house.Contains(key) && !_cut.Contains(key);
@@ -761,6 +781,43 @@ namespace CepaCero.Unity.Prototype
         }
 
         /// <summary>The second storey of a tall building's wall: the same material, with a window on every other cell; gone while you are inside or the wall is in front of you.</summary>
+        /// <summary>
+        /// The faces of a wall turned to a room show that room's paper, paint or tiles instead of the facade (D-027): the south face when the
+        /// room is south of the wall, the west face when it is west. The window or door of the wall stays open in the paper.
+        /// </summary>
+        private void PaintInside(int x, int y, bool standing)
+        {
+            var cell = new Vector3Int(x, y, 0);
+            Sprite south = null, west = null;
+            if (standing && _level == 0)
+            {
+                south = PaperFor(x, y, x, y - 1, 's');
+                west = PaperFor(x, y, x - 1, y, 'w');
+            }
+            _paperSouthMap.SetTile(cell, TileFor(south));
+            _paperWestMap.SetTile(cell, TileFor(west));
+        }
+
+        private Sprite PaperFor(int x, int y, int rx, int ry, char face)
+        {
+            if (!_blocks.InBounds(rx, ry) || !_paint.TryGetValue(Key(rx, ry), out string paper))
+            {
+                return null;
+            }
+            BlockType t = _blocks.GetBlock(x, y, _level, BuildLayer.Structure);
+            string shape = t.Build != null ? t.Build.Shape : t.Key == "door" || t.Key == "door_open" ? "door" : "wall";
+            string hole = "";
+            if (shape == "door" || shape == "window" || shape == "bigwindow")
+            {
+                bool eastWest = _sprites.IsWallLike(x + 1, y, _level) || _sprites.IsWallLike(x - 1, y, _level);
+                if ((eastWest ? 's' : 'w') == face)
+                {
+                    hole = shape == "door" ? "_door" : "_window";
+                }
+            }
+            return _art.TryGet($"iso_paper_{paper}{hole}_{face}", out Sprite sprite) ? sprite : null;
+        }
+
         private void PaintUpperWall(int x, int y, Sprite ground)
         {
             Sprite upper = null;

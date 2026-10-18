@@ -54,7 +54,9 @@ namespace CepaCero.Map
                         keepClear.Add(new Int2(st.X + Dx4[k], st.Y + Dy4[k]));
                     }
                 }
-                b.SetFurniture(InteriorPlanner.Furnish(world, b, new HashSet<Int2>(set), keepClear));
+                var paint = new Dictionary<Int2, string>();
+                b.SetFurniture(InteriorPlanner.Furnish(world, b, new HashSet<Int2>(set), keepClear, paint));
+                b.SetWallPaint(paint);
                 if (above > 0)
                 {
                     BuildUpstairs(world, b, set, walls, up, above, reg, floor, stairs, legacyDoor);

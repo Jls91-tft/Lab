@@ -32,6 +32,12 @@ namespace CepaCero.Map
         /// <summary>Carves the rooms into <paramref name="world"/> and returns the furniture. <paramref name="keepClear"/> are cells that must stay open (stairs).</summary>
         public static List<Furniture> Furnish(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, IReadOnlyCollection<Int2> keepClear)
         {
+            return Furnish(world, b, interior, keepClear, null);
+        }
+
+        /// <summary>As above, and fills <paramref name="paint"/> with the wall paint of every room's floor cell.</summary>
+        public static List<Furniture> Furnish(BlockWorld world, BuildingInfo b, HashSet<Int2> interior, IReadOnlyCollection<Int2> keepClear, Dictionary<Int2, string> paint)
+        {
             var furniture = new List<Furniture>();
             if (interior.Count < MinRoomCells)
             {
@@ -79,6 +85,17 @@ namespace CepaCero.Map
             foreach (Room r in rooms)
             {
                 Floor(world, r);
+                if (paint != null)
+                {
+                    string p = PaintFor(r.Kind, rng);
+                    if (p != null)
+                    {
+                        foreach (Int2 c in r.Cells)
+                        {
+                            paint[c] = p;
+                        }
+                    }
+                }
                 Place(world, interior, taken, rng, r, furniture, b);
                 DecorateWalls(world, rng, r, furniture, home);
                 PutRug(interior, taken, rng, r, furniture);
@@ -281,6 +298,24 @@ namespace CepaCero.Map
         // ------------------------------------------------------------------ furniture
 
         /// <summary>Each room its own floor, as in Project Zomboid: boards in the living areas, tiles in kitchens and bathrooms, concrete in shops and stores.</summary>
+        private static readonly string[] LivingPaint = { "cream", "ochre", "sage", "cream" };
+        private static readonly string[] BedroomPaint = { "blue", "rose", "sage", "cream" };
+        private static readonly string[] WorkPaint = { "grey", "cream", "grey" };
+
+        /// <summary>What a room's walls look like from inside (spritegen iso.PAPERS): tiles in kitchens and bathrooms, paper or paint elsewhere, bare in stores.</summary>
+        private static string PaintFor(RoomKind kind, DeterministicRandom rng)
+        {
+            switch (kind)
+            {
+                case RoomKind.Kitchen: return "kitchen";
+                case RoomKind.Bathroom: return "bath";
+                case RoomKind.Living: return LivingPaint[rng.Range(0, LivingPaint.Length)];
+                case RoomKind.Bedroom: return BedroomPaint[rng.Range(0, BedroomPaint.Length)];
+                case RoomKind.Storage: return null;
+                default: return WorkPaint[rng.Range(0, WorkPaint.Length)];
+            }
+        }
+
         private static void Floor(BlockWorld world, Room room)
         {
             string material;

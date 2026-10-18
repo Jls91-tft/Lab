@@ -47,5 +47,12 @@ namespace CepaCero.Map
         private List<Furniture> _furniture = new List<Furniture>();
 
         internal void SetFurniture(List<Furniture> furniture) => _furniture = furniture ?? new List<Furniture>();
+
+        /// <summary>The paint of each room's walls, by floor cell (D-027): wallpaper, tiles or paint seen from inside; empty for bare rooms.</summary>
+        public IReadOnlyDictionary<Int2, string> WallPaint => _wallPaint;
+
+        private Dictionary<Int2, string> _wallPaint = new Dictionary<Int2, string>();
+
+        internal void SetWallPaint(Dictionary<Int2, string> paint) => _wallPaint = paint ?? new Dictionary<Int2, string>();
     }
 }

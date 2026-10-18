@@ -25,6 +25,8 @@ def pivot_y(name: str, height: int) -> float | None:
         return round((height - height * FOOT) / height, 4)
     if name.startswith("iso_roof_"):
         return round((16 - 80) / height, 4)                   # D-025: the eave diamond (its centre is 16 px up from the bottom) lifted onto an 80 px wall
+    if name.startswith("iso_") and name.endswith("_2x2"):
+        return round(32 / height, 4)                          # D-027: the middle of a 2x2 footprint
     if name.startswith("iso_"):
         return round(16 / height, 4)                          # D-025: the centre of the 64x32 footprint at the bottom
     return None

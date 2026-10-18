@@ -58,7 +58,8 @@ namespace CepaCero.Unity.Prototype
                     UnityEngine.Rendering.SortingGroup group = anchor.AddComponent<UnityEngine.Rendering.SortingGroup>();
                     group.sortingOrder = PrototypeIso.UprightOrder;
                     go.transform.SetParent(anchor.transform, false);
-                    go.transform.localPosition = new Vector3(0f, size.y / 2f - 0.25f, 0f);
+                    // Isometric pieces carry their pivot at the middle of their footprint (spritegen); the old ones stand on their bottom edge.
+                    go.transform.localPosition = item.Sprite.StartsWith("iso_") ? new Vector3(0f, 0f, 0f) : new Vector3(0f, size.y / 2f - 0.25f, 0f);
                 }
                 _renderers.Add(r);
                 if (item.Sprite.EndsWith("_fire_0"))

@@ -260,8 +260,108 @@ def face_only(piece: Image.Image, side: str, low: int, high: int) -> Image.Image
     return img
 
 
+# ------------------------------------------------------------------ inside walls (D-027): wallpaper, paint and tiles, as in Project Zomboid
+def _hash(x: int, y: int, salt: int) -> float:
+    n = (x * 374761393 + y * 668265263 + salt * 2246822519) & 0xFFFFFFFF
+    n = ((n ^ (n >> 13)) * 1274126177) & 0xFFFFFFFF
+    return (n & 0xFFFF) / 65535.0
+
+
+def _mix(a, b, t):
+    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+
+
+def _stripes(base, line, width):
+    def f(x, h):
+        return line if x % width in (0,) else _mix(base, (255, 255, 255), .04) if x % width == width // 2 else base
+    return f
+
+
+def _damask(base, motif):
+    def f(x, h):
+        dx, dy = x % 8 - 4, h % 10 - 5
+        return motif if abs(dx) + abs(dy) * .8 in (2.4, 3.2) or (dx == 0 and dy == 0) else base
+    return f
+
+
+def _dots(base, dot):
+    def f(x, h):
+        return dot if (x % 8 == 2 and h % 8 == 3) or (x % 8 == 6 and h % 8 == 7) else base
+    return f
+
+
+def _plain(base):
+    def f(x, h):
+        return _mix(base, (0, 0, 0), _hash(x // 2, h // 2, 7) * .05)
+    return f
+
+
+def _tiles(tile, grout, height, above):
+    def f(x, h):
+        if h >= height:
+            return above(x, h)
+        if x % 8 == 0 or h % 8 == 0:
+            return grout
+        return _mix(tile, (255, 255, 255), .12) if (x % 8 == 1 or h % 8 == 7) else tile
+    return f
+
+
+PAPERS = {
+    "cream": _stripes((222, 206, 168), (200, 182, 142), 6),
+    "sage": _damask((150, 168, 128), (128, 146, 108)),
+    "blue": _dots((152, 172, 198), (118, 140, 170)),
+    "rose": _stripes((206, 164, 158), (186, 140, 136), 4),
+    "ochre": _plain((214, 186, 118)),
+    "grey": _plain((194, 192, 184)),
+    "kitchen": _tiles((236, 236, 228), (180, 178, 170), 40, _plain((226, 214, 170))),
+    "bath": _tiles((176, 206, 222), (130, 160, 180), 52, _plain((220, 230, 232))),
+}
+WINDOW_HOLE = (8, 23, 30, 58)          # tx from, tx to, h from, h to (the window of `window_face` laid on the wall)
+DOOR_HOLE = (5, 26, 0, DOOR_H)
+
+
+def paper_face(paint, side: str, hole) -> Image.Image:
+    """A wall face painted from inside: paper or tiles, a skirting board, a picture rail; the window or door of the wall left open."""
+    img = Image.new("RGBA", (W, D + WALL_H), (0, 0, 0, 0))
+    px = img.load()
+    base = D + WALL_H
+    for X in range(W):
+        u = (X + .5) / (W / 2)
+        west = X < W // 2
+        if west != (side == "w"):
+            continue
+        if west:
+            ground = base - D / 2 + u * D / 2
+            tx, k = int(u * 32) % 32, -.22
+        else:
+            u -= 1
+            ground = base - u * D / 2
+            tx, k = int(u * 32) % 32, 0.0
+        for Y in range(img.height):
+            h = int(ground - (Y + .5))
+            if not 0 <= h < WALL_H:
+                continue
+            if hole and hole[0] <= tx <= hole[1] and hole[2] <= h < hole[3]:
+                continue
+            if h < 4:
+                c = (92, 64, 44) if h > 0 else (60, 42, 30)                          # skirting board
+            elif h >= WALL_H - 3:
+                c = (232, 226, 210)                                                   # cornice
+            else:
+                c = paint(tx, h)
+                c = _mix(c, (20, 16, 24), max(0.0, (12 - h) / 12) * .18)              # a little darker near the floor
+                c = _mix(c, (255, 250, 236), max(0.0, (h - (WALL_H - 14)) / 14) * .1)
+            px[X, Y] = _shade(c + (255,), k) if k else c + (255,)
+    return img
+
+
 def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
+    for name, paint in PAPERS.items():
+        for side in ("s", "w"):
+            out[f"iso_paper_{name}_{side}"] = paper_face(paint, side, None)
+            out[f"iso_paper_{name}_window_{side}"] = paper_face(paint, side, WINDOW_HOLE)
+            out[f"iso_paper_{name}_door_{side}"] = paper_face(paint, side, DOOR_HOLE)
     for name, draw in DECO.items():
         front = _front(draw)
         for side in ("s", "w"):
