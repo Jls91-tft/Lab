@@ -102,7 +102,6 @@ namespace CepaCero.Unity.Prototype
             _belowBlockMap = CreateLayer(grid.transform, "Level below (blocks)", 0);
             _floorMap = CreateLayer(grid.transform, "Floors", PrototypeDecorView.FlatOrder);        // under the flat decals' neighbours: you walk on it
             _blockMap = CreateLayer(grid.transform, "Blocks", PrototypeDecorView.FlatOrder + 1); // flat decals go in between
-            _objectMap = CreateLayer(grid.transform, "Objects", PrototypeDecorView.FlatOrder + 1);
             // D-025: walls and roofs stand on an isometric grid in screen space and sort with the people (Individual mode, by screen height).
             var isoGrid = new GameObject("Walls and roofs (isometric)");
             isoGrid.transform.SetParent(upright, false);
@@ -117,6 +116,10 @@ namespace CepaCero.Unity.Prototype
             _roofFadeMap = CreateLayer(isoGrid.transform, "Roof of your house (fading)", PrototypeIso.UprightOrder);
             _roofCutMap = CreateLayer(isoGrid.transform, "Roofs in front of you (see-through)", PrototypeIso.UprightOrder);
             _roofCutMap.color = new Color(1f, 1f, 1f, 0.22f);
+            // Furniture and other objects stand up (D-025): their sprite rests on the cell centre; hidden under a closed roof.
+            _objectMap = CreateLayer(isoGrid.transform, "Objects", PrototypeIso.UprightOrder);
+            _objectMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+            _objectMap.tileAnchor = new Vector3(0.5f, 0.97f, 0f);
             _roofLineMap = CreateLayer(isoGrid.transform, "Roof outlines", PrototypeIso.UprightOrder);
             foreach (Tilemap roof in new[] { _roofMap, _roofFadeMap, _roofCutMap, _roofLineMap })
             {
@@ -474,6 +477,7 @@ namespace CepaCero.Unity.Prototype
             if (open != _houseOpen)
             {
                 _houseOpen = open;
+                PaintHouseObjects();
                 RoofVersion++;
             }
             if (_fadeTarget >= 1f && _fade >= 0.999f)
@@ -516,9 +520,11 @@ namespace CepaCero.Unity.Prototype
         {
             var cells = new List<int>(_house);
             _house.Clear();
+            _houseOpen = false;
             foreach (int key in cells)
             {
                 PaintRoofCell(key % _blocks.Width, key / _blocks.Width);
+                PaintObject(key % _blocks.Width, key / _blocks.Width);
             }
             _fade = _fadeTarget = 1f;
             _roofFadeMap.ClearAllTiles();
@@ -732,11 +738,26 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
+        /// <summary>An object is seen unless it is under a closed roof: inside a house you only see its things once you are in.</summary>
+        private void PaintObject(int x, int y)
+        {
+            bool hidden = _level >= 0 && HasRoofOver(x, y) && !(_houseOpen && _house.Contains(Key(x, y)));
+            _objectMap.SetTile(new Vector3Int(x, y, 0), hidden ? null : TileFor(_sprites.Object(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Object)));
+        }
+
+        private void PaintHouseObjects()
+        {
+            foreach (int key in _house)
+            {
+                PaintObject(key % _blocks.Width, key / _blocks.Width);
+            }
+        }
+
         private void PaintExtraLayers(int x, int y)
         {
             var cell = new Vector3Int(x, y, 0);
             _floorMap.SetTile(cell, TileFor(_sprites.Floor(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Floor)));
-            _objectMap.SetTile(cell, TileFor(_sprites.Object(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Object)));
+            PaintObject(x, y);
             PaintRoofCell(x, y);
         }
 
