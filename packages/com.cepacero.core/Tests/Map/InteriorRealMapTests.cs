@@ -59,7 +59,12 @@ namespace CepaCero.Tests.Map
                 {
                     string key = map.Blocks.GetBlock(x, y).Key;
                     bool building = map.Ground.Get(x, y) == GroundType.Floor || key.Contains("wall") || key.StartsWith("door") || key.StartsWith("window");
-                    if (building && map.Blocks.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    bool roofed = false;
+                    for (int z = 0; z <= map.Blocks.MaxLevel; z++)
+                    {
+                        roofed |= !map.Blocks.GetBlock(x, y, z, BuildLayer.Roof).IsAir;
+                    }
+                    if (building && !roofed)
                     {
                         bare++;
                     }

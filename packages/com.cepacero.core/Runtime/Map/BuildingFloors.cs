@@ -38,7 +38,7 @@ namespace CepaCero.Map
                     {
                         skipped++;                                           // several storeys need an interior; they stay one
                     }
-                    RoofBareFootprint(world, ground, b, legacyWall, legacyDoor, reg);   // no door or no room found: still roof it, so nothing is seen from outside
+                    RoofBareFootprint(world, ground, b, legacyWall, legacyDoor, reg);   // no door or no room found: still roof it, at the height of its storeys
                     continue;
                 }
                 Int2 up = PickStairs(interior, b.Doors, null);
@@ -69,7 +69,7 @@ namespace CepaCero.Map
                 PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
-            RoofLooseWalls(world, ground, legacyWall, reg);
+            RoofLooseWalls(world, ground, legacyWall, reg, buildings);
             if (skipped > 0)
             {
                 warnings.Add($"{skipped} building(s) with several storeys were left as one: no usable interior found.");
@@ -237,10 +237,22 @@ namespace CepaCero.Map
             return false;
         }
 
+        private static bool HasAnyRoof(BlockWorld world, int x, int y)
+        {
+            for (int z = world.MinLevel; z <= world.MaxLevel; z++)
+            {
+                if (!world.GetBlock(x, y, z, BuildLayer.Roof).IsAir)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private static bool IsWallCell(BlockWorld world, Int2 p, BlockType legacyWall) => world.InBounds(p.X, p.Y) && world.GetTypeId(p.X, p.Y) == legacyWall.Id;
 
         /// <summary>Everything that is a building and still has no roof (floor not reached from a door, rooms cut off by walls, solid blocks, odd outlines): roofed too, so no house shows its inside from the street (D-028).</summary>
-        private static void RoofLooseWalls(BlockWorld world, GroundLayer ground, BlockType wall, BlockRegistry reg)
+        private static void RoofLooseWalls(BlockWorld world, GroundLayer ground, BlockType wall, BlockRegistry reg, IReadOnlyList<BuildingInfo> buildings)
         {
             if (!reg.TryGet("roof_tile", out BlockType roof))
             {
@@ -252,9 +264,25 @@ namespace CepaCero.Map
                 {
                     bool covers = world.GetTypeId(x, y) == wall.Id || ground.Get(x, y) == GroundType.Floor
                         || world.GetBlock(x, y).Key.StartsWith("wall_") || world.GetBlock(x, y).Key.StartsWith("door_") || world.GetBlock(x, y).Key.StartsWith("window_");
-                    if (covers && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    if (covers && !HasAnyRoof(world, x, y))
                     {
-                        world.SetBlock(x, y, 0, BuildLayer.Roof, roof.Id);
+                        // A shut-in room or patio inside a taller building takes that building's roof height (D-028), not a pit at ground level.
+                        int top = 0;
+                        foreach (BuildingInfo b in buildings)
+                        {
+                            if (x >= b.Min.X && x <= b.Max.X && y >= b.Min.Y && y <= b.Max.Y)
+                            {
+                                top = Math.Max(top, Math.Min(b.Levels - 1, world.MaxLevel));
+                            }
+                        }
+                        if (top > 0 && world.GetBlock(x, y, top, BuildLayer.Roof).IsAir)
+                        {
+                            world.SetBlock(x, y, top, BuildLayer.Roof, roof.Id);
+                        }
+                        else if (top == 0)
+                        {
+                            world.SetBlock(x, y, 0, BuildLayer.Roof, roof.Id);
+                        }
                     }
                 }
             }
@@ -269,7 +297,7 @@ namespace CepaCero.Map
                 for (int x = b.Min.X; x <= b.Max.X; x++)
                 {
                     if (world.InBounds(x, y) && ground.Get(x, y) == GroundType.Floor && world.GetBlock(x, y).IsAir
-                        && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                        && !HasAnyRoof(world, x, y))
                     {
                         set.Add(new Int2(x, y));
                     }
@@ -277,7 +305,7 @@ namespace CepaCero.Map
             }
             if (set.Count > 0)
             {
-                PlaceRoof(world, b, set, FindWalls(world, set, wall, door), 0, reg);
+                PlaceRoof(world, b, set, FindWalls(world, set, wall, door), Math.Max(0, Math.Min(b.Levels - 1, world.MaxLevel)), reg);
                 return;
             }
             // A solid building (all wall, no floor to stand on): the roof goes straight over its walls.
@@ -286,7 +314,7 @@ namespace CepaCero.Map
             {
                 for (int x = b.Min.X; x <= b.Max.X; x++)
                 {
-                    if (world.InBounds(x, y) && world.GetTypeId(x, y) == wall.Id && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    if (world.InBounds(x, y) && world.GetTypeId(x, y) == wall.Id && !HasAnyRoof(world, x, y))
                     {
                         solid.Add(new Int2(x, y));
                     }
@@ -294,7 +322,7 @@ namespace CepaCero.Map
             }
             if (solid.Count > 0)
             {
-                PlaceRoof(world, b, new HashSet<Int2>(), solid, 0, reg);
+                PlaceRoof(world, b, new HashSet<Int2>(), solid, Math.Max(0, Math.Min(b.Levels - 1, world.MaxLevel)), reg);
             }
         }
 

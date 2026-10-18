@@ -312,13 +312,15 @@ namespace CepaCero.Unity.Prototype
                     {
                         continue;
                     }
+                    // One roof is the whole connected run of roofed cells of the same height class (a row of houses shares its ridge), not one
+                    // per building: per-building pitches left flat patches between pitched ones that looked like holes (D-028).
                     int self = _owner[y * w + x];
                     bool edge = false;
                     foreach (Int2 n in Neighbours)
                     {
                         int nx = x + n.X;
                         int ny = y + n.Y;
-                        if (!_blocks.InBounds(nx, ny) || !HasRoofOver(nx, ny) || _owner[ny * w + nx] != self)
+                        if (!_blocks.InBounds(nx, ny) || !HasRoofOver(nx, ny) || _tall[ny * w + nx] != _tall[y * w + x])
                         {
                             edge = true;
                             break;
@@ -345,7 +347,7 @@ namespace CepaCero.Unity.Prototype
                         continue;
                     }
                     int j = ny * w + nx;
-                    if (dist[j] == 0 && HasRoofOver(nx, ny) && _owner[j] == _owner[i])
+                    if (dist[j] == 0 && HasRoofOver(nx, ny) && _tall[j] == _tall[i])
                     {
                         dist[j] = (short)(dist[i] + 1);
                         queue.Enqueue(j);
@@ -374,7 +376,7 @@ namespace CepaCero.Unity.Prototype
             {
                 int nx = x + dirs[k].X;
                 int ny = y + dirs[k].Y;
-                if (_blocks.InBounds(nx, ny) && OwnerAt(nx, ny) == self && _roofLevel[ny * _blocks.Width + nx] > bestLevel)
+                if (_blocks.InBounds(nx, ny) && HasRoofOver(nx, ny) && _tall[ny * _blocks.Width + nx] == _tall[y * _blocks.Width + x] && _roofLevel[ny * _blocks.Width + nx] > bestLevel)
                 {
                     best = names[k];
                     bestLevel = _roofLevel[ny * _blocks.Width + nx];
@@ -579,8 +581,26 @@ namespace CepaCero.Unity.Prototype
         /// Call every frame with the player's tile: finds the house you are in (the roof cells connected over the interior, bounded
         /// by walls) and fades only that roof. Leaving it fades the roof back in.
         /// </summary>
+        /// <summary>Debug bridge (`hide wall,roof,...`): layers listed here are switched off, to see what lies under what.</summary>
+        public static string DebugHidden = "";
+
+        private void ApplyDebugHidden()
+        {
+            bool Off(string n) => DebugHidden.Contains(n);
+            _wallMap.gameObject.SetActive(!Off("wall"));
+            _upperWallMap.gameObject.SetActive(!Off("upper"));
+            _roofMap.gameObject.SetActive(!Off("roof"));
+            _roofLineMap.gameObject.SetActive(!Off("line"));
+            _roofDetailMap.gameObject.SetActive(!Off("detail"));
+            _paperSouthMap.gameObject.SetActive(!Off("paper"));
+            _paperWestMap.gameObject.SetActive(!Off("paper"));
+            _decoMap.gameObject.SetActive(!Off("deco"));
+            _floorMap.gameObject.SetActive(!Off("floor"));
+        }
+
         public void UpdateRoofs(Int2 player, float deltaTime)
         {
+            ApplyDebugHidden();
             if (_level < 0)
             {
                 if (_house.Count > 0)
@@ -599,7 +619,8 @@ namespace CepaCero.Unity.Prototype
             {
                 _lastPlayer = player;
                 _roofDirty = false;
-                if (FindHouse(player, _scratch))
+                bool found = FindHouse(player, _scratch);
+                if (found)
                 {
                     if (!_house.SetEquals(_scratch))
                     {
@@ -892,6 +913,9 @@ namespace CepaCero.Unity.Prototype
         /// The cutaway (Project Zomboid): the walls in front of you are drawn low, those of the house you are in and any wall right in
         /// front of you outside, so a building never hides the player.
         /// </summary>
+        /// <summary>How many rows (x + y) in front of the player a cell still hides them: a storey of wall is 5 rows tall on screen, two storeys 10 (D-028).</summary>
+        private int Reach(int x, int y) => _tall != null && _tall[y * _blocks.Width + x] ? 11 : 6;
+
         private void UpdateCut(Int2 player, bool inside)
         {
             _cutNext.Clear();
@@ -905,7 +929,7 @@ namespace CepaCero.Unity.Prototype
                     {
                         int x = player.X + dx;
                         int y = player.Y + dy;
-                        if (dx + dy <= 1 && dx + dy >= -13 && Math.Abs(dx - dy) <= (inside ? 3 : 2) && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
+                        if (dx + dy <= 1 && -(dx + dy) <= Reach(x, y) && Math.Abs(dx - dy) <= (inside ? 2 : 1) && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
                         {
                             _cutNext.Add(Key(x, y));
                         }
@@ -924,7 +948,7 @@ namespace CepaCero.Unity.Prototype
                     {
                         int x = player.X + dx;
                         int y = player.Y + dy;
-                        if (dx + dy <= 1 && dx + dy >= -13 && Math.Abs(dx - dy) <= (inside ? 6 : 4) && _blocks.InBounds(x, y) && HasRoofOver(x, y) && !_house.Contains(Key(x, y)))
+                        if (dx + dy <= 1 && -(dx + dy) <= Reach(x, y) + 1 && Math.Abs(dx - dy) <= (inside ? 3 : 2) && _blocks.InBounds(x, y) && HasRoofOver(x, y) && !_house.Contains(Key(x, y)))
                         {
                             _roofCutNext.Add(Key(x, y));
                         }

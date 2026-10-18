@@ -305,6 +305,10 @@ namespace CepaCero.Unity.Prototype
                     SetTime(c.Args[0]);
                     Settle("time " + c.Args[0]);
                     break;
+                case "hide":
+                    PrototypeWorldView.DebugHidden = c.Args[0] == "none" ? "" : c.Args[0];
+                    Settle("hidden: " + PrototypeWorldView.DebugHidden);
+                    break;
                 case "tp":
                     _host.HostSession.Teleport(_host.MeIndex, Centre(c.Int(0), c.Int(1)));
                     Settle($"teleported to {c.Int(0)},{c.Int(1)}");
