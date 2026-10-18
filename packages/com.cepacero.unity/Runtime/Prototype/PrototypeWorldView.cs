@@ -66,6 +66,7 @@ namespace CepaCero.Unity.Prototype
         };
 
         private byte[] _roofTint;
+        private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
 
@@ -188,7 +189,98 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             _owner = owner;
+            ComputePitch();
             RepaintAll();
+        }
+
+        /// <summary>
+        /// The pitch of every roof (D-025): a cell's height is how far it is from the edge of its building's roof (a hip roof), up to three steps,
+        /// so a house rises to a ridge and a wide building ends in a flat top.
+        /// </summary>
+        private void ComputePitch()
+        {
+            int w = _blocks.Width;
+            int h = _blocks.Height;
+            _roofLevel = new byte[w * h];
+            var dist = new short[w * h];
+            var queue = new Queue<int>();
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if (!HasRoofOver(x, y))
+                    {
+                        continue;
+                    }
+                    int self = _owner[y * w + x];
+                    bool edge = false;
+                    foreach (Int2 n in Neighbours)
+                    {
+                        int nx = x + n.X;
+                        int ny = y + n.Y;
+                        if (!_blocks.InBounds(nx, ny) || !HasRoofOver(nx, ny) || _owner[ny * w + nx] != self)
+                        {
+                            edge = true;
+                            break;
+                        }
+                    }
+                    if (edge || self == 0)
+                    {
+                        dist[y * w + x] = 1;
+                        queue.Enqueue(y * w + x);
+                    }
+                }
+            }
+            while (queue.Count > 0)
+            {
+                int i = queue.Dequeue();
+                int x = i % w;
+                int y = i / w;
+                foreach (Int2 n in Neighbours)
+                {
+                    int nx = x + n.X;
+                    int ny = y + n.Y;
+                    if (!_blocks.InBounds(nx, ny))
+                    {
+                        continue;
+                    }
+                    int j = ny * w + nx;
+                    if (dist[j] == 0 && HasRoofOver(nx, ny) && _owner[j] == _owner[i])
+                    {
+                        dist[j] = (short)(dist[i] + 1);
+                        queue.Enqueue(j);
+                    }
+                }
+            }
+            for (int i = 0; i < dist.Length; i++)
+            {
+                _roofLevel[i] = (byte)Mathf.Clamp(dist[i] - 1, 0, 3);
+            }
+        }
+
+        /// <summary>Which side of this roof cell climbs (n, e, s, w) toward a higher neighbour of the same building, or null when it is flat.</summary>
+        private string Rising(int x, int y, int level)
+        {
+            if (_roofLevel == null || level >= 3)
+            {
+                return null;
+            }
+            int self = OwnerAt(x, y);
+            string best = null;
+            int bestLevel = level;
+            string[] names = { "n", "e", "s", "w" };
+            Int2[] dirs = { new Int2(0, 1), new Int2(1, 0), new Int2(0, -1), new Int2(-1, 0) };
+            for (int k = 0; k < 4; k++)
+            {
+                int nx = x + dirs[k].X;
+                int ny = y + dirs[k].Y;
+                if (_blocks.InBounds(nx, ny) && OwnerAt(nx, ny) == self && _roofLevel[ny * _blocks.Width + nx] > bestLevel)
+                {
+                    best = names[k];
+                    bestLevel = _roofLevel[ny * _blocks.Width + nx];
+                }
+            }
+            return best;
         }
 
         private void Enqueue(BuildingInfo b, Int2 p, int[] owner, int id, Queue<Int2> queue, List<Int2> cells)
@@ -658,9 +750,9 @@ namespace CepaCero.Unity.Prototype
             if (!type.IsAir && _level >= 0)
             {
                 edge = EdgeTile(x, y);
-                RoofShape shape = RoofShape.Flat;                       // pitched roofs come in phase 3 (D-025); flat reads clearer meanwhile
                 byte tint = _roofTint != null ? _roofTint[y * _blocks.Width + x] : (byte)0;
-                tile = TileFor(_sprites.IsoRoof(type, shape), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
+                int pitch = _roofLevel != null ? _roofLevel[y * _blocks.Width + x] : 0;
+                tile = TileFor(_sprites.IsoRoof(type, pitch, Rising(x, y, pitch)), _blocks.GetVariant(x, y, level, BuildLayer.Roof), tint);
             }
             // One map per state: your house (fading), in front of you (see-through) or the rest.
             bool fading = _house.Contains(Key(x, y));

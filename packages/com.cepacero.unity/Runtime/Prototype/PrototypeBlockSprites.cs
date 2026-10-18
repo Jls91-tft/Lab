@@ -144,10 +144,10 @@ namespace CepaCero.Unity.Prototype
         }
 
         /// <summary>The roof piece as a diamond lifted onto the walls (D-025, spritegen iso.roof); the flat one if the atlas is older.</summary>
-        public Sprite IsoRoof(BlockType type, RoofShape shape)
+        public Sprite IsoRoof(BlockType type, int level, string rising)
         {
-            string name = $"iso_roof_{type.Build.MaterialId}_{RoofShapes.SpriteSuffix(shape)}";
-            return _art.TryGet(name, out Sprite s) ? s : Roof(type, shape);
+            string name = rising == null ? $"iso_roof_{type.Build.MaterialId}_f{level}" : $"iso_roof_{type.Build.MaterialId}_s{level}_{rising}";
+            return _art.TryGet(name, out Sprite s) ? s : Roof(type, RoofShape.Flat);
         }
 
         /// <summary>True for blocks that join walls: walls, doors, windows, gates, arches, pillars and the map's own walls.</summary>

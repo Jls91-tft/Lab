@@ -100,6 +100,53 @@ def block(front: Image.Image, cap: Image.Image, height: int, south: Image.Image 
     return img
 
 
+ROOF_STEP = 10                                        # px of roof height per step of the pitch
+ROOF_LEVELS = 4                                       # flat cells at 0..3 steps above the eaves
+SLOPE_SHADE = {"n": 0.10, "e": -0.18, "s": -0.02, "w": -0.08}      # the slope rising north faces you and is lit; the one rising east is in shade
+SAMPLES = 96
+
+
+def roof_cell(piece: Image.Image, level: int, rising: str | None) -> Image.Image:
+    """A roof cell at `level` steps over the eaves; with `rising` ("n", "e", "s", "w") its top climbs one more step toward that side, so
+    neighbouring cells join into a smooth pitch. West and south faces run down to the eaves, so nothing leaves a gap."""
+    top = level + (1 if rising else 0)
+    img = Image.new("RGBA", (W, D + top * ROOF_STEP), (0, 0, 0, 0))
+    px = img.load()
+    height = img.height
+
+    def lift(a: float, b: float) -> float:
+        t = {"n": b, "e": a, "s": 1 - b, "w": 1 - a}[rising] if rising else 0.0
+        return (level + t) * ROOF_STEP
+
+    for ia in range(SAMPLES):
+        for ib in range(SAMPLES):
+            a, b = (ia + .5) / SAMPLES, (ib + .5) / SAMPLES
+            X = int(32 + 32 * (a - b))
+            base = D - (a + b) * D / 2                                  # row from the top of the eave diamond
+            Y = int(height - D + base - lift(a, b))
+            if 0 <= X < W and 0 <= Y < height:
+                c = piece.getpixel((int(a * 32) % 32, int((1 - b) * 32) % 32))
+                px[X, Y] = _shade(c, SLOPE_SHADE[rising] if rising else 0.0)
+    for edge in ("west", "south"):
+        for i in range(SAMPLES):
+            t = (i + .5) / SAMPLES
+            a, b = (0.0, 1 - t) if edge == "west" else (t, 0.0)
+            X = int(32 + 32 * (a - b))
+            base = D - (a + b) * D / 2
+            y_top = height - D + base - lift(a, b)
+            y_floor = height - D + base
+            k = -.30 if edge == "west" else -.14
+            for Yf in range(int(y_top) + 1, int(y_floor) + 1):
+                if 0 <= X < W and 0 <= Yf < height and px[X, Yf][3] == 0:
+                    c = piece.getpixel((int(t * 32) % 32, (Yf * 2) % 32))
+                    px[X, Yf] = _shade(c, k)
+                    if X + 1 < W and px[X + 1, Yf][3] == 0 and edge == "west":
+                        px[X + 1, Yf] = _shade(c, k)
+                    if X - 1 >= 0 and px[X - 1, Yf][3] == 0 and edge == "south":
+                        px[X - 1, Yf] = _shade(c, k)
+    return img
+
+
 def roof(piece: Image.Image) -> Image.Image:
     """A roof piece laid on top of the walls: the 32 px piece as a 64x32 diamond (the game lifts it WALL_H, atlas.py pivot)."""
     img = Image.new("RGBA", (W, D), (0, 0, 0, 0))
@@ -114,8 +161,13 @@ def roof(piece: Image.Image) -> Image.Image:
 def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
     for name, piece in images.items():
-        if name.startswith("roof_"):
-            out["iso_" + name] = roof(piece)
+        if name.startswith("roof_") and name.endswith("_flat"):
+            kind = name[len("roof_"):-len("_flat")]
+            for level in range(ROOF_LEVELS):
+                out[f"iso_roof_{kind}_f{level}"] = roof_cell(piece, level, None)
+                if level < ROOF_LEVELS - 1:
+                    for d in ("n", "e", "s", "w"):
+                        out[f"iso_roof_{kind}_s{level}_{d}"] = roof_cell(piece, level, d)
     for m in MATERIALS:
         front, cap = images.get(f"wall_{m}_face_3"), images.get(f"wall_{m}_top_15")
         if front is None or cap is None:

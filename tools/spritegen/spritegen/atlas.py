@@ -24,7 +24,7 @@ def pivot_y(name: str, height: int) -> float | None:
     if name.startswith(("zombie_", "player_")) and not name.endswith("downed"):
         return round((height - height * FOOT) / height, 4)
     if name.startswith("iso_roof_"):
-        return round((16 - 80) / height, 4)                   # D-025: on top of an 80 px wall, sorted at the ground
+        return round((16 - 80) / height, 4)                   # D-025: the eave diamond (its centre is 16 px up from the bottom) lifted onto an 80 px wall
     if name.startswith("iso_"):
         return round(16 / height, 4)                          # D-025: the centre of the 64x32 footprint at the bottom
     return None
