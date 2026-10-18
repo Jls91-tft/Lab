@@ -84,7 +84,7 @@ namespace CepaCero.Unity.Prototype
                 }
             }
             DrawMessage(m.Message, m.MessageAlpha);
-            DrawDiary(m.Diary);
+            DrawDiary(m.Diary, m.DiaryAlpha);
             DrawHelp(m.ShowHelp, m.Inventory != null ? m.Inventory.BagSlots : 0);
             GUI.color = previous;
         }
@@ -261,18 +261,21 @@ namespace CepaCero.Unity.Prototype
             GUI.color = previous;
         }
 
-        private void DrawDiary(string diary)
+        private void DrawDiary(string diary, float alpha)
         {
-            if (string.IsNullOrEmpty(diary))
+            if (string.IsNullOrEmpty(diary) || alpha <= 0f)
             {
                 return;
             }
-            float w = 170f;
-            float x = Width - w - 4f;
-            float y = 64f;
-            Panel(x, y, w, 100f);
-            Text(x + 5f, y + 4f, w - 10f, 11f, "Diario", PrototypePalette.Tan, _text);
-            Text(x + 5f, y + 17f, w - 10f, 80f, diary, PrototypePalette.White, _wrap);
+            Color previous = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, alpha);
+            float w = Math.Min(260f, Width - 240f);
+            float x = (Width - w) / 2f;
+            float y = Height - 118f;
+            Panel(x, y, w, 56f);
+            Text(x + 5f, y + 3f, w - 10f, 11f, "Diario", PrototypePalette.Tan, _text);
+            Text(x + 5f, y + 15f, w - 10f, 40f, diary, PrototypePalette.White, _wrap);
+            GUI.color = previous;
         }
 
         private void DrawHelp(bool show, int bagSlots)

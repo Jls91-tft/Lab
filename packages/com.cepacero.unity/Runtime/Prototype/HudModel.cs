@@ -42,6 +42,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>The backpack panel is open (Tab); it also opens by itself next to an open container.</summary>
         public bool ShowBag;
         public string Diary;
+        public float DiaryAlpha;
 
         /// <summary>Network line for the loopback mode ("" otherwise).</summary>
         public string Network;

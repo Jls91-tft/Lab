@@ -355,6 +355,7 @@ namespace CepaCero.Unity.Prototype
                 Message = Time.time < _messageUntil ? _message : "",
                 MessageAlpha = Mathf.Clamp01(_messageUntil - Time.time),
                 Diary = Time.time < _diaryUntil ? _diaryText : "",
+                DiaryAlpha = Mathf.Clamp01(_diaryUntil - Time.time),
                 Network = Remote
                     ? $"Cliente en bucle: ↓ {_bytesDown / seconds / 1024.0:0.0} KB/s · ↑ {_bytesUp / seconds / 1024.0:0.00} KB/s"
                     : "",
@@ -894,7 +895,7 @@ namespace CepaCero.Unity.Prototype
                     {
                         DiaryEntry entry = diary.Entries[e.Value];
                         _diaryText = $"<i>{entry.source}</i>\n{entry.text}";
-                        _diaryUntil = Time.time + 12f;
+                        _diaryUntil = Time.time + 9f;
                     }
                     break;
             }
