@@ -41,8 +41,8 @@ namespace CepaCero.Unity.Prototype
                 PrototypeMaterials.Apply(r);
 
                 Vector2 size = art.UnitSize(item.Sprite);
-                float x = item.X + item.Width / 2f;
-                float y = item.Y + item.Height / 2f;
+                float x = item.X + item.Width / 2f + item.ShiftX;
+                float y = item.Y + item.Height / 2f + item.ShiftY;
                 if (item.Flat)
                 {
                     go.transform.SetParent(root, false);                      // marks on the ground: on the grid (D-025)

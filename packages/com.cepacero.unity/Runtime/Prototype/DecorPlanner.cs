@@ -9,8 +9,10 @@ namespace CepaCero.Unity.Prototype
     /// <summary>One piece of decoration: an atlas sprite on a rectangle of cells.</summary>
     public readonly struct DecorItem
     {
-        public DecorItem(string sprite, int x, int y, int width, int height, bool flat, bool flipX)
+        public DecorItem(string sprite, int x, int y, int width, int height, bool flat, bool flipX, float shiftX = 0f, float shiftY = 0f)
         {
+            ShiftX = shiftX;
+            ShiftY = shiftY;
             Sprite = sprite;
             X = x;
             Y = y;
@@ -36,6 +38,11 @@ namespace CepaCero.Unity.Prototype
         public bool Flat { get; }
 
         public bool FlipX { get; }
+
+        /// <summary>A push off the cell centre, in cells: furniture stands against its wall, not in the middle of its square (D-027).</summary>
+        public float ShiftX { get; }
+
+        public float ShiftY { get; }
     }
 
     /// <summary>
@@ -152,7 +159,18 @@ namespace CepaCero.Unity.Prototype
                         continue;                                 // pictures and curtains hang on the walls (PrototypeWorldView)
                     }
                     FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
-                    Items.Add(new DecorItem(info.Sprite, f.Cell.X, f.Cell.Y, info.Width, info.Height, info.Flat, !info.Flat && ((f.Cell.X + f.Cell.Y) & 1) == 0));
+                    float sx = 0f, sy = 0f;
+                    bool flip = false;
+                    if (!info.Flat && info.Width == 1 && info.Height == 1)
+                    {
+                        // Against the wall it touches (the back walls first, they are the ones you see), facing into the room.
+                        const float Push = 0.3f;
+                        if (Solid(f.Cell.X, f.Cell.Y + 1)) { sy = Push; }
+                        else if (Solid(f.Cell.X + 1, f.Cell.Y)) { sx = Push; flip = true; }
+                        else if (Solid(f.Cell.X - 1, f.Cell.Y)) { sx = -Push; }
+                        else if (Solid(f.Cell.X, f.Cell.Y - 1)) { sy = -Push; flip = true; }
+                    }
+                    Items.Add(new DecorItem(info.Sprite, f.Cell.X, f.Cell.Y, info.Width, info.Height, info.Flat, flip, sx, sy));
                     for (int dy = 0; dy < info.Height; dy++)
                     {
                         for (int dx = 0; dx < info.Width; dx++)
@@ -164,6 +182,16 @@ namespace CepaCero.Unity.Prototype
                         }
                     }
                 }
+            }
+
+            private bool Solid(int x, int y)
+            {
+                if (!In(x, y))
+                {
+                    return true;
+                }
+                BlockType t = _blocks.GetBlock(x, y);
+                return !t.IsAir && t.IsSolid && !t.Key.StartsWith("stairs") && t.ToggleTo == 0;
             }
 
             public void Interior(BuildingInfo b)

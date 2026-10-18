@@ -327,13 +327,11 @@ namespace CepaCero.Map
                         PutBed(world, interior, into, taken, wallCells, openCells);
                         Put(into, taken, wallCells, "wardrobe", 1);
                     }
-                    Put(into, taken, wallCells, "fridge", 1);
-                    Put(into, taken, wallCells, "stove", 1);
-                    Put(into, taken, wallCells, "cupboard", 1 + size / 12);
+                    // A kitchen counter along one wall, fridge, stove and cupboards side by side, and a table with its chairs in the middle.
+                    PutRun(world, room, taken, into, "fridge", "cupboard", "stove", "cupboard", "cupboard", "cupboard");
                     if (size >= 14)
                     {
-                        Put(into, taken, openCells, "dining_table", 1);
-                        Put(into, taken, openCells, "chair", 2);
+                        PutTable(room, taken, into, "dining_table", "chair", 2);
                     }
                     break;
                 case RoomKind.Bedroom:
@@ -351,26 +349,27 @@ namespace CepaCero.Map
                         PutBed(world, interior, into, taken, wallCells, openCells);
                         Put(into, taken, wallCells, "wardrobe", 1);
                     }
-                    Put(into, taken, openCells, "sofa", 1 + size / 25);
-                    Put(into, taken, wallCells, "bookshelf", 1);
+                    // The sofa against a wall with the coffee table in front of it; a bookshelf on another wall.
+                    PutRun(world, room, taken, into, "sofa", "sofa");
                     if (size >= 12)
                     {
-                        Put(into, taken, openCells, "coffee_table", 1);
+                        PutInFront(world, room, taken, into, "sofa", "coffee_table");
                     }
+                    Put(into, taken, Free(wallCells, taken), "bookshelf", 1);
                     break;
                 case RoomKind.Shop:
-                    Put(into, taken, wallCells, "shelf", Math.Max(2, size / 6));
-                    Put(into, taken, wallCells, "counter", 1 + size / 30);
-                    Put(into, taken, openCells, "crate", size / 25);
+                    PutRun(world, room, taken, into, Repeat("shelf", Math.Max(2, size / 6)));
+                    PutRun(world, room, taken, into, Repeat("counter", 1 + size / 30));
+                    Put(into, taken, Free(wallCells, taken), "crate", size / 25);
                     break;
                 case RoomKind.Office:
-                    Put(into, taken, wallCells, "shelf", 1 + size / 20);
-                    Put(into, taken, openCells, "desk", 1 + size / 14);
-                    Put(into, taken, openCells, "chair", 1 + size / 14);
+                    PutRun(world, room, taken, into, Repeat("desk", 1 + size / 14));
+                    PutInFront(world, room, taken, into, "desk", "chair");
+                    Put(into, taken, Free(wallCells, taken), "shelf", 1 + size / 20);
                     break;
                 case RoomKind.Storage:
-                    Put(into, taken, wallCells, "boxes", 1 + size / 5);
-                    Put(into, taken, openCells, "crate", size / 10);
+                    PutRun(world, room, taken, into, Repeat("boxes", 1 + size / 5));
+                    Put(into, taken, Free(wallCells, taken), "crate", size / 10);
                     break;
                 default:
                     break;
@@ -474,6 +473,167 @@ namespace CepaCero.Map
             into.Add(new Furniture(best, rng.Range(0, 2) == 0 ? "rug" : "rug_small"));
         }
 
+        private static string[] Repeat(string kind, int n)
+        {
+            var a = new string[Math.Max(0, n)];
+            for (int i = 0; i < a.Length; i++)
+            {
+                a[i] = kind;
+            }
+            return a;
+        }
+
+        private static List<Int2> Free(List<Int2> cells, HashSet<Int2> taken)
+        {
+            var free = new List<Int2>();
+            foreach (Int2 c in cells)
+            {
+                if (!taken.Contains(c))
+                {
+                    free.Add(c);
+                }
+            }
+            return free;
+        }
+
+        private static bool IsRealWall(BlockWorld world, int x, int y)
+        {
+            if (!world.InBounds(x, y))
+            {
+                return true;
+            }
+            BlockType t = world.GetBlock(x, y);
+            return !t.IsAir && t.IsSolid && !t.Key.StartsWith("stairs") && t.ToggleTo == 0;          // doors are not wall to lean on
+        }
+
+        /// <summary>
+        /// Pieces side by side along one wall, the longest free stretch of the room (the back walls, north and east, win a tie: they are the
+        /// ones in view). Like a kitchen counter or a row of shelves in Project Zomboid (D-027).
+        /// </summary>
+        private static void PutRun(BlockWorld world, Room room, HashSet<Int2> taken, List<Furniture> into, params string[] kinds)
+        {
+            if (kinds.Length == 0)
+            {
+                return;
+            }
+            var cells = new HashSet<Int2>(room.Cells);
+            List<Int2> best = null;
+            int[] dxs = { 0, 1, -1, 0 };                                  // north, east, west, south
+            int[] dys = { 1, 0, 0, -1 };
+            for (int side = 0; side < 4; side++)
+            {
+                bool alongX = dys[side] != 0;
+                var lines = new Dictionary<int, List<Int2>>();
+                foreach (Int2 c in room.Cells)
+                {
+                    if (!taken.Contains(c) && IsRealWall(world, c.X + dxs[side], c.Y + dys[side]))
+                    {
+                        int line = alongX ? c.Y : c.X;
+                        if (!lines.TryGetValue(line, out List<Int2> l))
+                        {
+                            lines[line] = l = new List<Int2>();
+                        }
+                        l.Add(c);
+                    }
+                }
+                foreach (List<Int2> line in lines.Values)
+                {
+                    line.Sort((a, b) => alongX ? a.X.CompareTo(b.X) : b.Y.CompareTo(a.Y));
+                    var run = new List<Int2>();
+                    for (int i = 0; i < line.Count; i++)
+                    {
+                        bool next = i > 0 && (alongX ? line[i].X == line[i - 1].X + 1 : line[i].Y == line[i - 1].Y - 1);
+                        if (!next)
+                        {
+                            run = new List<Int2>();
+                        }
+                        run.Add(line[i]);
+                        if (best == null || run.Count > best.Count)
+                        {
+                            best = new List<Int2>(run);
+                        }
+                    }
+                }
+            }
+            if (best == null)
+            {
+                return;
+            }
+            for (int i = 0; i < kinds.Length && i < best.Count; i++)
+            {
+                taken.Add(best[i]);
+                into.Add(new Furniture(best[i], kinds[i]));
+            }
+        }
+
+        /// <summary>A table near the middle of the room with its chairs on either side.</summary>
+        private static void PutTable(Room room, HashSet<Int2> taken, List<Furniture> into, string table, string chair, int chairs)
+        {
+            int cx = 0, cy = 0;
+            foreach (Int2 c in room.Cells)
+            {
+                cx += c.X;
+                cy += c.Y;
+            }
+            cx /= room.Cells.Count;
+            cy /= room.Cells.Count;
+            var cells = new HashSet<Int2>(room.Cells);
+            Int2 at = default;
+            int bestD = int.MaxValue;
+            foreach (Int2 c in room.Cells)
+            {
+                var w = new Int2(c.X - 1, c.Y);
+                var e = new Int2(c.X + 1, c.Y);
+                bool ok = !taken.Contains(c) && cells.Contains(w) && !taken.Contains(w) && cells.Contains(e) && !taken.Contains(e);
+                int d = Math.Abs(c.X - cx) + Math.Abs(c.Y - cy);
+                if (ok && d < bestD)
+                {
+                    at = c;
+                    bestD = d;
+                }
+            }
+            if (bestD == int.MaxValue)
+            {
+                return;
+            }
+            taken.Add(at);
+            into.Add(new Furniture(at, table));
+            var sides = new[] { new Int2(at.X - 1, at.Y), new Int2(at.X + 1, at.Y), new Int2(at.X, at.Y - 1), new Int2(at.X, at.Y + 1) };
+            for (int i = 0, placed = 0; i < sides.Length && placed < chairs; i++)
+            {
+                if (cells.Contains(sides[i]) && !taken.Contains(sides[i]))
+                {
+                    taken.Add(sides[i]);
+                    into.Add(new Furniture(sides[i], chair));
+                    placed++;
+                }
+            }
+        }
+
+        /// <summary>One piece on the free cell in front of the first piece of <paramref name="behind"/> (a coffee table before the sofa, a chair at a desk).</summary>
+        private static void PutInFront(BlockWorld world, Room room, HashSet<Int2> taken, List<Furniture> into, string behind, string kind)
+        {
+            var cells = new HashSet<Int2>(room.Cells);
+            foreach (Furniture f in into)
+            {
+                if (f.Kind != behind || !cells.Contains(f.Cell))
+                {
+                    continue;
+                }
+                for (int k = 0; k < 4; k++)
+                {
+                    var wall = new Int2(f.Cell.X + Dx4[k], f.Cell.Y + Dy4[k]);
+                    var front = new Int2(f.Cell.X - Dx4[k], f.Cell.Y - Dy4[k]);
+                    if (IsRealWall(world, wall.X, wall.Y) && cells.Contains(front) && !taken.Contains(front))
+                    {
+                        taken.Add(front);
+                        into.Add(new Furniture(front, kind));
+                        return;
+                    }
+                }
+            }
+        }
+
         private static void Put(List<Furniture> into, HashSet<Int2> taken, List<Int2> cells, string kind, int count)
         {
             for (int i = 0; i < cells.Count && count > 0; i++)
@@ -523,8 +683,14 @@ namespace CepaCero.Map
         {
             for (int k = 0; k < 4; k++)
             {
+                // A real wall, window or door next to it: not just the edge of the flooded interior, nor a stairwell (D-027).
                 var n = new Int2(c.X + Dx4[k], c.Y + Dy4[k]);
-                if (!interior.Contains(n) || !world.GetBlock(n.X, n.Y).IsAir)
+                if (!world.InBounds(n.X, n.Y))
+                {
+                    return true;
+                }
+                BlockType t = world.GetBlock(n.X, n.Y);
+                if (!t.IsAir && t.IsSolid && !t.Key.StartsWith("stairs"))
                 {
                     return true;
                 }

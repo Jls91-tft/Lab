@@ -52,7 +52,7 @@ namespace CepaCero.Tests.Map
             }
 
             // Dump the three biggest homes for a look (run with --logger "console;verbosity=detailed").
-            foreach (BuildingInfo b in map.Buildings.Where(x => x.Kind == "residential").OrderByDescending(x => x.Tiles).Take(3))
+            foreach (BuildingInfo b in map.Buildings.Where(x => x.Min.X <= 309 && x.Max.X >= 309 && x.Min.Y <= 73 && x.Max.Y >= 73).Concat(map.Buildings.Where(x => x.Kind == "residential").OrderByDescending(x => x.Tiles).Take(1)))
             {
                 var sb = new StringBuilder($"\nbuilding {b.Id} {b.Kind} tiles {b.Tiles}\n");
                 for (int y = b.Max.Y; y >= b.Min.Y; y--)
