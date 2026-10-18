@@ -57,6 +57,7 @@ namespace CepaCero.Map
                 PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
+            RoofLooseWalls(world, legacyWall, reg);
             if (skipped > 0)
             {
                 warnings.Add($"{skipped} building(s) with several storeys were left as one: no usable interior found.");
@@ -226,6 +227,25 @@ namespace CepaCero.Map
 
         private static bool IsWallCell(BlockWorld world, Int2 p, BlockType legacyWall) => world.InBounds(p.X, p.Y) && world.GetTypeId(p.X, p.Y) == legacyWall.Id;
 
+        /// <summary>Any wall of the map still without a roof (solid blocks and odd outlines that are in no building's list): roofed too, so no tower of bare wall shows.</summary>
+        private static void RoofLooseWalls(BlockWorld world, BlockType wall, BlockRegistry reg)
+        {
+            if (!reg.TryGet("roof_tile", out BlockType roof))
+            {
+                return;
+            }
+            for (int y = 0; y < world.Height; y++)
+            {
+                for (int x = 0; x < world.Width; x++)
+                {
+                    if (world.GetTypeId(x, y) == wall.Id && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    {
+                        world.SetBlock(x, y, 0, BuildLayer.Roof, roof.Id);
+                    }
+                }
+            }
+        }
+
         /// <summary>A building with no usable interior (no door, tiny): its floor cells and the walls around them get a roof at street level.</summary>
         private static void RoofBareFootprint(BlockWorld world, GroundLayer ground, BuildingInfo b, BlockType wall, BlockType door, BlockRegistry reg)
         {
@@ -244,6 +264,23 @@ namespace CepaCero.Map
             if (set.Count > 0)
             {
                 PlaceRoof(world, b, set, FindWalls(world, set, wall, door), 0, reg);
+                return;
+            }
+            // A solid building (all wall, no floor to stand on): the roof goes straight over its walls.
+            var solid = new List<Int2>();
+            for (int y = b.Min.Y; y <= b.Max.Y; y++)
+            {
+                for (int x = b.Min.X; x <= b.Max.X; x++)
+                {
+                    if (world.InBounds(x, y) && world.GetTypeId(x, y) == wall.Id && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    {
+                        solid.Add(new Int2(x, y));
+                    }
+                }
+            }
+            if (solid.Count > 0)
+            {
+                PlaceRoof(world, b, new HashSet<Int2>(), solid, 0, reg);
             }
         }
 
