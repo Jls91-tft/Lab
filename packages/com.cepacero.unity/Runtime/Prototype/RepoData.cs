@@ -25,6 +25,9 @@ namespace CepaCero.Unity.Prototype
         /// </summary>
         public const string DeliciasMap = "data/maps/delicias-centro.map.json";
 
+        /// <summary>The prototype's map since D-029: Zaragoza's old town around the Pilar, built on a square grid (osm2tiles --zone casco-pilar).</summary>
+        public const string CascoMap = "data/maps/casco-pilar.map.json";
+
         /// <summary>Tiny hand-made map of the core tests: quick to load, one street.</summary>
         public const string SyntheticMap = "packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json";
 

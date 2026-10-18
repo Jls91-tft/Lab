@@ -18,5 +18,17 @@
     "description": "Zaragoza, centro de Delicias (~350 x 335 m) a 1 m por casilla: casas el doble de grandes por lado. Mapa del prototipo (D-026).",
     "rotate": "auto",
     "yards": true
+  },
+  "casco-pilar": {
+    "bbox": [
+      41.6525,
+      -0.8825,
+      41.6585,
+      -0.8735
+    ],
+    "description": "Zaragoza, casco histórico alrededor del Pilar y la Seo, con el Ebro al norte. Mapa construido (D-029): calles rectas y casas de plantilla.",
+    "rotate": "auto",
+    "city": true,
+    "yards": true
   }
 }

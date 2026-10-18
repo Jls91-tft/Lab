@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca5a2ae57d13927428c353223551582e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CepaCero.Unity::CepaCero.Unity.Prototype.PrototypeGame
-  _mapPath: data/maps/delicias-centro.map.json
+  _mapPath: data/maps/casco-pilar.map.json
   _settings:
     TickRate: 20
     DaySeconds: 90

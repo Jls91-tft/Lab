@@ -13,6 +13,7 @@ python -m osm2tiles --list-zones                       # zonas predefinidas (zon
 python -m osm2tiles --zone delicias-test               # descarga por Overpass (con caché) y convierte
 python -m osm2tiles --zone delicias-test --meters-per-tile 1.5
 python -m osm2tiles --zone delicias-centro --meters-per-tile 1   # mapa del prototipo (D-026/D-027): zona girada y edificios regularizados
+python -m osm2tiles --zone casco-pilar --meters-per-tile 1 --input cache/casco-pilar.osm   # mapa del prototipo (D-029): modo ciudad
 python -m osm2tiles --zone delicias-test --rotate auto        # gira el mapa para que la rejilla de calles y casas quede sobre los ejes
 python -m osm2tiles --bbox 41.648,-0.912,41.654,-0.903 --name mi-zona
 python -m osm2tiles --zone delicias-test --input export.osm   # sin red: un .osm exportado

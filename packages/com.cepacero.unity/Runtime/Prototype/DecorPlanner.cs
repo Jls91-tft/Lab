@@ -141,7 +141,7 @@ namespace CepaCero.Unity.Prototype
                         {
                             continue;
                         }
-                        double p = _rng.NextDouble();
+                        double p = _rng.NextDouble() * 4.0;                      // street furniture by the square metre: a 1 m map has four cells where there used to be one (D-029)
                         switch (_ground.Get(x, y))
                         {
                             case GroundType.Asphalt:
@@ -384,7 +384,7 @@ namespace CepaCero.Unity.Prototype
                         {
                             continue;
                         }
-                        double p = _rng.NextDouble();
+                        double p = _rng.NextDouble() * 4.0;                      // street furniture by the square metre: a 1 m map has four cells where there used to be one (D-029)
                         double blood = g == GroundType.Floor ? 0.010 : 0.005;
                         string decal =
                             p < blood ? "decal_blood_" + _rng.Next(3)

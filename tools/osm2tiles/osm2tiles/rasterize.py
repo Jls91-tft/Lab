@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 from PIL import Image, ImageDraw
 
+from . import city as city_mode
 from . import rules
 from .geo import Projector
 from .osm import OsmData, assemble_rings
@@ -262,6 +263,7 @@ class _Rasterizer:
         self.data = data
         self.proj = proj
         self.w, self.h = proj.width, proj.height
+        self.manhattan = False                                   # city mode (D-029): no diagonal lines
 
     def pts(self, refs: list[int]) -> list[tuple[float, float]]:
         # Pillow puts pixel centres on integer coordinates; tile (i, j) spans
@@ -272,7 +274,7 @@ class _Rasterizer:
             if n is not None:
                 x, y = self.proj.to_tiles(n.lat, n.lon)
                 out.append((x - 0.5, self.h - y - 0.5))
-        return out
+        return city_mode.manhattan(out) if self.manhattan else out
 
     def cell(self, lat: float, lon: float) -> tuple[int, int]:
         """Image-space cell (x, row) containing a point; may be out of range."""
@@ -286,11 +288,14 @@ class _Rasterizer:
         p = self.pts(refs)
         if len(p) < 2:
             return
-        draw.line(p, fill=fill, width=width, joint="curve")
-        if width > 2:  # round caps so intersections have no notches
+        draw.line(p, fill=fill, width=width, joint=None if self.manhattan else "curve")
+        if width > 2:  # caps so intersections have no notches (square ones on a city grid)
             r = width / 2
-            for x, y in (p[0], p[-1]):
-                draw.ellipse((x - r, y - r, x + r, y + r), fill=fill)
+            for x, y in p if self.manhattan else (p[0], p[-1]):
+                if self.manhattan:
+                    draw.rectangle((x - r + 0.5, y - r + 0.5, x + r - 0.5, y + r - 0.5), fill=fill)
+                else:
+                    draw.ellipse((x - r, y - r, x + r, y + r), fill=fill)
 
     def fill_area(self, img: Image.Image, area: _Area, value: int) -> None:
         if not area.inners:
@@ -335,8 +340,9 @@ def _distance_to_roads(gnd: list[int], bid_at: list[int], w: int, h: int) -> lis
     return dist
 
 
-def build_map(data: OsmData, proj: Projector, yards: bool = False) -> TileMap:
+def build_map(data: OsmData, proj: Projector, yards: bool = False, city: bool = False) -> TileMap:
     r = _Rasterizer(data, proj)
+    r.manhattan = city
     w, h = r.w, r.h
     ground = Image.new("L", (w, h), G["dirt"])
     wood = Image.new("L", (w, h), 0)
@@ -406,6 +412,15 @@ def build_map(data: OsmData, proj: Projector, yards: bool = False) -> TileMap:
     gnd = _pixels(ground)
     bid_at = _pixels(ids)
     _regularize(bid_at, gnd, w, h)
+    if city:
+        # D-029: landmarks stay (one clean rectangle each), every other building becomes rectangular lots, one house per lot.
+        sizes: dict[int, int] = {}
+        for b in bid_at:
+            if b:
+                sizes[b] = sizes.get(b, 0) + 1
+        keep = {b for b, n in sizes.items() if city_mode.is_landmark(building_tags.get(b, {}), n)}
+        city_mode.tidy_landmarks(bid_at, w, h, keep)
+        building_tags = city_mode.lots(bid_at, w, h, keep, building_tags)
     wood_at = _pixels(wood)
     fence_at = _pixels(fences)
     kind_hint = _pixels(kinds_img)

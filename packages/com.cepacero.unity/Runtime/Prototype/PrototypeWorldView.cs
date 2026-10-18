@@ -948,7 +948,7 @@ namespace CepaCero.Unity.Prototype
                     {
                         int x = player.X + dx;
                         int y = player.Y + dy;
-                        if (dx + dy <= 1 && -(dx + dy) <= Reach(x, y) + 1 && Math.Abs(dx - dy) <= (inside ? 3 : 2) && _blocks.InBounds(x, y) && HasRoofOver(x, y) && !_house.Contains(Key(x, y)))
+                        if (dx + dy <= 1 && -(dx + dy) <= Reach(x, y) + 1 && Math.Abs(dx - dy) <= (inside ? 7 : 2) && _blocks.InBounds(x, y) && HasRoofOver(x, y) && !_house.Contains(Key(x, y)))
                         {
                             _roofCutNext.Add(Key(x, y));
                         }
@@ -1075,7 +1075,7 @@ namespace CepaCero.Unity.Prototype
                 {
                     roofSprite = _art.Lifted(roofSprite, PrototypeIso.WallHeight);              // on top of the second storey
                 }
-                if (rising == null && (h >> 8) % 29 == 0)
+                if (rising == null && (h >> 8) % 61 == 0)
                 {
                     bool flat = type.Build != null && type.Build.MaterialId == "flat";
                     string[] pool = flat ? FlatRoofDetails : PitchedRoofDetails;

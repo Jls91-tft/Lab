@@ -33,6 +33,7 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     p.add_argument("--name", help="output name (default: zone name or 'map')")
     p.add_argument("--input", type=Path, help="read a local .osm file instead of downloading")
     p.add_argument("--meters-per-tile", type=float, default=2.0, help="tile size in metres (default 2)")
+    p.add_argument("--city", action="store_true", help="city mode (D-029): no diagonals, ordinary buildings as rectangular lots, landmarks kept")
     p.add_argument("--yards", action="store_true", help="turn the bare ground between buildings into paved and grassy yards (D-027)")
     p.add_argument("--rotate", default=None, help="turn the map this many degrees, or 'auto' to put the main building grid along the axes (D-027)")
     p.add_argument("--out", type=Path, default=TOOL_DIR / "out", help="output folder")
@@ -103,7 +104,8 @@ def main(argv: list[str] | None = None) -> int:
         proj = Projector(bbox, args.meters_per_tile, rotation)
         print(f"Turning the map {rotation:.0f} degrees so the main street grid runs along the axes.")
     yards = args.yards or bool(args.zone and load_zones()[args.zone].get("yards"))
-    tm = build_map(data, proj, yards)
+    citymode = args.city or bool(args.zone and load_zones()[args.zone].get("city"))
+    tm = build_map(data, proj, yards, citymode)
     doc = to_document(tm, name, bbox, args.meters_per_tile, data.timestamp)
     json_path = args.out / f"{name}.map.json"
     png_path = args.out / f"{name}.preview.png"

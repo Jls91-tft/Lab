@@ -34,7 +34,7 @@ namespace CepaCero.Unity.Prototype
 
 
         [Tooltip("Map relative to the repository root: data/maps/delicias-test.map.json (real, default) or the test fixture packages/com.cepacero.core/Tests/Fixtures/synthetic.map.json.")]
-        [SerializeField] private string _mapPath = RepoData.DeliciasMap;
+        [SerializeField] private string _mapPath = RepoData.CascoMap;
 
         [Tooltip("Match options. Short days by default so a night comes quickly.")]
         [SerializeField] private GameSettings _settings = new GameSettings { DaySeconds = 90, DuskSeconds = 15, NightSeconds = 90, DawnSeconds = 10 };
