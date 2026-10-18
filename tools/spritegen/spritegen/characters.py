@@ -854,6 +854,43 @@ def player_looks() -> dict[str, Look]:
     }
 
 
+class _Img:
+    """A finished image standing in for a Sprite (the atlas only calls .image())."""
+
+    def __init__(self, img):
+        self._img = img
+
+    def image(self):
+        return self._img
+
+
+def _column(src, x: float, y: int):
+    """Pixel of `src` at a fractional column (nearest), transparent outside."""
+    xi = int(x)
+    if 0 <= xi < src.width and 0 <= y < src.height:
+        return src.getpixel((xi, y))
+    return (0, 0, 0, 0)
+
+
+def three_quarter(front, side, back, view: str):
+    """The diagonal views of D-025 (8 directions), made from the three drawn ones: facing down-left the leading half of the body is the
+    left profile and the trailing half the front, narrowed; facing up-left it is the back, narrowed and turned a pixel toward the left. The right-hand views are these mirrored by the game."""
+    from PIL import Image
+    w, h = front.size
+    out = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    px = out.load()
+    for y in range(h):
+        for x in range(w):
+            if view == "dl":
+                c = _column(side, x, y) if x < 16 else _column(front, 16 + (x - 16) * 1.3, y)
+                if x == 16 and c[3] == 0:
+                    c = _column(front, 16, y)
+            else:                                                                        # "ul"
+                c = _column(back, 16 + (x + 1 - 16) * 1.18, y)
+            px[x, y] = c
+    return out
+
+
 def build(zombie_ids: list[str]) -> dict[str, Sprite]:
     looks = zombie_looks()
     missing = [z for z in zombie_ids if z not in looks]
@@ -865,6 +902,10 @@ def build(zombie_ids: list[str]) -> dict[str, Sprite]:
         for d in DIRS:
             for f in range(NFRAMES):
                 out[f"{prefix}_{d}_{f}"] = DRAWERS[d](look, f)
+        for f in range(NFRAMES):
+            imgs = {d: out[f"{prefix}_{d}_{f}"].image() for d in DIRS}
+            out[f"{prefix}_dl_{f}"] = _Img(three_quarter(imgs["down"], imgs["left"], imgs["up"], "dl"))
+            out[f"{prefix}_ul_{f}"] = _Img(three_quarter(imgs["down"], imgs["left"], imgs["up"], "ul"))
 
     for name, look in looks.items():
         if name == "brute":

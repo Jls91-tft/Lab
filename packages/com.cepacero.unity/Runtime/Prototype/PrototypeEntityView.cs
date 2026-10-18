@@ -20,11 +20,51 @@ namespace CepaCero.Unity.Prototype
         private const float WalkFps = 8f;
 
         // Facing indices; right reuses the left frames mirrored.
+        // Eight directions (D-025): the art has five views (down, up, left, down-left, up-left) and the rest are their mirrors.
         private const int Down = 0;
         private const int Up = 1;
         private const int Left = 2;
         private const int Right = 3;
-        private static readonly string[] FacingNames = { "down", "up", "left" };
+        private const int DownLeft = 4;
+        private const int UpLeft = 5;
+        private const int DownRight = 6;
+        private const int UpRight = 7;
+        private static readonly string[] FacingNames = { "down", "up", "left", "dl", "ul" };
+
+        /// <summary>The drawn view of a facing, and whether it is mirrored.</summary>
+        private static int ArtView(int facing, out bool flip)
+        {
+            flip = facing == Right || facing == DownRight || facing == UpRight;
+            switch (facing)                                  // index in FacingNames: down, up, left, dl, ul
+            {
+                case Right: return 2;
+                case DownLeft:
+                case DownRight: return 3;
+                case UpLeft:
+                case UpRight: return 4;
+                default: return facing;
+            }
+        }
+
+        /// <summary>
+        /// The facing for a step on the grid. The grid is turned 45 degrees on screen, so a step along an axis looks diagonal:
+        /// east goes up-right, north up-left, west down-left, south down-right; the grid diagonals are the straight views.
+        /// </summary>
+        private static int FacingOf(float dx, float dy)
+        {
+            int sector = (int)Math.Round(Math.Atan2(dy, dx) / (Math.PI / 4.0));
+            switch (((sector % 8) + 8) % 8)
+            {
+                case 0: return UpRight;       // east
+                case 1: return Up;            // north-east
+                case 2: return UpLeft;        // north
+                case 3: return Left;          // north-west
+                case 4: return DownLeft;      // west
+                case 5: return Down;          // south-west
+                case 6: return DownRight;     // south
+                default: return Right;        // south-east
+            }
+        }
 
         // Everything is sorted by height on screen (lower = in front); the bias breaks ties.
         private const int SortBase = 20000;
@@ -207,8 +247,8 @@ namespace CepaCero.Unity.Prototype
                 c = Color.Lerp(c, Color.red, Mathf.PingPong(Time.time * 6f, 1f));
             }
             Sprite[][] frames = type == _walkerType && _walkerVariants.Count > 1 ? _walkerVariants[Math.Abs(key) % _walkerVariants.Count] : _zombieFrames[type];
-            Sprite sprite = frames[Math.Min(facing, Left)][frame];
-            Place(_zombies, _used, position, sprite, facing == Right, c, ZombieBias, FootOffset);
+            Sprite sprite = frames[ArtView(facing, out bool flipZ)][frame];
+            Place(_zombies, _used, position, sprite, flipZ, c, ZombieBias, FootOffset);
 
             // The same sprite again above the light: a green glow that grows with the darkness (the mutants shine, docs/lore.md), white when hit.
             float dark = Lighting != null && Lighting.Available ? 1f - Lighting.LightAt(position) : 0f;
@@ -218,7 +258,7 @@ namespace CepaCero.Unity.Prototype
             {
                 Color glow = Color.Lerp(new Color(0.42f, 1f, 0.38f, 1f), Color.white, flash);
                 glow.a = alpha;
-                Place(_glows, _used, position, sprite, facing == Right, glow, ZombieBias, FootOffset, short.MaxValue - 1);
+                Place(_glows, _used, position, sprite, flipZ, glow, ZombieBias, FootOffset, short.MaxValue - 1);
             }
             else if (_glows.Count > _used && _glows[_used].gameObject.activeSelf)
             {
@@ -239,8 +279,9 @@ namespace CepaCero.Unity.Prototype
                     continue;
                 }
                 Animate(_playerWalk, p, s.Position, out int facing, out int frame);
-                Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[Math.Min(facing, Left)][frame];
-                Place(_players, used++, s.Position, sprite, facing == Right && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
+                int view = ArtView(facing, out bool flipP);
+                Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[view][frame];
+                Place(_players, used++, s.Position, sprite, flipP && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
             }
             Trim(_players, used);
         }
@@ -287,11 +328,7 @@ namespace CepaCero.Unity.Prototype
             bool moving = dx * dx + dy * dy > 1e-6f;
             if (moving)
             {
-                // Facing is read on the screen (D-025): a step along the grid goes diagonally there, so most steps show the side view
-                // and only a straight walk up or down the screen shows the back or the front (true diagonal art comes later).
-                float sx = dx - dy;
-                float sy = (dx + dy) * 0.5f;
-                w.Facing = Math.Abs(sx) > Math.Abs(sy) * 1.2f ? (sx < 0f ? Left : Right) : (sy > 0f ? Up : Down);
+                w.Facing = FacingOf(dx, dy);
                 w.Phase += Time.deltaTime * WalkFps;
             }
             else
@@ -339,7 +376,13 @@ namespace CepaCero.Unity.Prototype
                 frames[f] = new Sprite[4];
                 for (int i = 0; i < 4; i++)
                 {
-                    frames[f][i] = art.Get($"{prefix}_{FacingNames[f]}_{i}");
+                    // La Mole (brute) is drawn natively with four views: its diagonals use the side and the back.
+                    string view = FacingNames[f];
+                    if (!art.TryGet($"{prefix}_{view}_{i}", out Sprite sprite))
+                    {
+                        sprite = art.Get($"{prefix}_{(view == "dl" ? "left" : "up")}_{i}");
+                    }
+                    frames[f][i] = sprite;
                 }
             }
             return frames;
