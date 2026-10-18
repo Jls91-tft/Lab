@@ -147,6 +147,21 @@ def roof_cell(piece: Image.Image, level: int, rising: str | None) -> Image.Image
     return img
 
 
+def ground_diamond(src: Image.Image) -> Image.Image:
+    """A flat 32 px tile as a 64x32 diamond, drawn a hair larger than its cell so neighbouring diamonds leave no seam."""
+    img = Image.new("RGBA", (W, D), (0, 0, 0, 0))
+    for X in range(W):
+        for Y in range(D):
+            fx = (X + .5 - W / 2) / (W / 2)
+            fy = (D / 2 - (Y + .5)) / (D / 2)
+            if abs(fx) + abs(fy) > 1.06:
+                continue
+            a = min(.999, max(0.0, (fx + fy + 1) / 2))
+            b = min(.999, max(0.0, (fy - fx + 1) / 2))
+            img.putpixel((X, Y), src.getpixel((min(src.width - 1, int(a * src.width)), min(src.height - 1, int((1 - b) * src.height)))))
+    return img
+
+
 def roof(piece: Image.Image) -> Image.Image:
     """A roof piece laid on top of the walls: the 32 px piece as a 64x32 diamond (the game lifts it WALL_H, atlas.py pivot)."""
     img = Image.new("RGBA", (W, D), (0, 0, 0, 0))
@@ -160,6 +175,9 @@ def roof(piece: Image.Image) -> Image.Image:
 
 def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
+    for name, piece in list(images.items()):
+        if (name.startswith("ground_") or name.startswith("floor_")) and piece.size == (32, 32):
+            out["iso_" + name] = ground_diamond(piece)
     for name, piece in images.items():
         if name.startswith("roof_") and name.endswith("_flat"):
             kind = name[len("roof_"):-len("_flat")]

@@ -105,7 +105,9 @@ namespace CepaCero.Unity.Prototype
                 var rect = new Rect(s.x, s.y, s.w, s.h);
                 // Characters carry a pivot (fractions of the sprite) so their feet sit on the entity's position.
                 var pivot = s.pivot_x > 0f ? new Vector2(s.pivot_x, s.pivot_y) : new Vector2(0.5f, 0.5f);
-                atlas.Sprites[s.name] = Sprite.Create(texture, rect, pivot, data.ppu, 0, SpriteMeshType.FullRect);
+                Sprite created = Sprite.Create(texture, rect, pivot, data.ppu, 0, SpriteMeshType.FullRect);
+                created.name = s.name;
+                atlas.Sprites[s.name] = created;
                 atlas.Uv[s.name] = new Rect((float)s.x / data.width, (float)s.y / data.height, (float)s.w / data.width, (float)s.h / data.height);
                 atlas.Size[s.name] = new Vector2(s.w, s.h);
             }
@@ -145,6 +147,12 @@ namespace CepaCero.Unity.Prototype
         {
             uint h = unchecked((uint)(x * 73856093) ^ (uint)(y * 19349663));
             return _ground[(int)type][h % GroundVariants];
+        }
+
+        /// <summary>The isometric diamond of a flat tile (D-025: ground and floors drawn as 64x32 diamonds), or the sprite itself when the atlas has none.</summary>
+        public Sprite IsoFlat(Sprite flat)
+        {
+            return flat != null && TryGet("iso_" + flat.name, out Sprite iso) ? iso : flat;
         }
 
         /// <summary>Legacy block sprite (the map's own blocks: building_wall, tree, door…), or null for air.</summary>

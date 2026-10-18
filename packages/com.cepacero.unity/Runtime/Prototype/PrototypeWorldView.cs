@@ -97,10 +97,7 @@ namespace CepaCero.Unity.Prototype
             var grid = new GameObject("World (prototype)");
             grid.transform.SetParent(parent, false);
             grid.AddComponent<Grid>();
-            _groundMap = CreateLayer(grid.transform, "Ground", -2);
-            _belowFloorMap = CreateLayer(grid.transform, "Level below (floors)", -1);       // seen through holes in the floor (level cut)
             _belowBlockMap = CreateLayer(grid.transform, "Level below (blocks)", 0);
-            _floorMap = CreateLayer(grid.transform, "Floors", PrototypeDecorView.FlatOrder);        // under the flat decals' neighbours: you walk on it
             _blockMap = CreateLayer(grid.transform, "Blocks", PrototypeDecorView.FlatOrder + 1); // flat decals go in between
             // D-025: walls and roofs stand on an isometric grid in screen space and sort with the people (Individual mode, by screen height).
             var isoGrid = new GameObject("Walls and roofs (isometric)");
@@ -108,6 +105,10 @@ namespace CepaCero.Unity.Prototype
             Grid g = isoGrid.AddComponent<Grid>();
             g.cellLayout = GridLayout.CellLayout.Isometric;
             g.cellSize = new Vector3(2f, 1f, 1f);
+            // Ground and floors are own diamonds on the same isometric grid (D-025), under everything that stands up and under the flat decals.
+            _groundMap = CreateLayer(isoGrid.transform, "Ground", -2);
+            _belowFloorMap = CreateLayer(isoGrid.transform, "Level below (floors)", -1);       // seen through holes in the floor (level cut)
+            _floorMap = CreateLayer(isoGrid.transform, "Floors", 0);                           // you walk on it
             _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
             _wallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             // A roof piece is drawn on top of the walls (its sprite pivot lifts it) but sorts at the ground of its cell, a hair in front of the
@@ -330,7 +331,7 @@ namespace CepaCero.Unity.Prototype
             {
                 for (int x = 0; x < w; x++)
                 {
-                    groundTiles[y * w + x] = TileFor(_art.Ground(_ground.Get(x, y), x, y));
+                    groundTiles[y * w + x] = TileFor(_art.IsoFlat(_art.Ground(_ground.Get(x, y), x, y)));
                     blockTiles[y * w + x] = BlockTile(x, y);
                 }
             }
@@ -393,7 +394,7 @@ namespace CepaCero.Unity.Prototype
             }
             Sprite floor = _sprites.Floor(x, y, below);
             Sprite wall = _sprites.Structure(x, y, below);
-            _belowFloorMap.SetTile(cell, TileFor(floor, _blocks.GetVariant(x, y, below, BuildLayer.Floor)));
+            _belowFloorMap.SetTile(cell, TileFor(_art.IsoFlat(floor), _blocks.GetVariant(x, y, below, BuildLayer.Floor)));
             _belowBlockMap.SetTile(cell, TileFor(wall, _blocks.GetVariant(x, y, below, BuildLayer.Structure)));
         }
 
@@ -756,7 +757,7 @@ namespace CepaCero.Unity.Prototype
         private void PaintExtraLayers(int x, int y)
         {
             var cell = new Vector3Int(x, y, 0);
-            _floorMap.SetTile(cell, TileFor(_sprites.Floor(x, y, _level), _blocks.GetVariant(x, y, _level, BuildLayer.Floor)));
+            _floorMap.SetTile(cell, TileFor(_art.IsoFlat(_sprites.Floor(x, y, _level)), _blocks.GetVariant(x, y, _level, BuildLayer.Floor)));
             PaintObject(x, y);
             PaintRoofCell(x, y);
         }
