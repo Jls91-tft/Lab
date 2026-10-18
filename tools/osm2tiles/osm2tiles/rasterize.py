@@ -107,6 +107,7 @@ def _regularize(bid_at: list[int], gnd: list[int], w: int, h: int) -> None:
     size and centre, turned to the nearest axis; one that is axis-aligned already, or an L, T or U, becomes the union of its biggest
     rectangles. A building never grows over another one, a road, water or a railway."""
     original = bid_at[:]
+    outside = _outside(original, w, h)
     cells: dict[int, list[int]] = {}
     for i, b in enumerate(original):
         if b:
@@ -128,7 +129,7 @@ def _regularize(bid_at: list[int], gnd: list[int], w: int, h: int) -> None:
             for y in range(max(0, y0), min(h - 1, y1) + 1):
                 for x in range(max(0, x0), min(w - 1, x1) + 1):
                     i = y * w + x
-                    if original[i] in (0, b) and gnd[i] not in blocked:
+                    if original[i] == b or (original[i] == 0 and outside[i] and gnd[i] not in blocked and _touches(original, i, b, w, h)):
                         shape.add(i)
         if shape:
             shape = _largest_rectangle(shape, w)           # where a neighbour or a street cut a corner off, shrink to a clean rectangle
@@ -142,6 +143,33 @@ def _regularize(bid_at: list[int], gnd: list[int], w: int, h: int) -> None:
         for i in result[b]:
             if bid_at[i] == 0:
                 bid_at[i] = b
+
+
+def _touches(ids: list[int], i: int, b: int, w: int, h: int) -> bool:
+    x, y = i % w, i // w
+    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        nx, ny = x + dx, y + dy
+        if 0 <= nx < w and 0 <= ny < h and ids[ny * w + nx] == b:
+            return True
+    return False
+
+
+def _outside(ids: list[int], w: int, h: int) -> list[bool]:
+    """Empty cells joined to the edge of the map: the street side. Courtyards closed in by buildings are not (they must stay open)."""
+    reach = [False] * (w * h)
+    stack = [i for i in range(w * h) if ids[i] == 0 and (i % w in (0, w - 1) or i // w in (0, h - 1))]
+    for i in stack:
+        reach[i] = True
+    while stack:
+        i = stack.pop()
+        x, y = i % w, i // w
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if 0 <= nx < w and 0 <= ny < h:
+                j = ny * w + nx
+                if not reach[j] and ids[j] == 0:
+                    reach[j] = True
+                    stack.append(j)
+    return reach
 
 
 def _largest_rectangle(cells: set[int], w: int) -> set[int]:
@@ -180,6 +208,23 @@ def _rectangle_union(idx: list[int], w: int, total: int) -> set[int]:
         if len(keep) >= KEEP_FRACTION * total:
             break
     return keep if len(keep) >= 0.5 * total else set(idx)           # too irregular to tidy: as OSM drew it
+
+
+def _yards(gnd: list[int], bid_at: list[int], blk: list[int], w: int, h: int) -> None:
+    """The bare ground left between buildings becomes yards (D-027): paving a metre wide around the houses and grass beyond, instead of a
+    brown waste. Trees placed later find the grass."""
+    dirt, grass, paving = G["dirt"], G["grass"], G["sidewalk"]
+    for i in range(w * h):
+        if gnd[i] != dirt or bid_at[i]:
+            continue
+        x, y = i % w, i // w
+        near = False
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h and bid_at[ny * w + nx]:
+                    near = True
+        gnd[i] = paving if near else grass
 
 
 def _collect_areas(data: OsmData) -> list[_Area]:
@@ -290,7 +335,7 @@ def _distance_to_roads(gnd: list[int], bid_at: list[int], w: int, h: int) -> lis
     return dist
 
 
-def build_map(data: OsmData, proj: Projector) -> TileMap:
+def build_map(data: OsmData, proj: Projector, yards: bool = False) -> TileMap:
     r = _Rasterizer(data, proj)
     w, h = r.w, r.h
     ground = Image.new("L", (w, h), G["dirt"])
@@ -459,6 +504,9 @@ def build_map(data: OsmData, proj: Projector) -> TileMap:
         ix, iy = math.floor(x), h - 1 - math.floor(y)
         if 0 <= ix < w and 0 <= iy < h and free_outdoor(iy * w + ix):
             blk[iy * w + ix] = B["tree"]
+
+    if yards:
+        _yards(gnd, bid_at, blk, w, h)
 
     # ---- Flip to row 0 = south and renumber buildings ----
     def flip(layer: list[int]) -> list[int]:

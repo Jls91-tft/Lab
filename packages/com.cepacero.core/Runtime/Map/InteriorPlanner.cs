@@ -363,7 +363,7 @@ namespace CepaCero.Map
                         Put(into, taken, wallCells, "wardrobe", 1);
                     }
                     // A kitchen counter along one wall, fridge, stove and cupboards side by side, and a table with its chairs in the middle.
-                    PutRun(world, room, taken, into, "fridge", "cupboard", "stove", "cupboard", "cupboard", "cupboard");
+                    PutRun(world, room, taken, into, "fridge", "cupboard", "sink", "stove", "cupboard", "washer", "cupboard");
                     if (size >= 14)
                     {
                         PutTable(room, taken, into, "dining_table", "chair", 2);
@@ -371,8 +371,9 @@ namespace CepaCero.Map
                     break;
                 case RoomKind.Bedroom:
                     PutBed(world, interior, into, taken, wallCells, openCells);
-                    Put(into, taken, wallCells, "wardrobe", 1);
-                    Put(into, taken, wallCells, "nightstand", 1);
+                    Put(into, taken, Free(wallCells, taken), "wardrobe", 1);
+                    Put(into, taken, Free(wallCells, taken), "nightstand", 1);
+                    Put(into, taken, Free(wallCells, taken), "plant", size / 20);
                     break;
                 case RoomKind.Bathroom:
                     Put(into, taken, wallCells, "toilet", 1);
@@ -390,7 +391,10 @@ namespace CepaCero.Map
                     {
                         PutInFront(world, room, taken, into, "sofa", "coffee_table");
                     }
+                    Put(into, taken, Free(wallCells, taken), "lamp", 1);
+                    PutRun(world, room, taken, into, "tv");
                     Put(into, taken, Free(wallCells, taken), "bookshelf", 1);
+                    Put(into, taken, Free(wallCells, taken), "plant", 1 + size / 30);
                     break;
                 case RoomKind.Shop:
                     PutRun(world, room, taken, into, Repeat("shelf", Math.Max(2, size / 6)));

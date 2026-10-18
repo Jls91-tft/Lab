@@ -61,6 +61,12 @@ namespace CepaCero.Map
             { "clock", new Info("iso_deco_clock", 1, 1, null, onWall: true) },
             { "wall_shelf", new Info("iso_deco_shelf", 1, 1, null, onWall: true) },
             { "curtain", new Info("iso_deco_curtain", 1, 1, null, onWall: true) },
+            // Little things that make a home (D-027): no loot, they are there to look lived in.
+            { "sink", new Info("decor_counter_1", 1, 1, "kitchen") },
+            { "washer", new Info("decor_counter_3", 1, 1, null) },
+            { "tv", new Info("decor_shelf_1", 1, 1, null) },
+            { "plant", new Info("decor_plant_0", 1, 1, null) },
+            { "lamp", new Info("decor_lamp", 1, 1, null) },
             // Storage.
             { "boxes", new Info("decor_boxes_0", 1, 1, "storage") },
             { "crate", new Info("decor_boxes_1", 1, 1, "storage") },

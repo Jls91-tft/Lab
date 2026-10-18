@@ -183,9 +183,14 @@ def mirror_cabinet(u, v):
 
 # ------------------------------------------------------------------ pieces
 
-def piece(kind: str, orient: str) -> Image.Image:
-    wood = (150, 104, 66)
-    wood_dark = (112, 76, 46)
+WOODS = [((150, 104, 66), (112, 76, 46)), ((184, 146, 98), (140, 104, 66)), ((104, 70, 48), (74, 48, 32)), ((200, 196, 186), (150, 146, 138))]
+FABRICS = [(110, 132, 116), (150, 96, 70), (84, 104, 150), (156, 64, 64)]
+QUILTS = [(70, 100, 150), (160, 60, 60), (90, 130, 90), (200, 176, 120)]
+VARIANTS = 4
+
+
+def piece(kind: str, orient: str, variant: int = 0) -> Image.Image:
+    wood, wood_dark = WOODS[variant % len(WOODS)]
     white = (232, 232, 228)
     grey = (150, 154, 160)
     f = _front_face(orient)
@@ -271,10 +276,61 @@ def piece(kind: str, orient: str) -> Image.Image:
     if kind == "sofa":
         c = Canvas(1, 36)
         x0, x1, y0, y1 = _footprint(orient if orient != "c" else "s", 1.0, 0.7)
-        fabric, dark = (110, 132, 116), (82, 100, 88)
-        c.box(x0, x1, y0, y1, 0, 14, (124, 148, 130), fabric)
+        fabric = FABRICS[variant % len(FABRICS)]
+        dark = _shade(fabric, -.25)
+        c.box(x0, x1, y0, y1, 0, 14, _shade(fabric, .1), fabric)
         bx0, bx1, by0, by1 = _footprint(orient if orient != "c" else "s", 1.0, 0.2)
-        c.box(bx0, bx1, by0, by1, 14, 30, (124, 148, 130), dark)                # back rest against the wall
+        c.box(bx0, bx1, by0, by1, 14, 30, _shade(fabric, .1), dark)             # back rest against the wall
+        return c.finish()
+    if kind == "sink":
+        c = Canvas(1, 40)
+        x0, x1, y0, y1 = _footprint(orient, 1.0, 0.6)
+        def basin(u, w):
+            return (150, 170, 184) if 0.25 < u < 0.75 and 0.25 < w < 0.75 else (196, 190, 176)
+        c.box(x0, x1, y0, y1, 0, 30, (214, 210, 200), white, doors(white, (176, 172, 164), (120, 120, 128)), f)
+        c.box(x0, x1, y0, y1, 30, 33, basin, (176, 170, 156))
+        tx, ty = (x0 + x1) / 2, y1 - 0.08 if orient == "s" else (y0 + y1) / 2
+        if orient == "w":
+            tx = x1 - 0.08
+        c.box(tx - 0.03, tx + 0.03, ty - 0.03, ty + 0.03, 33, 42, (190, 194, 200), (160, 164, 170))   # tap
+        return c.finish()
+    if kind == "washer":
+        c = Canvas(1, 40)
+        x0, x1, y0, y1 = _footprint(orient, 0.85, 0.6)
+        def drum(u, v):
+            d = ((u - 0.5) * 30) ** 2 + (v - 14) ** 2
+            return (60, 66, 76) if d < 50 else (170, 174, 180) if d < 70 else (236, 238, 242)
+        c.box(x0, x1, y0, y1, 0, 31, (236, 238, 242), (226, 228, 232), drum, f)
+        return c.finish()
+    if kind == "tv":
+        c = Canvas(1, 50)
+        x0, x1, y0, y1 = _footprint(orient, 0.9, 0.45)
+        c.box(x0, x1, y0, y1, 0, 16, _shade(wood, .1), wood, drawers(wood, wood_dark, (200, 180, 120)), f)
+        sx0, sx1, sy0, sy1 = _footprint(orient, 0.7, 0.12)
+        if orient in ("s", "w"):
+            sx0, sx1, sy0, sy1 = (sx0, sx1, sy0 - 0.1, sy1 - 0.1) if orient == "s" else (sx0 - 0.1, sx1 - 0.1, sy0, sy1)
+        c.box(sx0, sx1, sy0, sy1, 16, 38, (40, 42, 48), (30, 32, 36), lambda u, v: (30, 36, 48) if 0.06 < u < 0.94 and 2 < v < 20 else (24, 24, 28), f)
+        return c.finish()
+    if kind == "plant":
+        c = Canvas(1, 50)
+        x0, x1, y0, y1 = _footprint(orient, 0.35, 0.35)
+        c.box(x0, x1, y0, y1, 0, 12, (176, 96, 64), (156, 82, 54))
+        leaves = [(80, 140, 70), (60, 116, 56), (100, 160, 80)]
+        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+        for k in range(26):
+            a = k * 2.399
+            r = 0.05 + 0.1 * ((k * 37) % 10) / 10
+            lx, ly = mx + math.cos(a) * r, my + math.sin(a) * r
+            z = 12 + (k * 13) % 26
+            c.box(lx - 0.04, lx + 0.04, ly - 0.04, ly + 0.04, z, z + 5, leaves[k % 3], leaves[(k + 1) % 3])
+        return c.finish()
+    if kind == "lamp":
+        c = Canvas(1, 70)
+        x0, x1, y0, y1 = _footprint(orient, 0.3, 0.3)
+        mx, my = (x0 + x1) / 2, (y0 + y1) / 2
+        c.box(mx - 0.1, mx + 0.1, my - 0.1, my + 0.1, 0, 3, (60, 60, 64), (50, 50, 54))
+        c.box(mx - 0.02, mx + 0.02, my - 0.02, my + 0.02, 3, 50, (70, 70, 74), (60, 60, 64))
+        c.box(mx - 0.13, mx + 0.13, my - 0.13, my + 0.13, 50, 62, (246, 230, 180), (226, 204, 150))
         return c.finish()
     if kind in ("boxes", "crate"):
         c = Canvas(1, 40)
@@ -286,30 +342,38 @@ def piece(kind: str, orient: str) -> Image.Image:
     raise ValueError(kind)
 
 
-def bed(orient: str) -> Image.Image:
+def bed(orient: str, variant: int = 0) -> Image.Image:
     """A double bed on a 2x2 footprint, the headboard against its wall."""
     c = Canvas(2, 36)
-    frame, sheet, quilt = (120, 84, 54), (236, 234, 226), (70, 100, 150)
+    frame, sheet, quilt = WOODS[variant % len(WOODS)][1], (236, 234, 226), QUILTS[variant % len(QUILTS)]
     head = {"s": (0.2, 1.8, 1.85, 2.0), "w": (1.85, 2.0, 0.2, 1.8), "n": (0.2, 1.8, 0.0, 0.15), "e": (0.0, 0.15, 0.2, 1.8)}[orient]
     c.box(0.2, 1.8, 0.2, 1.8, 0, 10, sheet, frame)
     c.box(0.2, 1.8, 0.2, 1.8, 10, 14, lambda u, w: quilt if ((orient in ("s", "n") and (w < 0.65 if orient == "s" else w > 0.35))
                                                                or (orient in ("w", "e") and (u < 0.65 if orient == "w" else u > 0.35))) else sheet,
-          (60, 86, 130))
+          _shade(quilt, -.2))
     c.box(head[0], head[1], head[2], head[3], 0, 30, (140, 98, 64), frame)
     return c.finish()
 
 
 KINDS = ("counter", "stove", "fridge", "wardrobe", "bookshelf", "shelf", "nightstand", "bathroom_cabinet", "toilet", "desk",
-         "sofa", "boxes")
+         "sofa", "boxes", "sink", "washer", "tv", "plant", "lamp")
+VARIED = ("wardrobe", "bookshelf", "nightstand", "desk", "sofa", "tv", "dining_table", "coffee_table", "chair")   # wood or fabric per house
 
 
 def build() -> dict[str, Image.Image]:
     out: dict[str, Image.Image] = {}
     for kind in KINDS:
-        for o in ORIENTS:
+        for o in ORIENTS + (("c",) if kind in ("plant", "lamp") else ()):
             out[f"iso_furn_{kind}_{o}"] = piece(kind, o)
+            if kind in VARIED:
+                for v in range(1, VARIANTS):
+                    out[f"iso_furn_{kind}_{o}_v{v}"] = piece(kind, o, v)
     for kind in ("dining_table", "coffee_table", "chair"):
         out[f"iso_furn_{kind}_c"] = piece(kind, "c")
+        for v in range(1, VARIANTS):
+            out[f"iso_furn_{kind}_c_v{v}"] = piece(kind, "c", v)
     for o in ORIENTS:
         out[f"iso_furn_bed_{o}_2x2"] = bed(o)
+        for v in range(1, VARIANTS):
+            out[f"iso_furn_bed_{o}_v{v}_2x2"] = bed(o, v)
     return out

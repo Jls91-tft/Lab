@@ -65,6 +65,13 @@ namespace CepaCero.Unity.Prototype
         public static List<DecorItem> Plan(BlockWorld blocks, GroundLayer ground, IReadOnlyList<BuildingInfo> buildings, int seed, Func<string, bool> hasSprite)
         {
             var plan = new Planner(blocks, ground, new Random(seed)) { HasSprite = hasSprite };
+            if (buildings != null)
+            {
+                foreach (BuildingInfo b in buildings)
+                {
+                    plan.Furnishes |= b.Furniture.Count > 0;
+                }
+            }
             plan.Outdoors();
             if (buildings != null)
             {
@@ -74,9 +81,9 @@ namespace CepaCero.Unity.Prototype
                     {
                         plan.Furnished(b);                    // rooms and furniture of the importer (D-026)
                     }
-                    else
+                    else if (!plan.Furnishes)
                     {
-                        plan.Interior(b);
+                        plan.Interior(b);                     // maps without the interior planner (old ones, tests): scattered furniture
                     }
                 }
             }
@@ -105,6 +112,9 @@ namespace CepaCero.Unity.Prototype
             private readonly Random _rng;
 
             public Func<string, bool> HasSprite;
+
+            /// <summary>The map's buildings carry planned interiors (D-026): the rest stay empty rather than get scattered flat furniture.</summary>
+            public bool Furnishes;
             private readonly bool[] _taken;
             private readonly int _w;
             private readonly int _h;
@@ -167,7 +177,7 @@ namespace CepaCero.Unity.Prototype
                         continue;                                 // pictures and curtains hang on the walls (PrototypeWorldView)
                     }
                     FurnitureKinds.Info info = FurnitureKinds.Of(f.Kind);
-                    string iso = IsoFurniture(f, info);
+                    string iso = IsoFurniture(f, info, b.Id);
                     if (iso != null)
                     {
                         // A real isometric piece (spritegen isofurn): already drawn against its wall, front into the room (D-027).
@@ -215,7 +225,7 @@ namespace CepaCero.Unity.Prototype
             }
 
             /// <summary>The isometric sprite of a piece and which way it stands: s/w/n/e against the north/east/south/west wall, c free.</summary>
-            private string IsoFurniture(Furniture f, FurnitureKinds.Info info)
+            private string IsoFurniture(Furniture f, FurnitureKinds.Info info, int building)
             {
                 if (info.Flat)
                 {
@@ -226,10 +236,22 @@ namespace CepaCero.Unity.Prototype
                 int x = f.Cell.X, y = f.Cell.Y;
                 string o = WallAlong(x, y + h, w, true) ? "s" : WallAlong(x + w, y, h, false) ? "w"
                     : WallAlong(x, y - 1, w, true) ? "n" : WallAlong(x - 1, y, h, false) ? "e" : "c";
-                string name = w == 2 && h == 2 ? $"iso_furn_{kind}_{(o == "c" ? "s" : o)}_2x2" : $"iso_furn_{kind}_{o}";
+                // Each house has its own wood, fabric and bedding (the _v1.._v3 sprites); the plain one is variant 0.
+                int v = (int)(((uint)(building * 2654435761u)) >> 28) % 4;
+                string suffix = v == 0 ? "" : "_v" + v;
+                string name = w == 2 && h == 2 ? $"iso_furn_{kind}_{(o == "c" ? "s" : o)}{suffix}_2x2" : $"iso_furn_{kind}_{o}{suffix}";
                 if (HasSprite != null && HasSprite(name))
                 {
                     return name;
+                }
+                name = w == 2 && h == 2 ? $"iso_furn_{kind}_{(o == "c" ? "s" : o)}_2x2" : $"iso_furn_{kind}_{o}";
+                if (HasSprite != null && HasSprite(name))
+                {
+                    return name;
+                }
+                if (suffix.Length > 0 && HasSprite != null && HasSprite($"iso_furn_{kind}_c{suffix}"))
+                {
+                    return $"iso_furn_{kind}_c{suffix}";
                 }
                 name = $"iso_furn_{kind}_c";
                 if (HasSprite != null && HasSprite(name))
