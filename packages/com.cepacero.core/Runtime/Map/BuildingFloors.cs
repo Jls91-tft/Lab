@@ -69,7 +69,7 @@ namespace CepaCero.Map
                 PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
-            RoofLooseWalls(world, legacyWall, reg);
+            RoofLooseWalls(world, ground, legacyWall, reg);
             if (skipped > 0)
             {
                 warnings.Add($"{skipped} building(s) with several storeys were left as one: no usable interior found.");
@@ -239,8 +239,8 @@ namespace CepaCero.Map
 
         private static bool IsWallCell(BlockWorld world, Int2 p, BlockType legacyWall) => world.InBounds(p.X, p.Y) && world.GetTypeId(p.X, p.Y) == legacyWall.Id;
 
-        /// <summary>Any wall of the map still without a roof (solid blocks and odd outlines that are in no building's list): roofed too, so no tower of bare wall shows.</summary>
-        private static void RoofLooseWalls(BlockWorld world, BlockType wall, BlockRegistry reg)
+        /// <summary>Everything that is a building and still has no roof (floor not reached from a door, rooms cut off by walls, solid blocks, odd outlines): roofed too, so no house shows its inside from the street (D-028).</summary>
+        private static void RoofLooseWalls(BlockWorld world, GroundLayer ground, BlockType wall, BlockRegistry reg)
         {
             if (!reg.TryGet("roof_tile", out BlockType roof))
             {
@@ -250,7 +250,9 @@ namespace CepaCero.Map
             {
                 for (int x = 0; x < world.Width; x++)
                 {
-                    if (world.GetTypeId(x, y) == wall.Id && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    bool covers = world.GetTypeId(x, y) == wall.Id || ground.Get(x, y) == GroundType.Floor
+                        || world.GetBlock(x, y).Key.StartsWith("wall_") || world.GetBlock(x, y).Key.StartsWith("door_") || world.GetBlock(x, y).Key.StartsWith("window_");
+                    if (covers && world.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
                     {
                         world.SetBlock(x, y, 0, BuildLayer.Roof, roof.Id);
                     }

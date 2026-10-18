@@ -51,6 +51,23 @@ namespace CepaCero.Tests.Map
                 }
             }
 
+            // D-028: from the street nothing of a building shows without a roof: every floor cell and every wall of the real map is roofed.
+            int bare = 0;
+            for (int y = 0; y < map.Blocks.Height; y++)
+            {
+                for (int x = 0; x < map.Blocks.Width; x++)
+                {
+                    string key = map.Blocks.GetBlock(x, y).Key;
+                    bool building = map.Ground.Get(x, y) == GroundType.Floor || key.Contains("wall") || key.StartsWith("door") || key.StartsWith("window");
+                    if (building && map.Blocks.GetBlock(x, y, 0, BuildLayer.Roof).IsAir)
+                    {
+                        bare++;
+                    }
+                }
+            }
+            Console.WriteLine($"cells of buildings without a roof: {bare}");
+            Assert.That(bare, Is.Zero);
+
             // Dump the three biggest homes for a look (run with --logger "console;verbosity=detailed").
             foreach (BuildingInfo b in map.Buildings.Where(x => x.Min.X <= 309 && x.Max.X >= 309 && x.Min.Y <= 73 && x.Max.Y >= 73).Concat(map.Buildings.Where(x => x.Kind == "residential").OrderByDescending(x => x.Tiles).Take(1)))
             {

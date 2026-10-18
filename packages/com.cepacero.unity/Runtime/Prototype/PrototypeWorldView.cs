@@ -81,6 +81,7 @@ namespace CepaCero.Unity.Prototype
         private readonly Tilemap _paperWestMap;
         private readonly Dictionary<int, string> _paint = new Dictionary<int, string>();                          // pictures, clocks and curtains on the walls of the house you are in (D-027)
         private readonly Dictionary<int, string> _wallDeco = new Dictionary<int, string>();                     // the second storey of the walls of tall buildings
+        private readonly Dictionary<int, List<int>> _byOwner = new Dictionary<int, List<int>>();     // building index + 1 -> its cells
         private byte[] _roofLevel;                                  // pitch: 0 at the eaves .. 3 at the ridge of a wide building (D-025)
         private readonly Dictionary<(Sprite, int), Tile> _tiles = new Dictionary<(Sprite, int), Tile>();
         private readonly List<BlockChange> _changes = new List<BlockChange>();
@@ -229,7 +230,48 @@ namespace CepaCero.Unity.Prototype
                     _tall[c.Y * w + c.X] = b.Levels >= 3;
                 }
             }
+            // Roofed cells the door flood did not reach (rooms shut in by walls, odd corners) join the building next to them, so a house is always
+            // one whole under one roof (D-028).
+            var spread = new Queue<int>();
+            for (int i = 0; i < owner.Length; i++)
+            {
+                if (owner[i] != 0)
+                {
+                    spread.Enqueue(i);
+                }
+            }
+            while (spread.Count > 0)
+            {
+                int i = spread.Dequeue();
+                int ix = i % w;
+                int iy = i / w;
+                foreach (Int2 n in Neighbours)
+                {
+                    int nx = ix + n.X;
+                    int ny = iy + n.Y;
+                    if (_blocks.InBounds(nx, ny) && owner[ny * w + nx] == 0 && HasRoofOver(nx, ny))
+                    {
+                        owner[ny * w + nx] = owner[i];
+                        _roofTint[ny * w + nx] = _roofTint[i];
+                        _facade[ny * w + nx] = _facade[i];
+                        _tall[ny * w + nx] = _tall[i];
+                        spread.Enqueue(ny * w + nx);
+                    }
+                }
+            }
             _owner = owner;
+            _byOwner.Clear();
+            for (int i = 0; i < owner.Length; i++)
+            {
+                if (owner[i] != 0)
+                {
+                    if (!_byOwner.TryGetValue(owner[i], out List<int> list))
+                    {
+                        _byOwner[owner[i]] = list = new List<int>();
+                    }
+                    list.Add(i);
+                }
+            }
             _wallDeco.Clear();
             _paint.Clear();
             foreach (BuildingInfo b in buildings)
@@ -605,6 +647,16 @@ namespace CepaCero.Unity.Prototype
             {
                 return false;
             }
+            // The whole building opens at once (D-028): every cell of the same building, rooms and walls, not a flood that a wall can stop.
+            int owner = OwnerAt(start.X, start.Y);
+            if (owner != 0 && _byOwner.TryGetValue(owner, out List<int> cellsOfOwner))
+            {
+                foreach (int k in cellsOfOwner)
+                {
+                    into.Add(k);
+                }
+                return true;
+            }
             _queue.Clear();
             _queue.Enqueue(start);
             into.Add(Key(start.X, start.Y));
@@ -844,41 +896,54 @@ namespace CepaCero.Unity.Prototype
         {
             _cutNext.Clear();
             int pd = player.X + player.Y;
-            if (inside)
             {
-                foreach (int key in _house)
+                // The band of the screen between you and the camera: a wall two storeys tall hides you from up to 12 rows away (x + y), so
+                // everything in that band drops low, your own house and the ones in front of it alike (D-028).
+                for (int dy = -14; dy <= 2; dy++)
                 {
-                    int x = key % _blocks.Width;
-                    int y = key / _blocks.Width;
-                    if (x + y <= pd + 1 && _sprites.IsWallLike(x, y, _level))
+                    for (int dx = -14; dx <= 2; dx++)
                     {
-                        _cutNext.Add(key);
+                        int x = player.X + dx;
+                        int y = player.Y + dy;
+                        if (dx + dy <= 1 && dx + dy >= -13 && Math.Abs(dx - dy) <= (inside ? 3 : 2) && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
+                        {
+                            _cutNext.Add(Key(x, y));
+                        }
                     }
                 }
             }
-            for (int dy = -3; dy <= 1; dy++)
-            {
-                for (int dx = -3; dx <= 1; dx++)
-                {
-                    int x = player.X + dx;
-                    int y = player.Y + dy;
-                    if (dx + dy < 0 && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
-                    {
-                        _cutNext.Add(Key(x, y));
-                    }
-                }
-            }
-            // Roofs that would cover you on screen: in front of you and close, drawn see-through.
+            // Project Zomboid rules (D-028): from outside every building is whole and opaque, walls and roof. Only the building you are in
+            // opens: its roof fades (UpdateRoofs) and its walls in front of you drop low (above). Nothing is cut away around you out in the street.
             _roofCutNext.Clear();
-            for (int dy = -7; dy <= 2; dy++)
             {
-                for (int dx = -7; dx <= 2; dx++)
+                // The roofs of the buildings in front of you (the camera looks over them) go see-through so you can see
+                // your own rooms; from the street they stay opaque.
+                for (int dy = -14; dy <= 2; dy++)
                 {
-                    int x = player.X + dx;
-                    int y = player.Y + dy;
-                    if (dx + dy <= 1 && Math.Abs(dx - dy) <= 6 && _blocks.InBounds(x, y) && HasRoofOver(x, y))
+                    for (int dx = -14; dx <= 2; dx++)
                     {
-                        _roofCutNext.Add(Key(x, y));
+                        int x = player.X + dx;
+                        int y = player.Y + dy;
+                        if (dx + dy <= 1 && dx + dy >= -13 && Math.Abs(dx - dy) <= (inside ? 6 : 4) && _blocks.InBounds(x, y) && HasRoofOver(x, y) && !_house.Contains(Key(x, y)))
+                        {
+                            _roofCutNext.Add(Key(x, y));
+                        }
+                    }
+                }
+            }
+            if (_level < 0)
+            {
+                // Underground there is no roof to open; the earth in front of you drops low so you can see yourself.
+                for (int dy = -3; dy <= 1; dy++)
+                {
+                    for (int dx = -3; dx <= 1; dx++)
+                    {
+                        int x = player.X + dx;
+                        int y = player.Y + dy;
+                        if (dx + dy < 0 && _blocks.InBounds(x, y) && _sprites.IsWallLike(x, y, _level))
+                        {
+                            _cutNext.Add(Key(x, y));
+                        }
                     }
                 }
             }

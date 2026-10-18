@@ -173,6 +173,24 @@ namespace CepaCero.Tests.Map
         }
 
         [Test]
+        public void NoFloorOrWallOfABuildingIsLeftWithoutARoof()
+        {
+            MapImportResult map = Import(Map(1, 0, "tile"));
+            BlockWorld w = map.Blocks;
+            for (int y = 0; y < 20; y++)
+            {
+                for (int x = 0; x < 30; x++)
+                {
+                    bool building = !w.GetBlock(x, y).IsAir && w.GetBlock(x, y).Key != "tree" || map.Ground.Get(x, y) == GroundType.Floor;
+                    if (building)
+                    {
+                        Assert.That(w.GetBlock(x, y, 0, BuildLayer.Roof).IsAir, Is.False, $"no roof over {x},{y}");
+                    }
+                }
+            }
+        }
+
+        [Test]
         public void ABuildingWithNoRoofKindGetsTheCommonTileRoof()
         {
             MapImportResult map = Import(Map(1, 0, ""));
