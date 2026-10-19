@@ -50,6 +50,8 @@ namespace CepaCero.Tests.Lighting
             Assert.That(rgba[(10 * 21 + 11) * 4], Is.EqualTo(255), "in front of you");
             Assert.That(rgba[(10 * 21 + 12) * 4], Is.EqualTo(255), "the wall you look at");
             Assert.That(rgba[(10 * 21 + 15) * 4], Is.LessThan(100), "behind the wall: dark");
+            Assert.That(grid.IsSeen(11, 10), Is.True, "you see what is in front of you");
+            Assert.That(grid.IsSeen(15, 10), Is.False, "and not a zombie behind the wall");
         }
 
         [Test]

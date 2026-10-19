@@ -247,4 +247,5 @@ antigua como **Sustituida por D-XXX**.
 ## D-030 · Línea de visión y paredes translúcidas (19/10/2026)
 - **Decisión:** como Project Zomboid: (1) **línea de visión**: lo que el jugador no ve desde donde está (tras muros y puertas cerradas, otras habitaciones, el otro lado de un edificio) se oscurece al 32 % de su luz (`LightGrid.ApplySight`, tras resolver la luz; las paredes de tu habitación cuentan como vistas). (2) En **tu casa** el tejado desaparece y los muros que tienes delante ya no se recortan: quedan **enteros y translúcidos** (30 %), también su segunda planta. (3) Los edificios ajenos siguen opacos (D-029: sin spoilers) y tu silueta se ve a través de ellos.
 - **Motivo:** Javier mostró cómo lo hace Project Zomboid: quitar el tejado, transparentar un poco las paredes y ver solo donde llega la vista.
-- **Coste / límites:** la oscuridad se aplica a la capa de luz del suelo, así que muros y tejados toman la de la casilla del suelo que tienen detrás en pantalla; los zombis fuera de la vista no se ocultan todavía (se ven en la penumbra).
+- **Adenda (D-031):** los zombis fuera de tu línea de visión no se dibujan (`LightGrid.IsSeen`); se siguen oyendo.
+- **Coste / límites:** la oscuridad se aplica a la capa de luz del suelo, así que muros y tejados toman la de la casilla del suelo que tienen detrás en pantalla.

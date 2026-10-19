@@ -187,6 +187,12 @@ namespace CepaCero.Unity.Prototype
             }
         }
 
+        /// <summary>True when the player can see this spot from where they stand (D-031): zombies and people out of sight are not drawn.</summary>
+        public bool CanSeeSpot(Float2 position)
+        {
+            return !Sight || !Available || _grid.IsSeen(position.Tile.X, position.Tile.Y);
+        }
+
         /// <summary>The light on a spot, 0..1: for things that glow in the dark or hide in it.</summary>
         public float LightAt(Float2 position)
         {

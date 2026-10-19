@@ -238,7 +238,11 @@ namespace CepaCero.Unity.Prototype
                 return;                                              // inside a closed house: you cannot see it
             }
             Effects?.Observe(key, position, health);
-            Audio?.ZombieNear(key, position, state != ZombieState.Idle);
+            Audio?.ZombieNear(key, position, state != ZombieState.Idle);       // you still hear them
+            if (Lighting != null && !Lighting.CanSeeSpot(position))
+            {
+                return;                                              // out of your sight (D-031): behind a wall, around a corner
+            }
             Animate(_zombieWalk, key, position, out int facing, out int frame);
             // Mutants glow at night (docs/lore.md): never darker than half their colour.
             Color c = Color.Lerp(Dim(Color.white, light), Color.white, 0.5f);

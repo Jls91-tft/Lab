@@ -161,13 +161,19 @@ namespace CepaCero.Lighting
         /// </summary>
         public void ApplySight(BlockWorld world, int level, int playerX, int playerY, float unseen, byte[] rgba)
         {
+            if (_seen.Length != Width * Height)
+            {
+                _seen = new bool[Width * Height];
+            }
             for (int y = 0; y < Height; y++)
             {
                 for (int x = 0; x < Width; x++)
                 {
                     int wx = OriginX + x;
                     int wy = OriginY + y;
-                    if (SeenFrom(world, level, playerX, playerY, wx, wy))
+                    bool seen = SeenFrom(world, level, playerX, playerY, wx, wy);
+                    _seen[y * Width + x] = seen;
+                    if (seen)
                     {
                         continue;
                     }
@@ -177,6 +183,18 @@ namespace CepaCero.Lighting
                     rgba[i + 2] = (byte)(rgba[i + 2] * unseen);
                 }
             }
+        }
+
+        private bool[] _seen = new bool[0];
+
+        /// <summary>Whether a tile was seen from the player's tile the last time <see cref="ApplySight"/> ran (outside the window: not seen).</summary>
+        public bool IsSeen(int x, int y)
+        {
+            if (!Contains(x, y) || _seen.Length != Width * Height)
+            {
+                return false;
+            }
+            return _seen[(y - OriginY) * Width + (x - OriginX)];
         }
 
         private static bool SeenFrom(BlockWorld world, int level, int px, int py, int x, int y)
