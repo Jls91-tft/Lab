@@ -937,6 +937,10 @@ namespace CepaCero.Unity.Prototype
 
         private void Say(string text)
         {
+            if (text == _message && Time.time < _messageUntil)
+            {
+                return;                                          // holding the button on a spot that stopped being valid: say it once
+            }
             _message = text;
             _messageUntil = Time.time + 3.5f;
             _bridge?.Log(text);

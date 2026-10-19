@@ -501,7 +501,8 @@ namespace CepaCero.Net
             {
                 for (int i = 0; i < _zombies.Capacity; i++)
                 {
-                    if (_zombies.IsAlive(i) && InArc(origin, aim, _zombies.GetPosition(i), range, cosHalfArc, level))
+                    // Reach is from body edge to body edge: the weapon's range plus your half and the zombie's (a zombie that hits you is in reach).
+                    if (_zombies.IsAlive(i) && InArc(origin, aim, _zombies.GetPosition(i), range + BodyRadius + _zombies.GetRadius(i), cosHalfArc, level))
                     {
                         _zombies.Damage(i, damage, type);
                         hits++;
@@ -512,7 +513,7 @@ namespace CepaCero.Net
             {
                 for (int p = 0; p < players.Count; p++)
                 {
-                    if (p != playerIndex && !players[p].IsDowned && players[p].Level == level && InArc(origin, aim, players[p].Position, range, cosHalfArc, level))
+                    if (p != playerIndex && !players[p].IsDowned && players[p].Level == level && InArc(origin, aim, players[p].Position, range + 2f * BodyRadius, cosHalfArc, level))
                     {
                         _playerDamage.Add(new PlayerDamage(playerIndex, p, damage));
                         hits++;

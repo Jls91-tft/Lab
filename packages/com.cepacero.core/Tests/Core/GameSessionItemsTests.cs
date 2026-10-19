@@ -146,6 +146,19 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void AZombieCloseEnoughToBiteYouIsCloseEnoughToHit()
+        {
+            // D-031: a walker attacks from attack_range + both radii (about 1.55 tiles); a bat must reach it there, not only point blank.
+            AsciiMap map = Open(20);
+            GameSession s = Session(map);
+            int p = s.AddPlayer(new Float2(5.5f, 5.5f));
+            Equip(s, p, "bat");
+            int z = s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(7.05f, 5.5f), aware: false);
+            Assert.That(Do(s, p, PlayerIntent.Melee(new Float2(1, 0))), Is.EqualTo(IntentResult.Ok));
+            Assert.That(s.Zombies.GetHealth(z), Is.LessThan(60));
+        }
+
+        [Test]
         public void ThePistolNeedsAmmoIsStoppedByWallsAndIsLoud()
         {
             var map = new AsciiMap(

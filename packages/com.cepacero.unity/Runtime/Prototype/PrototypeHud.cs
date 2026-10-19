@@ -181,7 +181,7 @@ namespace CepaCero.Unity.Prototype
         private void DrawBuildPanel(in HudModel m)
         {
             float total = HotbarCount * Slot + (HotbarCount - 1) * Gap;
-            float panelW = Math.Max(total, 260f);
+            float panelW = Math.Max(total, 340f);                          // wide enough for the longest hint at the pixel font
             float px = (Width - panelW) / 2f;
             float y = Height - Slot - 4f;
             Panel(px, y - 56f, panelW, 40f);
@@ -205,7 +205,7 @@ namespace CepaCero.Unity.Prototype
         {
             int capacity = Math.Max(BagColumns, (box.Bag.Count + BagColumns - 1) / BagColumns * BagColumns);
             float w = GridWidth();
-            string title = box.Bag.Count == 0 ? "Contenedor (vacío)" : "Contenedor · T para coger";
+            string title = box.Bag.Count == 0 ? "Vacío" : "T: coger";
             Grid(Width - w - 4f, box, capacity, title, true);
         }
 

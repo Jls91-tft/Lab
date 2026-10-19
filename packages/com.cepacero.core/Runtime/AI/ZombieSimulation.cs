@@ -242,6 +242,9 @@ namespace CepaCero.AI
 
         public byte GetTypeIndex(int slot) => _type[slot];
 
+        /// <summary>Body radius of a zombie, in tiles: melee reach is measured to its edge (D-031).</summary>
+        public float GetRadius(int slot) => _radius[_type[slot]];
+
         public Float2 GetPosition(int slot) => _pos[slot];
 
         /// <summary>Level the zombie is on (D-022): 0 is the street.</summary>

@@ -399,7 +399,7 @@ namespace CepaCero.Unity.Prototype
         {
             switch (v)
             {
-                case Verdict.OutOfReach: return "Demasiado lejos: se construirá cuando te acerques";
+                case Verdict.OutOfReach: return "Lejos: se hará al acercarte";
                 case Verdict.Occupied: return "Ocupado";
                 case Verdict.NotBuildable: return "Aquí no se puede construir";
                 case Verdict.MissingMaterials: return "Te faltan materiales";
