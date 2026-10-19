@@ -154,6 +154,47 @@ namespace CepaCero.Lighting
             }
         }
 
+        /// <summary>
+        /// Line of sight (D-030, as Project Zomboid): every tile the player cannot see from where they stand, through walls and closed doors,
+        /// is darkened to <paramref name="unseen"/> of its light. A wall tile itself counts as seen when the tile next to it toward the player
+        /// is, so you see the walls of your room. Call after <see cref="Resolve"/>.
+        /// </summary>
+        public void ApplySight(BlockWorld world, int level, int playerX, int playerY, float unseen, byte[] rgba)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                for (int x = 0; x < Width; x++)
+                {
+                    int wx = OriginX + x;
+                    int wy = OriginY + y;
+                    if (SeenFrom(world, level, playerX, playerY, wx, wy))
+                    {
+                        continue;
+                    }
+                    int i = (y * Width + x) * 4;
+                    rgba[i] = (byte)(rgba[i] * unseen);
+                    rgba[i + 1] = (byte)(rgba[i + 1] * unseen);
+                    rgba[i + 2] = (byte)(rgba[i + 2] * unseen);
+                }
+            }
+        }
+
+        private static bool SeenFrom(BlockWorld world, int level, int px, int py, int x, int y)
+        {
+            if (CanSee(world, level, px, py, x, y))
+            {
+                return true;
+            }
+            if (!Blocks(world, level, x, y))
+            {
+                return false;
+            }
+            int sx = Math.Sign(px - x);
+            int sy = Math.Sign(py - y);
+            return (sx != 0 && !Blocks(world, level, x + sx, y) && CanSee(world, level, px, py, x + sx, y))
+                || (sy != 0 && !Blocks(world, level, x, y + sy) && CanSee(world, level, px, py, x, y + sy));
+        }
+
         private static byte ToByte(float v) => (byte)(Math.Min(1f, Math.Max(0f, v)) * 255f + 0.5f);
 
         /// <summary>1 at the source, 0 at the radius, smooth in between (a bright core and a long soft edge).</summary>

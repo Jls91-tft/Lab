@@ -34,6 +34,25 @@ namespace CepaCero.Tests.Lighting
         }
 
         [Test]
+        public void WhatThePlayerCannotSeeStaysDarkButTheirOwnWallsShow()
+        {
+            var rows = new string[21];
+            for (int i = 0; i < 21; i++)
+            {
+                rows[i] = new string('.', 12) + "#" + new string('.', 8);
+            }
+            var map = new AsciiMap(rows);
+            var grid = new LightGrid();
+            grid.Begin(0, 0, 21, 21);
+            var rgba = new byte[21 * 21 * 4];
+            grid.Resolve(1f, 1f, 1f, rgba);
+            grid.ApplySight(map.Blocks, 0, 10, 10, 0.25f, rgba);
+            Assert.That(rgba[(10 * 21 + 11) * 4], Is.EqualTo(255), "in front of you");
+            Assert.That(rgba[(10 * 21 + 12) * 4], Is.EqualTo(255), "the wall you look at");
+            Assert.That(rgba[(10 * 21 + 15) * 4], Is.LessThan(100), "behind the wall: dark");
+        }
+
+        [Test]
         public void AWallBlocksLightAndCastsAShadow()
         {
             // A wall column at x = 12; the lamp is at x = 10.

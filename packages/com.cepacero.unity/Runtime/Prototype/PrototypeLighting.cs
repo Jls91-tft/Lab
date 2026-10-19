@@ -43,6 +43,12 @@ namespace CepaCero.Unity.Prototype
         /// <summary>The torch in your hand (L): a cone toward the cursor. Off, you only keep the small glow around you.</summary>
         public bool FlashlightOn { get; set; } = true;
 
+        /// <summary>Line of sight (D-030): what you cannot see from where you stand stays dark, like Project Zomboid.</summary>
+        public bool Sight { get; set; } = true;
+
+        /// <summary>How much light is left where you cannot see (0 black, 1 no effect).</summary>
+        public float Unseen { get; set; } = 0.32f;
+
         /// <summary>False when the shader is missing (an old project): the game then runs without light instead of failing.</summary>
         public bool Available => _overlay != null;
 
@@ -167,6 +173,10 @@ namespace CepaCero.Unity.Prototype
 
             _grid.Smooth();
             _grid.Resolve(_ambient.x, _ambient.y, _ambient.z, _buffer);
+            if (Sight)
+            {
+                _grid.ApplySight(_blocks, level, (int)Math.Floor(player.X), (int)Math.Floor(player.Y), Unseen, _buffer);   // D-030
+            }
             _texture.LoadRawTextureData(_buffer);
             _texture.Apply(false);
             _overlay.transform.localPosition = new Vector3(x0, y0, 0f);            // local: the flat root is the rotated isometric one (D-025)

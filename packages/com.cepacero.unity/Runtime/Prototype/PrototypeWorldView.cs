@@ -76,6 +76,8 @@ namespace CepaCero.Unity.Prototype
         private byte[] _roofTint;
         private bool[] _tall;                                       // a building of three storeys or more is drawn two storeys tall (D-026)
         private readonly Tilemap _upperWallMap;
+        private readonly Tilemap _wallSeeMap;                       // walls in front of you, whole but see-through (D-030)
+        private readonly Tilemap _upperSeeMap;
         private readonly Tilemap _decoMap;
         private readonly Tilemap _paperSouthMap;                    // the inside of the walls (D-027): paper, paint or tiles of the room in front
         private readonly Tilemap _paperWestMap;
@@ -128,6 +130,14 @@ namespace CepaCero.Unity.Prototype
             _floorMap = CreateLayer(isoGrid.transform, "Floors", 0);                           // you walk on it
             _wallMap = CreateLayer(isoGrid.transform, "Walls", PrototypeIso.UprightOrder);
             _upperWallMap = CreateLayer(isoGrid.transform, "Walls, second storey", PrototypeIso.UprightOrder);
+            _wallSeeMap = CreateLayer(isoGrid.transform, "Walls in front of you (see-through)", PrototypeIso.UprightOrder);
+            _upperSeeMap = CreateLayer(isoGrid.transform, "Upper walls in front of you (see-through)", PrototypeIso.UprightOrder);
+            foreach (Tilemap see in new[] { _wallSeeMap, _upperSeeMap })
+            {
+                see.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
+                see.color = new Color(1f, 1f, 1f, 0.3f);
+            }
+            _upperSeeMap.tileAnchor = new Vector3(0.5f, 0.49f, 0f);
             _paperSouthMap = CreateLayer(isoGrid.transform, "Inside of the walls (south faces)", PrototypeIso.UprightOrder);
             _paperWestMap = CreateLayer(isoGrid.transform, "Inside of the walls (west faces)", PrototypeIso.UprightOrder);
             foreach (Tilemap paper in new[] { _paperSouthMap, _paperWestMap })
@@ -501,6 +511,8 @@ namespace CepaCero.Unity.Prototype
             _blockMap.SetTilesBlock(area, blockTiles);
             _wallMap.ClearAllTiles();
             _upperWallMap.ClearAllTiles();
+            _wallSeeMap.ClearAllTiles();
+            _upperSeeMap.ClearAllTiles();
             _cut.Clear();
             for (int y = 0; y < h; y++)
             {
@@ -876,8 +888,11 @@ namespace CepaCero.Unity.Prototype
         private void PaintWall(int x, int y)
         {
             string facade = _facade != null && _level == 0 ? _facadeNames[_facade[y * _blocks.Width + x]] : null;
-            Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, _cut.Contains(Key(x, y)), facade) : null;
-            _wallMap.SetTile(new Vector3Int(x, y, 0), TileFor(s));
+            // Walls in front of you stay whole but go see-through (D-030, as Project Zomboid), instead of being cut low.
+            bool see = _cut.Contains(Key(x, y));
+            Sprite s = _sprites.IsWallLike(x, y, _level) ? _sprites.IsoWall(x, y, _level, false, facade) : null;
+            _wallMap.SetTile(new Vector3Int(x, y, 0), see ? null : TileFor(s));
+            _wallSeeMap.SetTile(new Vector3Int(x, y, 0), see ? TileFor(s) : null);
             PaintUpperWall(x, y, s);
             int key = Key(x, y);
             // The inside of the walls only shows in the house you are in: elsewhere the roof hides it, and drawn there it showed through the
@@ -932,13 +947,16 @@ namespace CepaCero.Unity.Prototype
         {
             Sprite upper = null;
             int key = Key(x, y);
-            if (ground != null && _level == 0 && _tall != null && _tall[key] && !_cut.Contains(key) && !(_houseOpen && _house.Contains(key)) && !_roofCut.Contains(key))
+            bool inside = _houseOpen && _house.Contains(key);
+            if (ground != null && _level == 0 && _tall != null && _tall[key] && !inside)
             {
                 string facade = _facade != null ? _facadeNames[_facade[key]] : null;
                 upper = _sprites.IsoUpperWall(x, y, _level, facade, ground);
                 upper = upper != null ? _art.Lifted(upper, PrototypeIso.WallHeight) : null;
             }
-            _upperWallMap.SetTile(new Vector3Int(x, y, 0), TileFor(upper));
+            bool see = _cut.Contains(key);
+            _upperWallMap.SetTile(new Vector3Int(x, y, 0), see ? null : TileFor(upper));
+            _upperSeeMap.SetTile(new Vector3Int(x, y, 0), see ? TileFor(upper) : null);
         }
 
         /// <summary>
