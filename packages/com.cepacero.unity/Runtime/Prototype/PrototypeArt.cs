@@ -19,8 +19,8 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Base resolution height of the world (D-021): it is scaled by whole numbers from 960×540.</summary>
         public const int BaseHeight = 540;
 
-        /// <summary>Base height of the interface: it keeps its 16 px pixel grid and its own scale (D-018).</summary>
-        public const int UiBaseHeight = 360;
+        /// <summary>Base height of the interface: it keeps its 16 px pixel grid and its own scale (D-018); 540 since D-037 (×2 at 1080p, it was too big at ×3).</summary>
+        public const int UiBaseHeight = 540;
 
         /// <summary>
         /// Screen pixels per art pixel for a screen height: a whole number, rounded up unless the screen is only a little

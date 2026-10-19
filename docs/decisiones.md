@@ -294,3 +294,7 @@ antigua como **Sustituida por D-XXX**.
   - **Teclas y cantidades:** las teclas de ayuda se dibujan como teclas, y las cantidades llevan contorno para leerse sobre el icono.
   - Todo sale de rectángulos y de dos piezas nuevas del atlas de interfaz, dentro de la paleta de 32 colores.
 - **Motivo:** Javier: la interfaz era muy básica y parecía hecha por una IA. Ahora tiene una identidad propia que casa con los edificios estilizados (D-035) y con el tono del juego.
+
+## D-037 · Interfaz más pequeña (19/10/2026)
+- **Decisión:** la escala de la interfaz se calcula sobre 540 px de alto en vez de 360 (×2 a 1080p, antes ×3), así que todo ocupa un tercio menos. El texto usa un solo tamaño de 8 px de arte, nítido a cualquier escala, y el panel de controles y los números de las casillas un tamaño menor. El reloj se ensancha para que quepa «Día N» y la fase.
+- **Motivo:** Javier veía la interfaz muy grande.

@@ -30,6 +30,8 @@ namespace CepaCero.Unity.Prototype
         private static readonly Color DropShadow = new Color(0.05f, 0.05f, 0.06f, 0.45f);
         private static readonly Color RuleBlue = new Color(0.38f, 0.59f, 0.82f, 0.45f);
 
+        private const float CharW = 8f;                                   // art px per glyph of the pixel font
+
         private static readonly string[] Controls =
         {
             "WASD moverse (W = arriba en pantalla) · Shift correr · Tab mochila · 1-9 o rueda: elegir de la barra",
@@ -51,6 +53,7 @@ namespace CepaCero.Unity.Prototype
         private GUIStyle _numberRight;
         private GUIStyle _smallCenter;
         private GUIStyle _wrap;
+        private GUIStyle _tiny;
         private int _styleScale = -1;
         private int _s = 1;
 
@@ -164,11 +167,11 @@ namespace CepaCero.Unity.Prototype
 
         private void DrawClock(in HudModel m)
         {
-            float w = 104f;
+            float w = 140f;
             float x = Width - w - 8f;
             float y = 8f;
             bool nights = m.NightsSurvived >= 0;
-            float h = nights ? 58f : 48f;
+            float h = nights ? 62f : 50f;
             Card(x, y, w, h, 3f, -4f);
 
             bool night = m.Phase == DayPhase.Night;
@@ -179,9 +182,8 @@ namespace CepaCero.Unity.Prototype
             float cy = y + 5f + 20f - Mathf.Sin(a) * 13f;
             Sprite(PhaseIcon(m.Phase), Mathf.Round(cx - 5.5f), Mathf.Round(cy - 5.5f));
 
-            Write(x + 54f, y + 8f, 20f, 9f, "Día", _small);
-            Write(x + 74f, y + 5f, 28f, 13f, m.Day.ToString(), _number);
-            Write(x + 54f, y + 20f, 48f, 9f, PhaseName(m.Phase), _small, PhaseColor(m.Phase));
+            Write(x + 54f, y + 7f, w - 58f, 10f, $"Día {m.Day}", _number);
+            Write(x + 54f, y + 20f, w - 58f, 9f, PhaseName(m.Phase), _small, PhaseColor(m.Phase));
 
             float row = y + 33f;
             Sprite("icon_zombie", x + 5f, row);
@@ -193,8 +195,8 @@ namespace CepaCero.Unity.Prototype
             }
             if (nights)
             {
-                Write(x + 5f, y + 47f, 40f, 8f, "Noches", _small);
-                Tally(x + 42f, y + 46f, m.NightsSurvived, w - 48f);
+                Write(x + 6f, y + 48f, 52f, 9f, "Noches", _small);
+                Tally(x + 60f, y + 48f, m.NightsSurvived, w - 66f);
             }
             if (!string.IsNullOrEmpty(m.Network))
             {
@@ -256,7 +258,7 @@ namespace CepaCero.Unity.Prototype
                 {
                     ItemInSlot(inv, st, x + 1f, sy + 1f);
                 }
-                Write(x + 2f, sy + 1f, 8f, 8f, (h + 1).ToString(), _small, PrototypePalette.Shadow);
+                Write(x + 2f, sy + 1f, 8f, 6f, (h + 1).ToString(), _tiny, PrototypePalette.Shadow);
             }
             ItemStack held = inv.SelectedHotbar >= 0 ? inv.GetHotbar(inv.SelectedHotbar) : default;
             if (!held.IsEmpty)
@@ -287,7 +289,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Over the hotbar while the hand holds a material: the piece and its cost, paint colour, turn and the ghost's hint.</summary>
         private void DrawBuildPanel(in HudModel m)
         {
-            float panelW = 348f;                                          // wide enough for the longest hint at the pixel font
+            float panelW = Math.Min(Width - 40f, 560f);                   // wide enough for the longest hint at the pixel font
             float px = (Width - panelW) / 2f;
             float y = Height - Slot - 8f - 62f;
             Card(px, y, panelW, 40f, -4f, 4f);
@@ -389,15 +391,15 @@ namespace CepaCero.Unity.Prototype
                 body = (diary.Substring(0, open) + diary.Substring(close + 4)).Trim();
             }
             Color fade = new Color(1f, 1f, 1f, alpha);
-            float w = Math.Min(270f, Width - 260f);
-            float h = 66f;
+            float w = Math.Min(320f, Width - 260f);
+            float h = 80f;
             float x = (Width - w) / 2f;
             float y = Height - Slot - 8f - 26f - h;
             Matrix4x4 saved = GUI.matrix;
             GUIUtility.RotateAroundPivot(-1.5f, new Vector2((x + w / 2f) * _s, (y + h / 2f) * _s));
             Fill(x + 3f, y + 3f, w, h, Mul(DropShadow, fade));
             Fill(x, y, w, h, Mul(Paper, fade));
-            for (float ly = y + 17f; ly < y + h - 3f; ly += 8f)
+            for (float ly = y + 26.5f; ly < y + h - 3f; ly += 8.5f)            // under each line of the pixel font
             {
                 Fill(x + 2f, ly, w - 4f, 1f, Mul(RuleBlue, fade));
             }
@@ -406,7 +408,7 @@ namespace CepaCero.Unity.Prototype
             {
                 Fill(t, y - 1f, 2f, 1f, Mul(Paper, fade));                 // the torn top edge
             }
-            Write(x + 18f, y + 5f, w - 24f, 9f, heading, _small, Mul(PrototypePalette.Red, fade));
+            Write(x + 18f, y + 6f, w - 24f, 9f, heading, _small, Mul(PrototypePalette.Red, fade));
             Write(x + 18f, y + 18f, w - 24f, h - 20f, body, _wrap, Mul(Ink, fade));
             TapeStrip(x + w / 2f - 16f, y - 5f, 32f, 9f, 4f, alpha);
             GUI.matrix = saved;
@@ -420,7 +422,7 @@ namespace CepaCero.Unity.Prototype
                 float y = Height - 18f;
                 x = Key(x, y, "Tab") + 3f;
                 Shadowed(x, y + 1f, 60f, 10f, "mochila", PrototypePalette.White, _small);
-                x += 62f;
+                x += 66f;
                 x = Key(x, y, "H") + 3f;
                 Shadowed(x, y + 1f, 80f, 10f, "controles", PrototypePalette.White, _small);
                 return;
@@ -432,14 +434,14 @@ namespace CepaCero.Unity.Prototype
             Card(hx, hy, w, h, -3f, 3f);
             for (int i = 0; i < Controls.Length; i++)
             {
-                Write(hx + 8f, hy + 8f + i * 12f, w - 16f, 11f, Controls[i], _small);
+                Write(hx + 8f, hy + 8f + i * 12f, w - 16f, 11f, Controls[i], _tiny);
             }
         }
 
         /// <summary>A keyboard key drawn as a little cap; returns where the text after it can start.</summary>
         private float Key(float x, float y, string label)
         {
-            float w = 6f + label.Length * 6f;
+            float w = 6f + label.Length * CharW;
             Fill(x + 1f, y, w - 2f, 13f, Ink);
             Fill(x, y + 1f, w, 11f, Ink);
             Fill(x + 1f, y + 1f, w - 2f, 11f, PaperShade);
@@ -451,7 +453,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>A short text on a scrap of tape, centred on <paramref name="cx"/>.</summary>
         private void Label(float cx, float y, string text)
         {
-            float w = Math.Min(Width - 40f, 14f + text.Length * 6f);
+            float w = Math.Min(Width - 40f, 14f + text.Length * CharW);
             float x = cx - w / 2f;
             Fill(x + 2f, y + 2f, w, 12f, DropShadow);
             Fill(x, y, w, 12f, Kraft);
@@ -463,7 +465,7 @@ namespace CepaCero.Unity.Prototype
         /// <summary>A rubber stamp, tilted: red ink in a box, for being down or dead.</summary>
         private void Stamp(float cx, float cy, string text, Color color)
         {
-            float w = 14f + text.Length * 6f;
+            float w = 14f + text.Length * CharW;
             float h = 14f;
             Matrix4x4 saved = GUI.matrix;
             GUIUtility.RotateAroundPivot(-4f, new Vector2(cx * _s, cy * _s));
@@ -586,8 +588,9 @@ namespace CepaCero.Unity.Prototype
             _styleScale = _s;
             // Public Pixel (CC0) is drawn on an 8 px grid: sizes that are whole multiples of 8 keep it crisp.
             Font font = Resources.Load<Font>("Cepa/PublicPixel");
-            int size = font != null ? 8 * ((_s + 1) / 2) : 0;          // long text: half the UI scale, still a whole multiple of 8
-            int big = font != null ? 8 * _s : 0;                        // short numbers: full size
+            int size = font != null ? 8 * _s : 0;                       // one glyph = 8 art px, a whole multiple of 8 on screen (D-037)
+            int big = size;
+            int tiny = font != null ? 8 * ((_s + 1) / 2) : 0;           // the controls panel and the slot digits
             _text = Style(font, size > 0 ? size : Math.Max(11, 7 * _s), TextAnchor.MiddleLeft, false);
             _small = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.MiddleLeft, false);
             _smallRight = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.MiddleRight, false);
@@ -595,6 +598,7 @@ namespace CepaCero.Unity.Prototype
             _numberRight = Style(font, big > 0 ? big : Math.Max(10, 6 * _s), TextAnchor.LowerRight, false);
             _smallCenter = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.MiddleCenter, false);
             _wrap = Style(font, size > 0 ? size : Math.Max(10, 6 * _s), TextAnchor.UpperLeft, true);
+            _tiny = Style(font, tiny > 0 ? tiny : Math.Max(9, 5 * _s), TextAnchor.MiddleLeft, false);
         }
 
         private static GUIStyle Style(Font font, int size, TextAnchor anchor, bool wrap)
