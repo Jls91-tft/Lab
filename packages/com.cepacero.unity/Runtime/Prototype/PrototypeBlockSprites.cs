@@ -116,6 +116,10 @@ namespace CepaCero.Unity.Prototype
         {
             BlockType t = _blocks.GetBlock(x, y, level, BuildLayer.Structure);
             string m = t.Build != null ? t.Build.MaterialId : facade ?? "brick";       // the map's own walls take their building's facade
+            if (facade != null && t.Build != null && t.Build.Shape != "wall" && _art.TryGet("iso_wall_" + facade, out _))
+            {
+                m = facade;                     // its windows and doors too (D-035): a brick window in a plaster wall made stripes
+            }
             if (t.IsAir)
             {
                 m = level <= -3 ? "rock" : "earth";
@@ -148,9 +152,24 @@ namespace CepaCero.Unity.Prototype
         {
             BlockType t = _blocks.GetBlock(x, y, level, BuildLayer.Structure);
             string m = t.Build != null ? t.Build.MaterialId : facade ?? "brick";
+            if (facade != null && t.Build != null && t.Build.Shape != "wall")
+            {
+                m = facade;
+            }
             bool eastWest = IsWallLike(x + 1, y, level) || IsWallLike(x - 1, y, level);
-            bool window = ((x + y) & 1) == 0 && (t.Build == null || t.Build.Shape == "wall");
-            string name = window ? $"iso_wall_{m}_window_{(eastWest ? "s" : "w")}" : $"iso_wall_{m}";
+            bool window = ((x + y) & 1) == 0 && (t.Build == null || t.Build.Shape == "wall" || t.Build.Shape == "window");
+            string face = eastWest ? "s" : "w";
+            // The stylized facades have their own upper storey (D-035): a floor line at the foot, a deeper cornice, and balconies here and there.
+            if (_art.TryGet($"iso_wall_{m}_up", out Sprite up))
+            {
+                if (!window)
+                {
+                    return up;
+                }
+                bool balcony = (((x + y) >> 1) & 1) == 0;
+                return _art.TryGet($"iso_wall_{m}_up_{(balcony ? "balcony" : "window")}_{face}", out Sprite piece) ? piece : up;
+            }
+            string name = window ? $"iso_wall_{m}_window_{face}" : $"iso_wall_{m}";
             return _art.TryGet(name, out Sprite s) ? s : below;
         }
 

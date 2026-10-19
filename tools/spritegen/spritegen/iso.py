@@ -373,6 +373,7 @@ def paper_face(paint, side: str, hole) -> Image.Image:
 
 
 def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
+    from .toon import TOON_ROOFS, roof_piece as toon_roof
     out: dict[str, Image.Image] = {}
     for name, paint in PAPERS.items():
         for side in ("s", "w"):
@@ -389,9 +390,13 @@ def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
     for name, piece in images.items():
         if name.startswith("roof_") and name.endswith("_flat"):
             kind = name[len("roof_"):-len("_flat")]
+            toon = kind in TOON_ROOFS                                    # D-035: clean, light tiles the game colours per building
+            if toon:
+                piece = toon_roof(kind)
             for level in range(ROOF_LEVELS):
                 out[f"iso_roof_{kind}_f{level}"] = roof_cell(piece, level, None)
-                out[f"iso_roof_{kind}_f{level}_x"] = roof_cell(_weathered(piece), level, None)
+                if not toon:
+                    out[f"iso_roof_{kind}_f{level}_x"] = roof_cell(_weathered(piece), level, None)
                 if level < ROOF_LEVELS - 1:
                     for d in ("n", "e", "s", "w"):
                         out[f"iso_roof_{kind}_s{level}_{d}"] = roof_cell(piece, level, d)
@@ -406,4 +411,6 @@ def build(images: dict[str, Image.Image]) -> dict[str, Image.Image]:
             for name, piece, lo, hi in (("door", door, 0, DOOR_H), ("dooropen", door_open, 0, DOOR_H), ("window", window, WINDOW_LOW, WINDOW_HIGH)):
                 kw = {"south": piece} if side == "s" else {"west": piece}
                 out[f"iso_wall_{m}_{name}_{side}"] = block(front, cap, WALL_H, low=lo, high=hi, **kw)
+    from .toon import build as toon_build
+    out.update(toon_build())
     return out

@@ -55,21 +55,27 @@ namespace CepaCero.Unity.Prototype
         private readonly Tilemap _belowFloorMap;
         private readonly Tilemap _belowBlockMap;
         // Each building's roof gets its own shade, so neighbours read as separate houses instead of one red sea.
+        // D-035: the roof pieces are light and colourless, so these are the roofs' real colours, bright and storybook-like.
         private static readonly Color[] RoofTints =
         {
             Color.white,
-            new Color(0.60f, 0.66f, 0.80f),                  // slate
-            new Color(1.00f, 0.86f, 0.52f),                  // ochre
-            new Color(0.62f, 0.52f, 0.50f),                  // dark brown
-            new Color(0.70f, 0.84f, 0.66f),                  // mossy green
-            new Color(1.00f, 0.66f, 0.58f),                  // salmon
-            new Color(0.50f, 0.56f, 0.68f),                  // blue grey
-            new Color(0.84f, 0.80f, 0.76f),                  // pale clay
+            new Color(0.92f, 0.46f, 0.34f),                  // terracotta
+            new Color(0.84f, 0.38f, 0.30f),                  // red tile
+            new Color(0.46f, 0.56f, 0.80f),                  // slate blue
+            new Color(0.36f, 0.70f, 0.66f),                  // teal
+            new Color(0.62f, 0.44f, 0.66f),                  // plum
+            new Color(0.56f, 0.72f, 0.40f),                  // moss green
+            new Color(0.94f, 0.66f, 0.30f),                  // amber
+            new Color(0.42f, 0.44f, 0.56f),                  // charcoal blue
         };
 
         // The facade material of each building (D-025): plaster, ochre, brick, stone, concrete, so a street is not one brown wall.
-        private static readonly string[] ResidentialFacades = { "drywall", "drywall", "drywall", "drywall", "adobe", "adobe", "adobe", "brick", "brick", "stone" };
-        private static readonly string[] OtherFacades = { "concrete", "concrete", "concrete", "drywall", "drywall", "stone", "stone", "brick", "brick" };
+        // D-035: flat, bright plaster (spritegen toon.py) instead of realistic brick and stone, so each building reads as one shape.
+        private static readonly string[] ResidentialFacades =
+        {
+            "fac_ochre", "fac_terracotta", "fac_mint", "fac_sky", "fac_coral", "fac_cream", "fac_lavender", "fac_sage", "fac_white", "fac_mustard", "fac_sand",
+        };
+        private static readonly string[] OtherFacades = { "fac_slate", "fac_white", "fac_sand", "fac_cream", "fac_sky", "fac_slate", "fac_sage" };
         private string[] _facadeNames;
         private byte[] _facade;                                    // index into _facadeNames per cell, 0 = the map's own (brick)
 
@@ -196,7 +202,11 @@ namespace CepaCero.Unity.Prototype
             _roofTint = new byte[w * _blocks.Height];
             _tall = new bool[w * _blocks.Height];
             _facade = new byte[w * _blocks.Height];
-            _facadeNames = new[] { null, "drywall", "adobe", "brick", "stone", "concrete" };
+            _facadeNames = new[]
+            {
+                null, "fac_ochre", "fac_terracotta", "fac_mint", "fac_sky", "fac_coral", "fac_cream", "fac_lavender", "fac_sage", "fac_white",
+                "fac_mustard", "fac_slate", "fac_sand",
+            };
             var owner = new int[w * _blocks.Height];                       // building index + 1, 0 = none
             var queue = new Queue<Int2>();
             var cells = new List<Int2>();

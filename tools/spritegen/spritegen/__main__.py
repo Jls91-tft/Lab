@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import brute, characters, decor, iso, isofurn, palette, structures, underground, world
+from . import brute, characters, decor, iso, isofurn, palette, structures, toon, underground, world
 from .atlas import describe, pack
 
 REPO = Path(__file__).resolve().parents[3]
@@ -50,7 +50,8 @@ def build_images() -> dict[str, Image.Image]:
             raise ValueError(f"spritegen: duplicate sprite names {sorted(clash)}")
         images.update(part)
     images.update(iso.build(images))                         # D-025: isometric blocks made from the pieces above
-    return {n: palette.apply(im) for n, im in images.items()}
+    # The stylized buildings (D-035) keep their own flat colours: forced into the closed palette they came out speckled and off-hue.
+    return {n: im if toon.is_toon(n) else palette.apply(im) for n, im in images.items()}
 
 
 def build_all() -> tuple[bytes, str]:

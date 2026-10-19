@@ -36,6 +36,7 @@ Mapas de **ciudades reales** desde OpenStreetMap, empezando por **Zaragoza**.
 - **Código de Unity** en `packages/com.cepacero.unity` (D-014; incluye `PrototypeGame`, prototipo de depuración);
   `CepaCero/Assets/_Project/` solo contenido. Aún no compilado contra Unity real.
 - **Hambre y sed** duras por defecto, configurables Off/Soft/Hard (D-015, `SurvivalRules`).
+- **Edificios estilizados (D-035)**: fachadas lisas de un color vivo por edificio con ventanas, contraventanas y balcones (`tools/spritegen/toon.py`, fuera de la paleta cerrada); tejados limpios teñidos por edificio; la línea de visión solo oscurece el suelo.
 - **Vista y combate (D-033)**: los edificios entre el jugador y la cámara se vuelven translúcidos a su alrededor sin enseñar el interior; 8 fotogramas de andar y de correr con el paso ligado a la distancia; alcance cuerpo a cuerpo medido a 1 m por casilla. Velocidades a 1 m/casilla (D-034): jugador 2,1 andando y 3,3 corriendo; caminante 0,7.
 - **Puente de depuración** (D-023): `PrototypeDebugBridge` en `localhost:7777`, solo editor y builds de desarrollo; las órdenes se convierten en la misma entrada que el teclado.
 

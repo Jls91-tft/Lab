@@ -272,3 +272,13 @@ antigua como **Sustituida por D-XXX**.
   - Zombis: caminante 0,7, corredor 2,9 (más lento que tú al correr), gritón 1,2, escupidor 0,9, acorazado 0,6, zapador 0,85, La Mole 1,1 (carga 3,6), Paciente Cero 1,5.
   - El paso de la animación se ajusta: un ciclo cada 1,6 casillas andando y cada 2,2 corriendo, y se corre por encima de 2,7 casillas/s.
 - **Motivo:** Javier: los personajes se movían demasiado rápido, tenían que ser más pausados (3,5 m/s andando era casi trotar).
+
+## D-035 · Edificios estilizados (19/10/2026)
+- **Decisión:** Javier eligió un estilo **estilizado y colorido** (de cuento) en vez del realista, que se veía liado.
+  - **Fachadas:** de un solo color vivo por edificio (`tools/spritegen/toon.py`: ocre, terracota, menta, cielo, coral, crema, lavanda, salvia, blanco, mostaza, pizarra, arena), con sombreado en bandas, un zócalo oscuro abajo y una cornisa clara arriba.
+  - **Ventanas y balcones:** ventanas grandes con marco blanco y contraventanas de color. Los pisos altos tienen línea de forjado y balcones de hierro en una de cada dos ventanas.
+  - **Ventanas y puertas del mapa:** toman la fachada de su edificio. Antes eran de ladrillo y llenaban de franjas las fachadas lisas.
+  - **Tejados:** teja grande y limpia sin color propio. El juego la tiñe de un color por edificio (terracota, rojo, pizarra, verde azulado, ciruela, musgo, ámbar, azul carbón) y ya no hay manchas de envejecido.
+  - **Paleta:** estos sprites se quedan fuera de la paleta cerrada de D-021, porque cuantizados salían moteados y con otro tono.
+  - **Línea de visión:** ahora oscurece solo el suelo (una capa aparte bajo lo que se alza). Proyectada desde el suelo, dejaba manchas oscuras en fachadas y tejados.
+- **Motivo:** el ruido de las texturas realistas, las franjas de dos materiales y las manchas de la línea de visión hacían que una calle se leyera como una masa. Ahora cada edificio es una forma de un color y el detalle lo ponen ventanas, puertas y balcones.

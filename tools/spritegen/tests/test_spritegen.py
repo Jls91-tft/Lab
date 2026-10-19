@@ -145,11 +145,14 @@ def test_atlas_json_matches_and_characters_have_a_foot_pivot():
 
 
 def test_every_opaque_pixel_is_in_the_palette():
-    """The world has a closed, hand-designed palette (D-021)."""
+    """The world has a closed, hand-designed palette (D-021); the stylized buildings of D-035 keep their own flat colours."""
     from spritegen.palette import PALETTE
+    from spritegen.toon import is_toon
     allowed = set(PALETTE)
     used = set()
     for name, im in images().items():
+        if is_toon(name):
+            continue
         for r, g, b, a in im.getdata():
             if a == 255:
                 used.add((r, g, b))

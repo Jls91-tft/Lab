@@ -38,6 +38,12 @@ namespace CepaCero.Unity.Prototype
         private Texture2D _texture;
         private Sprite _sprite;
         private byte[] _buffer = new byte[0];
+        // Line of sight darkens only what lies on the ground (D-035): drawn under the walls and roofs, so what is out of sight no longer
+        // throws dark patches onto the facades and roofs in front of it.
+        private SpriteRenderer _sightOverlay;
+        private Texture2D _sightTexture;
+        private Sprite _sightSprite;
+        private byte[] _sightBuffer = new byte[0];
         private Vector3 _ambient = Vector3.one;
 
         /// <summary>The torch in your hand (L): a cone toward the cursor. Off, you only keep the small glow around you.</summary>
@@ -68,6 +74,11 @@ namespace CepaCero.Unity.Prototype
             _overlay = go.AddComponent<SpriteRenderer>();
             _overlay.sharedMaterial = new Material(shader) { name = "CepaCero light multiply" };
             _overlay.sortingOrder = short.MaxValue - 2;                       // over the world, under the ghosts and the cursor
+            var sight = new GameObject("Sight overlay (ground only)");
+            sight.transform.SetParent(_root, false);
+            _sightOverlay = sight.AddComponent<SpriteRenderer>();
+            _sightOverlay.sharedMaterial = _overlay.sharedMaterial;
+            _sightOverlay.sortingOrder = PrototypeIso.UprightOrder - 1;        // over floors and decals, under everything that stands
         }
 
         /// <summary>Debug bridge: set a path and the next frame also saves the light map there as a PNG.</summary>
@@ -173,13 +184,20 @@ namespace CepaCero.Unity.Prototype
 
             _grid.Smooth();
             _grid.Resolve(_ambient.x, _ambient.y, _ambient.z, _buffer);
+            for (int i = 0; i < _sightBuffer.Length; i++)
+            {
+                _sightBuffer[i] = 255;
+            }
             if (Sight)
             {
-                _grid.ApplySight(_blocks, level, (int)Math.Floor(player.X), (int)Math.Floor(player.Y), Unseen, _buffer);   // D-030
+                _grid.ApplySight(_blocks, level, (int)Math.Floor(player.X), (int)Math.Floor(player.Y), Unseen, _sightBuffer);   // D-030
             }
             _texture.LoadRawTextureData(_buffer);
             _texture.Apply(false);
+            _sightTexture.LoadRawTextureData(_sightBuffer);
+            _sightTexture.Apply(false);
             _overlay.transform.localPosition = new Vector3(x0, y0, 0f);            // local: the flat root is the rotated isometric one (D-025)
+            _sightOverlay.transform.localPosition = _overlay.transform.localPosition;
             if (DumpPath != null)
             {
                 System.IO.File.WriteAllBytes(DumpPath, _texture.EncodeToPNG());
@@ -251,6 +269,8 @@ namespace CepaCero.Unity.Prototype
             {
                 UnityEngine.Object.Destroy(_texture);
                 UnityEngine.Object.Destroy(_sprite);
+                UnityEngine.Object.Destroy(_sightTexture);
+                UnityEngine.Object.Destroy(_sightSprite);
             }
             // Linear, bilinear: one texel per tile, softened by the GPU into a smooth light.
             _texture = new Texture2D(w, h, TextureFormat.RGBA32, false, true)
@@ -262,6 +282,15 @@ namespace CepaCero.Unity.Prototype
             _sprite = Sprite.Create(_texture, new Rect(0, 0, w, h), Vector2.zero, 1f, 0, SpriteMeshType.FullRect);
             _overlay.sprite = _sprite;
             _buffer = new byte[w * h * 4];
+            _sightTexture = new Texture2D(w, h, TextureFormat.RGBA32, false, true)
+            {
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                name = "Sight map",
+            };
+            _sightSprite = Sprite.Create(_sightTexture, new Rect(0, 0, w, h), Vector2.zero, 1f, 0, SpriteMeshType.FullRect);
+            _sightOverlay.sprite = _sightSprite;
+            _sightBuffer = new byte[w * h * 4];
         }
 
         private bool FindInside(GroundLayer ground, int cx, int cy, out Int2 at)
