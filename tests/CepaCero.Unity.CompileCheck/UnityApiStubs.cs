@@ -66,7 +66,7 @@ namespace UnityEngine.Tilemaps
     public class TileBase : UnityEngine.ScriptableObject { }
     public class Tile : TileBase { public UnityEngine.Sprite sprite; public UnityEngine.Color color; }
     public class Tilemap : UnityEngine.GridLayout { public UnityEngine.Color color; public UnityEngine.Vector3 tileAnchor; public void SetTile(UnityEngine.Vector3Int p, TileBase t) {} public T GetTile<T>(UnityEngine.Vector3Int p) where T : TileBase => null; public void SetTilesBlock(UnityEngine.BoundsInt b, TileBase[] t) {} public void ClearAllTiles() {} }
-    public class TilemapRenderer : UnityEngine.Renderer { public enum Mode { Chunk, Individual, SRPBatch } public Mode mode; }
+    public class TilemapRenderer : UnityEngine.Renderer { public enum Mode { Chunk, Individual, SRPBatch } public Mode mode; public enum DetectChunkCullingBounds { Auto, Manual } public DetectChunkCullingBounds detectChunkCullingBounds; public UnityEngine.Vector3 chunkCullingBounds; }
 }
 namespace UnityEngine.InputSystem
 {

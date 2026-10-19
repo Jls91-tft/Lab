@@ -13,7 +13,7 @@ namespace CepaCero.Unity.Prototype
         public static readonly string[] Verbs =
         {
             "state", "select", "aim", "click", "hold", "rclick", "mclick", "drag", "key", "move", "walk", "wait",
-            "screenshot", "give", "spawn", "time", "clear", "tp", "hide",
+            "screenshot", "give", "spawn", "time", "clear", "tp", "hide", "probe",
         };
 
         public static readonly string[] Keys =
@@ -106,6 +106,8 @@ namespace CepaCero.Unity.Prototype
                     return (Count == 3 || (Count == 4 && IsInt(3))) && IsInt(1) && IsInt(2) ? null : "spawn ZOMBIE_ID X Y [LEVEL]";
                 case "time":
                     return Count == 1 && (Args[0] == "day" || Args[0] == "night" || Args[0] == "dawn") ? null : "time day|night|dawn";
+                case "probe":
+                    return Count == 2 && IsInt(0) && IsInt(1) ? null : "probe X Y";
                 case "hide":
                     return Count == 1 ? null : "hide NAMES|none (wall, upper, roof, line, detail, paper, deco, floor)";
                 case "tp":

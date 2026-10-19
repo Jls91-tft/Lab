@@ -107,6 +107,7 @@ namespace CepaCero.Unity.Prototype
         {
             _blocks = blocks;
             _ground = ground;
+            Current = this;
             _art = art;
             _sprites = new PrototypeBlockSprites(blocks, art);
 
@@ -138,7 +139,9 @@ namespace CepaCero.Unity.Prototype
             _decoMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             _decoMap.tileAnchor = new Vector3(0.5f, 0.49f, 0f);                // a hair in front of its wall
             _upperWallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
-            _upperWallMap.transform.localPosition = new Vector3(0f, PrototypeIso.WallHeight, 0f);
+            // The second storey sorts at the ground of its cell, a hair in front of the first one (the lift is in the sprite): shifting the whole
+            // map up made each upper block sort behind its own lower block, whose top showed through as a second wall row (D-029).
+            _upperWallMap.tileAnchor = new Vector3(0.5f, 0.49f, 0f);
             _wallMap.GetComponent<TilemapRenderer>().mode = TilemapRenderer.Mode.Individual;
             // A roof piece is drawn on top of the walls (its sprite pivot lifts it) but sorts at the ground of its cell, a hair in front of the
             // wall of the same cell: whoever is behind the house is covered, whoever is in front is not.
@@ -596,6 +599,20 @@ namespace CepaCero.Unity.Prototype
         /// <summary>Debug bridge (`hide wall,roof,...`): layers listed here are switched off, to see what lies under what.</summary>
         public static string DebugHidden = "";
 
+        /// <summary>Debug bridge (`probe X Y`): the view this game is drawing with.</summary>
+        public static PrototypeWorldView Current;
+
+        /// <summary>What the view has on a cell: for the debug bridge.</summary>
+        public string Probe(int x, int y)
+        {
+            var cell = new Vector3Int(x, y, 0);
+            BlockType top = TopRoof(x, y, out int lvl);
+            string T(Tilemap m) { Tile t = m.GetTile<Tile>(cell); return t == null ? "-" : (t.sprite != null ? t.sprite.name + "@" + t.color.a.ToString("0.00") : "nosprite"); }
+            int k = Key(x, y);
+            return $"{x},{y} block={_blocks.GetBlock(x, y).Key} roof={top.Key}@{lvl} owner={OwnerAt(x, y)} tall={(_tall != null && _tall[k])} pitch={(_roofLevel != null ? _roofLevel[k] : -1)} "
+                + $"roofMap={T(_roofMap)} fade={T(_roofFadeMap)} cut={T(_roofCutMap)} wall={T(_wallMap)} upper={T(_upperWallMap)} house={_house.Contains(k)} open={_houseOpen} cutset={_roofCut.Contains(k)}";
+        }
+
         private void ApplyDebugHidden()
         {
             bool Off(string n) => DebugHidden.Contains(n);
@@ -919,6 +936,7 @@ namespace CepaCero.Unity.Prototype
             {
                 string facade = _facade != null ? _facadeNames[_facade[key]] : null;
                 upper = _sprites.IsoUpperWall(x, y, _level, facade, ground);
+                upper = upper != null ? _art.Lifted(upper, PrototypeIso.WallHeight) : null;
             }
             _upperWallMap.SetTile(new Vector3Int(x, y, 0), TileFor(upper));
         }
@@ -1258,6 +1276,10 @@ namespace CepaCero.Unity.Prototype
             Tilemap map = go.AddComponent<Tilemap>();
             TilemapRenderer renderer = go.AddComponent<TilemapRenderer>();
             renderer.sortingOrder = order;
+            // Walls and roofs are drawn up to three storeys above their cell: the automatic culling bounds came from the tile cells and dropped
+            // the tall roofs of the cells near the bottom of the screen (whole rows of houses showed without a roof, D-029).
+            renderer.detectChunkCullingBounds = TilemapRenderer.DetectChunkCullingBounds.Manual;
+            renderer.chunkCullingBounds = new Vector3(4f, 12f, 0f);
             Material unlit = PrototypeMaterials.Unlit;
             if (unlit != null)
             {

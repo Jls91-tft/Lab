@@ -305,6 +305,9 @@ namespace CepaCero.Unity.Prototype
                     SetTime(c.Args[0]);
                     Settle("time " + c.Args[0]);
                     break;
+                case "probe":
+                    Settle(PrototypeWorldView.Current != null ? PrototypeWorldView.Current.Probe(c.Int(0), c.Int(1)) : "no view");
+                    break;
                 case "hide":
                     PrototypeWorldView.DebugHidden = c.Args[0] == "none" ? "" : c.Args[0];
                     Settle("hidden: " + PrototypeWorldView.DebugHidden);
