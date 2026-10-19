@@ -159,6 +159,22 @@ namespace CepaCero.Tests.Core
         }
 
         [Test]
+        public void ABlowPushesTheZombieBackAndMakesItReel()
+        {
+            AsciiMap map = Open(20);
+            GameSession s = Session(map);
+            int p = s.AddPlayer(new Float2(5.5f, 5.5f));
+            Equip(s, p, "bat");
+            int z = s.Zombies.Spawn(_data.Zombies.IndexOf("walker"), new Float2(6.8f, 5.5f), aware: false);
+            float before = s.Zombies.GetPosition(z).X;
+            s.QueueIntent(p, PlayerIntent.Melee(new Float2(1, 0)));
+            Step(s);
+            Assert.That(s.Zombies.IsStaggered(z), Is.True, "it reels");
+            Step(s, 6);
+            Assert.That(s.Zombies.GetPosition(z).X, Is.GreaterThan(before + 0.3f), "and is pushed away from you");
+        }
+
+        [Test]
         public void ThePistolNeedsAmmoIsStoppedByWallsAndIsLoud()
         {
             var map = new AsciiMap(

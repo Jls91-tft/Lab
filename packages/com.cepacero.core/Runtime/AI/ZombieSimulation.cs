@@ -86,6 +86,8 @@ namespace CepaCero.AI
         private readonly float[] _ability2;      // slam cooldown
         private readonly float[] _windup;        // scream or charge wind-up left
         private readonly float[] _stun;
+        private readonly float[] _stagger;                   // D-032: reeling from a blow, no attack, being pushed back
+        private readonly Float2[] _knock;
         private readonly float[] _buff;
         private readonly float[] _buffMultiplier;
         private readonly float[] _chargeLeft;
@@ -153,6 +155,8 @@ namespace CepaCero.AI
             _ability2 = new float[capacity];
             _windup = new float[capacity];
             _stun = new float[capacity];
+            _stagger = new float[capacity];
+            _knock = new Float2[capacity];
             _buff = new float[capacity];
             _buffMultiplier = new float[capacity];
             _chargeLeft = new float[capacity];
@@ -289,6 +293,8 @@ namespace CepaCero.AI
             _ability2[slot] = 0f;
             _windup[slot] = 0f;
             _stun[slot] = 0f;
+            _stagger[slot] = 0f;
+            _knock[slot] = default;
             _buff[slot] = 0f;
             _buffMultiplier[slot] = 1f;
             _chargeLeft[slot] = 0f;
@@ -316,6 +322,24 @@ namespace CepaCero.AI
 
         /// <summary>Share of a noise's radius that reaches the level above or below (D-022). Two levels away, nothing. Hiding underground must not be free.</summary>
         public float AdjacentLevelNoise { get; set; } = 0.7f;
+
+        /// <summary>
+        /// A melee blow pushes the zombie back and makes it reel (D-032): <paramref name="push"/> tiles per second away along
+        /// <paramref name="direction"/> (heavier zombies move less), for <paramref name="seconds"/>.
+        /// </summary>
+        public void Knock(int slot, Float2 direction, float push, float seconds)
+        {
+            if (!_alive[slot] || direction.LengthSquared < 1e-6f)
+            {
+                return;
+            }
+            float heft = Math.Max(1f, _catalog[_type[slot]].size_tiles);
+            Float2 d = direction.Normalized;
+            _knock[slot] = new Float2(d.X * push / heft, d.Y * push / heft);
+            _stagger[slot] = Math.Max(_stagger[slot], seconds / heft);
+        }
+
+        public bool IsStaggered(int slot) => _stagger[slot] > 0f;
 
         /// <summary>Applies damage of a type ("fire", "ballistic"...). Returns true if the zombie died.</summary>
         public bool Damage(int slot, int amount, string damageType)
@@ -507,6 +531,16 @@ namespace CepaCero.AI
             {
                 _stun[i] -= dt;
                 _state[i] = ZombieState.Stunned;
+                return;
+            }
+            if (_stagger[i] > 0f)
+            {
+                // Reeling from a blow (D-032): slides back, slowing down, and does not bite until it recovers.
+                _stagger[i] -= dt;
+                Move(i, _knock[i], dt);
+                float keep = Math.Max(0f, 1f - 9f * dt);
+                _knock[i] = new Float2(_knock[i].X * keep, _knock[i].Y * keep);
+                _cooldown[i] = Math.Max(_cooldown[i], 0.15f);
                 return;
             }
 

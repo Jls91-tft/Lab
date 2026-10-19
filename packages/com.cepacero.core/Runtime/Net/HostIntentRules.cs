@@ -504,7 +504,10 @@ namespace CepaCero.Net
                     // Reach is from body edge to body edge: the weapon's range plus your half and the zombie's (a zombie that hits you is in reach).
                     if (_zombies.IsAlive(i) && InArc(origin, aim, _zombies.GetPosition(i), range + BodyRadius + _zombies.GetRadius(i), cosHalfArc, level))
                     {
-                        _zombies.Damage(i, damage, type);
+                        if (!_zombies.Damage(i, damage, type))
+                        {
+                            _zombies.Knock(i, _zombies.GetPosition(i) - origin, armed ? 5f : 3f, armed ? 0.35f : 0.2f);   // D-032
+                        }
                         hits++;
                     }
                 }

@@ -96,7 +96,9 @@ namespace CepaCero.Unity.Prototype
         private readonly List<SpriteRenderer> _zombies = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _glows = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _players = new List<SpriteRenderer>();
-        private SpriteRenderer _silhouette;                          // you, drawn faintly over everything: seen behind a building (D-029)
+        private SpriteRenderer _silhouette;
+        private Float2 _lungeDir;                                    // D-032: your body leans into a swing for a moment
+        private float _lungeUntil;                          // you, drawn faintly over everything: seen behind a building (D-029)
         private readonly List<SpriteRenderer> _piles = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _containers = new List<SpriteRenderer>();
         private int _used;
@@ -289,7 +291,14 @@ namespace CepaCero.Unity.Prototype
                 Animate(_playerWalk, p, s.Position, out int facing, out int frame);
                 int view = ArtView(facing, out bool flipP);
                 Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[view][frame];
-                Place(_players, used++, s.Position, sprite, flipP && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
+                Float2 at = s.Position;
+                if (p == me && Time.time < _lungeUntil)
+                {
+                    float k = (_lungeUntil - Time.time) / 0.14f;
+                    float reach = 0.35f * Mathf.Sin(k * Mathf.PI);
+                    at = new Float2(at.X + _lungeDir.X * reach, at.Y + _lungeDir.Y * reach);
+                }
+                Place(_players, used++, at, sprite, flipP && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
                 if (p == me)
                 {
                     Silhouette(s.Position, sprite, flipP && !s.IsDowned, s.IsDowned ? 0f : FootOffset);
@@ -317,6 +326,16 @@ namespace CepaCero.Unity.Prototype
             _silhouette.sprite = sprite;
             _silhouette.flipX = flip;
             _silhouette.color = new Color(0.75f, 0.9f, 1f, 0.38f);
+        }
+
+        /// <summary>Your character lunges toward <paramref name="direction"/> for a fraction of a second: the swing reads.</summary>
+        public void Lunge(Float2 direction)
+        {
+            if (direction.LengthSquared > 1e-4f)
+            {
+                _lungeDir = direction.Normalized;
+                _lungeUntil = Time.time + 0.14f;
+            }
         }
 
         private void DrawPiles(IReadOnlyList<ItemPile> piles, float light)

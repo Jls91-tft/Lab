@@ -702,6 +702,7 @@ namespace CepaCero.Unity.Prototype
                     {
                         case HandAction.MeleeAttack when aim.LengthSquared > 0f:
                             _audio?.Swing(me.Position);
+                            _entities.Lunge(aim);
                             Send(PlayerIntent.Melee(aim));
                             break;
                         case HandAction.RangedAttack when aim.LengthSquared > 0f:

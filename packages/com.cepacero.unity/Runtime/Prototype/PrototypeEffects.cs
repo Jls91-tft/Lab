@@ -79,6 +79,7 @@ namespace CepaCero.Unity.Prototype
             if (_seen.TryGetValue(key, out Seen s) && health >= 0 && s.Health >= 0 && health < s.Health)
             {
                 _flash[key] = Time.time + FlashSeconds;
+                Shake(0.05f);                                     // a blow that lands is felt (D-032)
                 Audio?.Hit(position);
                 Burst(position, 5 + (s.Health - health) / 4, 2.6f, new Color(0.55f, 0.04f, 0.05f, 1f));
                 if (_rng.NextDouble() < 0.5)

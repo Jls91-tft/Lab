@@ -249,3 +249,10 @@ antigua como **Sustituida por D-XXX**.
 - **Motivo:** Javier mostró cómo lo hace Project Zomboid: quitar el tejado, transparentar un poco las paredes y ver solo donde llega la vista.
 - **Adenda (D-031):** los zombis fuera de tu línea de visión no se dibujan (`LightGrid.IsSeen`); se siguen oyendo.
 - **Coste / límites:** la oscuridad se aplica a la capa de luz del suelo, así que muros y tejados toman la de la casilla del suelo que tienen detrás en pantalla.
+
+## D-031 · Revisión de funciones (19/10/2026)
+- Probado en el juego: atacar (bate y pistola), talar, cavar, saquear contenedores, construir (suelto y en línea, cola de lo lejano) y desmontar con martillo. **Arreglado:** el alcance cuerpo a cuerpo se medía de centro a centro y nunca llegaba a un zombi que te muerde (ahora de borde a borde, `HostIntentRules.Melee`); los mensajes iguales seguidos se dicen una vez; ningún edificio queda encerrado (`BuildingFloors.OpenSealedBuildings` abre puerta por la medianera hasta que todos se alcanzan desde la calle, test `CascoMapTests`); los zombis fuera de la vista no se dibujan.
+
+## D-032 · Combate con contundencia (19/10/2026)
+- **Decisión:** cada golpe cuerpo a cuerpo que no mata **empuja** al zombi (5 casillas/s con arma, 3 a puño limpio, frenando) y lo deja **tambaleándose** 0,35 s (0,2 sin arma) sin poder morder; los pesados (La Mole, 2 casillas) se mueven y tambalean la mitad (`ZombieSimulation.Knock`). En la vista, tu personaje se impulsa hacia el golpe y la cámara tiembla un poco al acertar.
+- **Motivo:** Javier pidió que el combate fuera fluido; antes era golpe y número, sin respuesta del zombi.
