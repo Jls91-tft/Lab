@@ -13,7 +13,7 @@ de alrededor es solo explicación. Las claves van en inglés porque pasan tal cu
 | `damage` | daño por golpe al jugador | Puño: 8; hacha: 20 |
 | `structure_damage` | daño por golpe a bloques | Bloque de madera 100 · metal 300 · hormigón 600 |
 | `attack_interval` | segundos entre golpes | — |
-| `attack_range` / `detect_*` | tiles | — |
+| `attack_range` / `detect_*` | tiles | `attack_range` es el hueco entre los cuerpos: 1 tile = 1 m (D-026, D-033) |
 | `damage_taken` | multiplicadores (1,0 = normal) | — |
 | `loot` | `objeto: [mín, máx, probabilidad]` | — |
 
@@ -57,7 +57,7 @@ health: 60
 speed: 1.2
 damage: 10
 attack_interval: 1.5
-attack_range: 0.8
+attack_range: 0.35
 structure_damage: 8
 detect_sight: 8
 detect_hearing: 12
@@ -83,7 +83,7 @@ health: 40
 speed: 4.8
 damage: 8
 attack_interval: 0.8
-attack_range: 0.8
+attack_range: 0.35
 structure_damage: 4
 detect_sight: 12
 detect_hearing: 10
@@ -172,7 +172,7 @@ health: 250
 speed: 1.0
 damage: 20
 attack_interval: 2.0
-attack_range: 1.0
+attack_range: 0.45
 structure_damage: 25
 detect_sight: 8
 detect_hearing: 10
@@ -199,7 +199,7 @@ health: 150
 speed: 1.4
 damage: 12
 attack_interval: 1.2
-attack_range: 0.8
+attack_range: 0.35
 structure_damage: 45
 detect_sight: 6
 detect_hearing: 8
@@ -230,7 +230,7 @@ health_per_extra_player: 0.5     # +50 % de vida por cada jugador extra
 speed: 1.8
 damage: 40
 attack_interval: 2.5
-attack_range: 1.5
+attack_range: 0.7
 structure_damage: 150
 detect_sight: 12
 detect_hearing: 20
@@ -262,7 +262,7 @@ health_per_extra_player: 0.5
 speed: 2.5
 damage: 30
 attack_interval: 1.5
-attack_range: 1.2
+attack_range: 0.55
 structure_damage: 60
 detect_sight: 16
 detect_hearing: 16

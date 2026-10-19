@@ -256,3 +256,12 @@ antigua como **Sustituida por D-XXX**.
 ## D-032 · Combate con contundencia (19/10/2026)
 - **Decisión:** cada golpe cuerpo a cuerpo que no mata **empuja** al zombi (5 casillas/s con arma, 3 a puño limpio, frenando) y lo deja **tambaleándose** 0,35 s (0,2 sin arma) sin poder morder; los pesados (La Mole, 2 casillas) se mueven y tambalean la mitad (`ZombieSimulation.Knock`). En la vista, tu personaje se impulsa hacia el golpe y la cámara tiembla un poco al acertar.
 - **Motivo:** Javier pidió que el combate fuera fluido; antes era golpe y número, sin respuesta del zombi.
+
+## D-033 · Edificios translúcidos delante de ti, pasos de verdad y cuerpo a cuerpo de cerca (19/10/2026)
+- **Decisión:**
+  - Como en Project Zomboid, **cualquier edificio** que quede entre tú y la cámara se vuelve translúcido alrededor del personaje, paredes y tejado (`PrototypeWorldView.UpdateCut`). Sigue sin destripar el interior: muebles, zombis y papel pintado siguen ocultos bajo el tejado y lo que asoma es el suelo en penumbra (D-029).
+  - Personajes con **8 fotogramas** de andar, zancadas y braceo más amplios y el pie que se levanta (`tools/spritegen/characters.py`). Los jugadores tienen además 8 de **correr** (`player_run_*`) y todos una postura **quieta** (`_idle`). Las diagonales toman las piernas del perfil. El paso avanza según el suelo recorrido (un ciclo cada 1,9 casillas andando y cada 2,5 corriendo), así que los pies no patinan. Por encima de 4,6 casillas/s se usa la carrera.
+  - Al golpear, el personaje se gira hacia el golpe.
+  - **Alcance cuerpo a cuerpo a la mitad.** Los valores venían de cuando una casilla medía 2 m y el mapa ya está a 1 m (D-026): puño 0,6, bate 0,8, hacha y pico 0,75, martillo 0,6, cuchillo 0,55. Mordisco del caminante y del corredor 0,35 (La Mole 0,7). Es el hueco entre los cuerpos.
+  - El atlas de `spritegen` pasa a 2048 px de ancho.
+- **Motivo:** Javier: no se veía al personaje al pasar por detrás de un edificio, los personajes se arrastraban en vez de andar o correr, y el combate cuerpo a cuerpo se hacía desde muy lejos.

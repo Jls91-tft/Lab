@@ -275,6 +275,10 @@ namespace CepaCero.Unity.Prototype
                         _move = new Float2(c.Number(0), c.Number(1)).Normalized;
                         _run = c.Count == 4;
                         _phase = 1;
+                        if (c.Number(2) <= 0f)
+                        {
+                            Next($"moving {_move.X:0.##},{_move.Y:0.##} until the next move");   // 0 s: keep going, to look at it moving
+                        }
                     }
                     else if (Elapsed >= c.Number(2))
                     {

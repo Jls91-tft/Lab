@@ -12,12 +12,18 @@ namespace CepaCero.Unity.Prototype
 {
     /// <summary>
     /// Pooled sprites for players, zombies, piles on the floor and containers, with
-    /// 4-facing walk animation (D-018). Draws either the host simulation directly or,
+    /// 8-facing walk animation (D-018, D-025, D-033: steps paced by the ground covered, a running gait for the players). Draws either the host simulation directly or,
     /// in loopback mode, a client replica built only from network bytes.
     /// </summary>
     public sealed class PrototypeEntityView
     {
-        private const float WalkFps = 8f;
+        private const int WalkFrames = 8;
+        private const int Idle = WalkFrames;                 // the last entry of a view: standing still
+        // One cycle (two steps) per this much ground, so the feet do not slide (D-033); running takes longer strides.
+        private const float WalkCycle = 1.9f;
+        private const float RunCycle = 2.5f;
+        private const float RunSpeed = 4.6f;                 // tiles a second: faster than this is running (walk 3.5, sprint 5.5)
+        private const float StopAfter = 0.15f;               // the simulation moves in ticks: a frame without movement is not a stop yet
 
         // Facing indices; right reuses the left frames mirrored.
         // Eight directions (D-025): the art has five views (down, up, left, down-left, up-left) and the rest are their mirrors.
@@ -84,6 +90,8 @@ namespace CepaCero.Unity.Prototype
         private readonly Sprite[][][] _zombieFrames;
         private readonly Sprite[][] _playerFrames;
         private readonly Sprite[][] _otherFrames;
+        private readonly Sprite[][] _playerRun;
+        private readonly Sprite[][] _otherRun;
         private readonly List<Sprite[][]> _walkerVariants = new List<Sprite[][]>();
         private readonly int _walkerType = -1;
         private readonly Sprite _downed;
@@ -131,7 +139,9 @@ namespace CepaCero.Unity.Prototype
         {
             public Float2 Last;
             public int Facing;
-            public float Phase;
+            public float Phase;                              // walk cycles so far
+            public float Still;                              // seconds without moving
+            public float Speed;                              // tiles a second, smoothed
         }
 
         public PrototypeEntityView(Transform parent, Transform flat, ZombieCatalog catalog, PrototypeArt art)
@@ -159,6 +169,8 @@ namespace CepaCero.Unity.Prototype
             }
             _playerFrames = Frames(art, "player");
             _otherFrames = Frames(art, "player_other");
+            _playerRun = art.TryGet("player_run_down_0", out _) ? Frames(art, "player_run") : _playerFrames;
+            _otherRun = art.TryGet("player_other_run_down_0", out _) ? Frames(art, "player_other_run") : _otherFrames;
             _downed = art.Get("player_downed");
             _pile = art.Get("pile");
             _container = art.Get("block_chest");
@@ -245,7 +257,7 @@ namespace CepaCero.Unity.Prototype
             {
                 return;                                              // out of your sight (D-031): behind a wall, around a corner
             }
-            Animate(_zombieWalk, key, position, out int facing, out int frame);
+            Animate(_zombieWalk, key, position, out int facing, out int frame, out _);
             // Mutants glow at night (docs/lore.md): never darker than half their colour.
             Color c = Color.Lerp(Dim(Color.white, light), Color.white, 0.5f);
             if (state == ZombieState.Stunned)
@@ -288,9 +300,15 @@ namespace CepaCero.Unity.Prototype
                 {
                     continue;
                 }
-                Animate(_playerWalk, p, s.Position, out int facing, out int frame);
+                Animate(_playerWalk, p, s.Position, out int facing, out int frame, out bool running);
+                if (p == me && Time.time < _lungeUntil && _playerWalk.TryGetValue(p, out Walk turn))
+                {
+                    facing = turn.Facing = FacingOf(_lungeDir.X, _lungeDir.Y);       // you turn to what you hit, and stay looking at it
+                    _playerWalk[p] = turn;
+                }
                 int view = ArtView(facing, out bool flipP);
-                Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[view][frame];
+                Sprite[][] gait = p == me ? (running ? _playerRun : _playerFrames) : (running ? _otherRun : _otherFrames);
+                Sprite sprite = s.IsDowned ? _downed : gait[view][frame];
                 Float2 at = s.Position;
                 if (p == me && Time.time < _lungeUntil)
                 {
@@ -373,28 +391,38 @@ namespace CepaCero.Unity.Prototype
             Trim(_containers, used);
         }
 
-        private static void Animate(Dictionary<int, Walk> walks, int key, Float2 position, out int facing, out int frame)
+        private static void Animate(Dictionary<int, Walk> walks, int key, Float2 position, out int facing, out int frame, out bool running)
         {
             if (!walks.TryGetValue(key, out Walk w))
             {
-                w = new Walk { Last = position, Facing = Down };
+                w = new Walk { Last = position, Facing = Down, Still = StopAfter };
             }
             float dx = position.X - w.Last.X;
             float dy = position.Y - w.Last.Y;
-            bool moving = dx * dx + dy * dy > 1e-6f;
-            if (moving)
+            float dist = (float)Math.Sqrt(dx * dx + dy * dy);
+            float dt = Time.deltaTime;
+            if (dist > 1e-4f && dist < 3f)                   // a teleport or a respawn is not a step
             {
                 w.Facing = FacingOf(dx, dy);
-                w.Phase += Time.deltaTime * WalkFps;
+                float speed = dist / Math.Max(w.Still + dt, 1e-3f);
+                w.Speed = w.Still >= StopAfter ? speed : w.Speed + (speed - w.Speed) * Mathf.Clamp01(dt * 8f);
+                w.Phase += dist / (w.Speed > RunSpeed ? RunCycle : WalkCycle);
+                w.Still = 0f;
             }
             else
             {
-                w.Phase = 0f;
+                w.Still += dt;
+                if (w.Still >= StopAfter)
+                {
+                    w.Phase = 0f;
+                    w.Speed = 0f;
+                }
             }
             w.Last = position;
             walks[key] = w;
             facing = w.Facing;
-            frame = moving ? (int)w.Phase % 4 : 0;
+            running = w.Speed > RunSpeed;
+            frame = w.Still < StopAfter ? (int)(w.Phase * WalkFrames) % WalkFrames : Idle;
         }
 
         private void Place(List<SpriteRenderer> pool, int index, Float2 position, Sprite sprite, bool flip, Color color, int bias, float footOffset = 0f, int order = int.MinValue)
@@ -429,14 +457,15 @@ namespace CepaCero.Unity.Prototype
             var frames = new Sprite[FacingNames.Length][];
             for (int f = 0; f < FacingNames.Length; f++)
             {
-                frames[f] = new Sprite[4];
-                for (int i = 0; i < 4; i++)
+                frames[f] = new Sprite[WalkFrames + 1];
+                for (int i = 0; i <= WalkFrames; i++)
                 {
-                    // La Mole (brute) is drawn natively with four views: its diagonals use the side and the back.
+                    // La Mole (brute) is drawn natively with four views: its diagonals use the side and the back; it has no standing frame.
                     string view = FacingNames[f];
-                    if (!art.TryGet($"{prefix}_{view}_{i}", out Sprite sprite))
+                    string frame = i == Idle ? "idle" : i.ToString();
+                    if (!art.TryGet($"{prefix}_{view}_{frame}", out Sprite sprite) && !art.TryGet($"{prefix}_{(view == "dl" ? "left" : "up")}_{frame}", out sprite))
                     {
-                        sprite = art.Get($"{prefix}_{(view == "dl" ? "left" : "up")}_{i}");
+                        sprite = art.Get($"{prefix}_{(art.TryGet($"{prefix}_{view}_0", out _) ? view : view == "dl" ? "left" : "up")}_0");
                     }
                     frames[f][i] = sprite;
                 }

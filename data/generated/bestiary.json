@@ -15,7 +15,7 @@
       "damage": 10,
       "damage_type": "blunt",
       "attack_interval": 1.5,
-      "attack_range": 0.8,
+      "attack_range": 0.35,
       "structure_damage": 8,
       "structure_multipliers": {
         "wood": 1.0,
@@ -71,7 +71,7 @@
       "damage": 8,
       "damage_type": "blunt",
       "attack_interval": 0.8,
-      "attack_range": 0.8,
+      "attack_range": 0.35,
       "structure_damage": 4,
       "structure_multipliers": {
         "wood": 1.0,
@@ -265,7 +265,7 @@
       "damage": 20,
       "damage_type": "blunt",
       "attack_interval": 2.0,
-      "attack_range": 1.0,
+      "attack_range": 0.45,
       "structure_damage": 25,
       "structure_multipliers": {
         "wood": 1.0,
@@ -314,7 +314,7 @@
       "damage": 12,
       "damage_type": "blunt",
       "attack_interval": 1.2,
-      "attack_range": 0.8,
+      "attack_range": 0.35,
       "structure_damage": 45,
       "structure_multipliers": {
         "wood": 1.0,
@@ -363,7 +363,7 @@
       "damage": 40,
       "damage_type": "blunt",
       "attack_interval": 2.5,
-      "attack_range": 1.5,
+      "attack_range": 0.7,
       "structure_damage": 150,
       "structure_multipliers": {
         "wood": 1.0,
@@ -472,7 +472,7 @@
       "damage": 30,
       "damage_type": "blunt",
       "attack_interval": 1.5,
-      "attack_range": 1.2,
+      "attack_range": 0.55,
       "structure_damage": 60,
       "structure_multipliers": {
         "wood": 1.0,

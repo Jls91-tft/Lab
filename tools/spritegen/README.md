@@ -2,7 +2,7 @@
 
 Genera por código (Python + Pillow, sin dependencias nuevas) el arte del mundo a **32 px por casilla** (D-021):
 suelos, bloques, decoración, marcas del suelo, jugadores y los zombis del bestiario, en **4 direcciones**
-(abajo, arriba e izquierda; la derecha es la izquierda espejada) y **4 fotogramas** de caminar.
+(abajo, arriba e izquierda; la derecha es la izquierda espejada) y **8 fotogramas** de caminar (los jugadores, también 8 de correr: `player_run_*`).
 
 Es determinista: la misma ejecución da los mismos píxeles. Nada se dibuja a mano ni se descarga.
 
@@ -17,7 +17,7 @@ pytest -q
 ```
 
 ## Salida
-- `atlas.png`: todos los sprites (1024 px de ancho).
+- `atlas.png`: todos los sprites (2048 px de ancho).
 - `atlas.json`: formato `cepacero.atlas` v1, **igual que el de `tools/artgen`** (rectángulos con origen abajo a la izquierda),
   con `ppu: 32`. Los personajes llevan además `pivot_x`/`pivot_y` para que los pies queden en la posición de la entidad.
 - `tools/spritegen/out/preview.png`: vista previa ×3 (no se commitea).

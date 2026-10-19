@@ -1,4 +1,4 @@
-"""People and zombies: one anatomy, three views (front, back, side), 4 walk frames.
+"""People and zombies: one anatomy, three views (front, back, side), 8 walk frames (and 8 running ones for the players).
 
 `Look` holds the appearance (identical in every view); `draw_front/back/side` draw it.
 Right-facing sprites are the left-facing ones mirrored by the game, as in D-018.
@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from .gfx import (Color, Sprite, capsule, ellipse, hexc, hnoise, mix, poly, ramp5, rect)
 
-NFRAMES = 4
+NFRAMES = 8
 FOOT_Y = 44                      # pivot of every standing sprite: 44 px from the top of 48
 GLOW: Color = (190, 255, 96)
 GLOW_DIM: Color = (96, 190, 56)
@@ -49,8 +49,10 @@ class Look:
     buttons: bool = False
     limp: bool = False
     mut: str | None = None            # tumor | bone | claw | sac | jaw
-    stride: float = 2.2
+    stride: float = 2.6
     arm_swing: float = 1.7
+    lift: float = 1.6                 # how high the swinging foot rises
+    bob: int = 1                      # how far the body drops when both feet are down
     armor: bool = False
     hat: str = "none"                 # none | helmet | hardhat
     pack: str = "none"                # none | dynamite | bag
@@ -97,9 +99,10 @@ def random_look(seed: int, build: str = "normal", kind: str = "zombie", **over) 
 # ------------------------------------------------------------------ shared pose maths
 class Pose:
     def __init__(self, look: Look, frame: int):
-        self.ph = frame * 2 * math.pi / NFRAMES
-        self.sn, self.cs = math.sin(self.ph), math.cos(self.ph)
-        self.bob = 1 if abs(self.sn) > .8 else 0
+        self.ph = frame * 2 * math.pi / NFRAMES if frame >= 0 else 0.0
+        self.k = 0.0 if frame < 0 else 1.0     # frame -1: standing still, feet side by side and arms down
+        self.sn, self.cs = math.sin(self.ph) * self.k, math.cos(self.ph) * self.k
+        self.bob = int(look.bob * abs(self.sn) + .25)        # lowest with the feet apart, highest as they pass
         z = look.kind == "zombie"
         self.sway = (int(round(self.sn * .9)) + (1 if look.limp else 0)) if z else 0
         self.swing = int(round(look.arm_swing * self.sn))
@@ -118,7 +121,8 @@ def _foot(look: Look, pose: Pose, side: int, back: bool = False):
     p = pose.ph if side < 0 else pose.ph + math.pi
     amp = .7 if (look.limp and side > 0) else look.stride
     sgn = -1 if back else 1                 # walking away: the forward foot rises on screen
-    return (16 + side * (3.6 + .4 * math.cos(p)), 41.8 + sgn * amp * math.sin(p) - 1.3 * max(0, math.cos(p)))
+    k = pose.k
+    return (16 + side * (3.6 + .4 * math.cos(p) * k), 41.8 + sgn * amp * math.sin(p) * k - look.lift * max(0, math.cos(p)) * k)
 
 
 def _legs(S: Sprite, look: Look, pose: Pose, back: bool, wy: int, pants, shoe, skin, rng: random.Random):
@@ -640,13 +644,13 @@ def draw_side(look: Look, frame: int) -> Sprite:
     def foot(side):
         p = pose.ph if side < 0 else pose.ph + math.pi
         amp = .8 if (look.limp and side > 0) else look.stride * 2.1
-        return (cl - amp * math.sin(p), 43.2 - 2.4 * max(0, math.cos(p)))
+        return (cl - amp * math.sin(p) * pose.k, 43.2 - 1.5 * look.lift * max(0, math.cos(p)) * pose.k)
     legs = sorted([(foot(-1), -1), (foot(1), 1)], key=lambda lf: -lf[1])   # far leg (side 1) first
     for fpos, side in legs:
         far = side == 1
         pc, sc = (dpants if far else pants), (shoe if not far else [mix(c, (20, 18, 40), .3) for c in shoe])
         hip = (cl + .3, wy + 1)
-        fwd = max(0, math.cos(pose.ph if side < 0 else pose.ph + math.pi))
+        fwd = max(0, math.cos(pose.ph if side < 0 else pose.ph + math.pi)) * pose.k
         knee = ((hip[0] + fpos[0]) / 2 - 1.4 * fwd - .6, (hip[1] + fpos[1]) / 2 - .5)
         S.paint(capsule(hip, knee, (3.0 + wd * .25) * th), pc, grain=.14)
         S.paint(capsule(knee, fpos, (2.4 + wd * .2) * th), pc, grain=.14)
@@ -849,9 +853,14 @@ def zombie_looks() -> dict[str, Look]:
 
 def player_looks() -> dict[str, Look]:
     return {
-        "player": random_look(5, kind="human", build="normal", shirt=(58, 98, 138)),
-        "player_other": random_look(9, kind="human", build="normal", shirt=(196, 112, 52), pants=(70, 62, 58), hair=(92, 72, 48)),
+        "player": random_look(5, kind="human", build="normal", shirt=(58, 98, 138), **WALK),
+        "player_other": random_look(9, kind="human", build="normal", shirt=(196, 112, 52), pants=(70, 62, 58), hair=(92, 72, 48), **WALK),
     }
+
+
+# A person walks with a clear step and swinging arms; running is longer, higher and bouncier (the game picks it by speed).
+WALK = dict(stride=3.0, arm_swing=2.6, lift=2.2)
+RUN = dict(stride=3.9, arm_swing=3.9, lift=3.8, bob=2)
 
 
 class _Img:
@@ -872,6 +881,9 @@ def _column(src, x: float, y: int):
     return (0, 0, 0, 0)
 
 
+LEGS_Y = 31                        # first row below the hips
+
+
 def three_quarter(front, side, back, view: str):
     """The diagonal views of D-025 (8 directions), made from the three drawn ones: facing down-left the leading half of the body is the
     left profile and the trailing half the front, narrowed; facing up-left it is the back, narrowed and turned a pixel toward the left. The right-hand views are these mirrored by the game."""
@@ -881,7 +893,9 @@ def three_quarter(front, side, back, view: str):
     px = out.load()
     for y in range(h):
         for x in range(w):
-            if view == "dl":
+            if y >= LEGS_Y:
+                c = _column(side, x, y)                    # the legs stride in profile, so the step reads in the diagonals too
+            elif view == "dl":
                 c = _column(side, x, y) if x < 16 else _column(front, 16 + (x - 16) * 1.3, y)
                 if x == 16 and c[3] == 0:
                     c = _column(front, 16, y)
@@ -902,7 +916,8 @@ def build(zombie_ids: list[str]) -> dict[str, Sprite]:
         for d in DIRS:
             for f in range(NFRAMES):
                 out[f"{prefix}_{d}_{f}"] = DRAWERS[d](look, f)
-        for f in range(NFRAMES):
+            out[f"{prefix}_{d}_idle"] = DRAWERS[d](look, -1)
+        for f in list(range(NFRAMES)) + ["idle"]:
             imgs = {d: out[f"{prefix}_{d}_{f}"].image() for d in DIRS}
             out[f"{prefix}_dl_{f}"] = _Img(three_quarter(imgs["down"], imgs["left"], imgs["up"], "dl"))
             out[f"{prefix}_ul_{f}"] = _Img(three_quarter(imgs["down"], imgs["left"], imgs["up"], "ul"))
@@ -913,5 +928,8 @@ def build(zombie_ids: list[str]) -> dict[str, Sprite]:
         add(f"zombie_{name}", look)
     for name, look in player_looks().items():
         add(name, look)
+        for k, v in RUN.items():
+            setattr(look, k, v)
+        add(name + "_run", look)
     out["player_downed"] = draw_downed(player_looks()["player"])
     return out

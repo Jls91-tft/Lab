@@ -14,7 +14,7 @@ from PIL import Image
 from .gfx import Sprite
 
 PADDING = 2
-ATLAS_WIDTH = 1024
+ATLAS_WIDTH = 2048
 PPU = 32
 FOOT = 44 / 48            # a 32x48 character stands with its feet 44 px from the top
 

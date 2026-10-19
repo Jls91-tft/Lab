@@ -203,7 +203,7 @@ category: tool
 stack: 1
 size: 2
 durability: 160
-weapon: { damage: 20, damage_type: sharp, range: 1.4, arc: 90, cooldown: 0.8, noise: 8 }
+weapon: { damage: 20, damage_type: sharp, range: 0.75, arc: 90, cooldown: 0.8, noise: 8 }
 tool_power: 40
 tool_kind: pickaxe
 ```
@@ -213,7 +213,7 @@ name: Martillo
 category: tool
 stack: 1
 durability: 220
-weapon: { damage: 14, damage_type: blunt, range: 1.2, arc: 80, cooldown: 0.5, noise: 6 }
+weapon: { damage: 14, damage_type: blunt, range: 0.6, arc: 80, cooldown: 0.5, noise: 6 }
 tool_power: 12
 tool_kind: hammer
 ```
@@ -226,7 +226,7 @@ category: weapon
 stack: 1
 size: 2
 durability: 120
-weapon: { damage: 18, damage_type: blunt, range: 1.4, arc: 110, cooldown: 0.5, noise: 6 }
+weapon: { damage: 18, damage_type: blunt, range: 0.8, arc: 110, cooldown: 0.5, noise: 6 }
 tool_power: 12
 ```
 ```yaml
@@ -235,7 +235,7 @@ name: Cuchillo de cocina
 category: weapon
 stack: 1
 durability: 80
-weapon: { damage: 14, damage_type: sharp, range: 1.1, arc: 80, cooldown: 0.35, noise: 3 }
+weapon: { damage: 14, damage_type: sharp, range: 0.55, arc: 80, cooldown: 0.35, noise: 3 }
 tool_power: 6
 ```
 ```yaml
@@ -245,7 +245,7 @@ category: tool
 stack: 1
 size: 2
 durability: 150
-weapon: { damage: 24, damage_type: sharp, range: 1.4, arc: 100, cooldown: 0.7, noise: 7 }
+weapon: { damage: 24, damage_type: sharp, range: 0.75, arc: 100, cooldown: 0.7, noise: 7 }
 tool_power: 40
 tool_kind: axe
 ```

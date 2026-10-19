@@ -986,11 +986,33 @@ namespace CepaCero.Unity.Prototype
                     }
                 }
             }
-            // No spoilers (D-029): another building never opens nor goes see-through, so nothing inside it shows before you go in; only the walls
-            // of your own house drop low. When a building hides you, your silhouette shows through it instead (PrototypeEntityView).
-            // Project Zomboid rules (D-028): from outside every building is whole and opaque, walls and roof. Only the building you are in
-            // opens: its roof fades (UpdateRoofs) and its walls in front of you drop low (above). Nothing is cut away around you out in the street.
+            // Project Zomboid (D-033): any other building standing between you and the camera goes see-through around you, its walls and roof,
+            // so walking behind one you still see yourself and the street. It does not open: its furniture and zombies stay hidden under the
+            // roof (IsHiddenByRoof) and its paper is not drawn, so nothing inside is spoiled (D-029); what shows is its floor in the dark.
             _roofCutNext.Clear();
+            if (_level >= 0)
+            {
+                for (int dy = -14; dy <= 2; dy++)
+                {
+                    for (int dx = -14; dx <= 2; dx++)
+                    {
+                        int x = player.X + dx;
+                        int y = player.Y + dy;
+                        if (!_blocks.InBounds(x, y) || dx + dy > 1 || -(dx + dy) > Reach(x, y) || Math.Abs(dx - dy) > 4 || (inside && _house.Contains(Key(x, y))))
+                        {
+                            continue;
+                        }
+                        if (Math.Abs(dx - dy) <= 3 && _sprites.IsWallLike(x, y, _level))
+                        {
+                            _cutNext.Add(Key(x, y));
+                        }
+                        if (HasRoofOver(x, y))
+                        {
+                            _roofCutNext.Add(Key(x, y));
+                        }
+                    }
+                }
+            }
             if (_level < 0)
             {
                 // Underground there is no roof to open; the earth in front of you drops low so you can see yourself.

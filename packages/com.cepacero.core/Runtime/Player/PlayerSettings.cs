@@ -26,7 +26,7 @@ namespace CepaCero.Player
         public float Reach = 2.5f;
 
         // Bare hands (docs/bestiario.md: "Puño: 8"). Weapons and tools override these.
-        public float MeleeRange = 1.3f;
+        public float MeleeRange = 0.6f;
         public float MeleeArcDegrees = 100f;
         public int MeleeDamage = 8;
         public string MeleeDamageType = "blunt";

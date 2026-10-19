@@ -29,7 +29,7 @@ Coordenadas en casillas del mapa (las de `state.player.tile`).
 | `rclick [X Y]` / `mclick [X Y]` | Clic derecho (abrir, quitar pieza) / central (copiar pieza) |
 | `drag X1 Y1 X2 Y2 [line\|outline\|room\|select]` | Arrastrar con clic izquierdo; `outline` = Mayús, `room` = Ctrl, `select` = Alt (planos) |
 | `key K` | `up`/`down` (Re Pág / Av Pág), `shape+`/`shape-` (E/Q), `color+`/`color-`, `rotate` (R), `undo` (Ctrl+Z), `copy`/`paste`/`saveplan`/`loadplan` (Ctrl+C/V/S/L), `esc`, `take` (T), `pickup` (G), `equip` (V), `bandage` (C), `save`/`load` (F5/F9), `cost` (F6), `help` (H), `light` (L, linterna), `bag` (Tab, mochila) |
-| `move DX DY SEG [run]` | Mantener WASD en esa dirección |
+| `move DX DY SEG [run]` | Mantener WASD en esa dirección; con `SEG` 0 sigue andando mientras corren las órdenes siguientes, hasta otro `move` (para capturas en marcha) |
 | `walk X Y [run]` | Caminar hasta la casilla por un camino calculado con la regla de colisión del jugador |
 | `wait SEG` | Esperar |
 | `screenshot NOMBRE` | Captura de la vista Game en `tools/gamebridge/out/NOMBRE.png` (no en modo batch sin gráficos) |
