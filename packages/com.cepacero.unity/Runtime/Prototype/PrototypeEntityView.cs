@@ -20,9 +20,9 @@ namespace CepaCero.Unity.Prototype
         private const int WalkFrames = 8;
         private const int Idle = WalkFrames;                 // the last entry of a view: standing still
         // One cycle (two steps) per this much ground, so the feet do not slide (D-033); running takes longer strides.
-        private const float WalkCycle = 1.9f;
-        private const float RunCycle = 2.5f;
-        private const float RunSpeed = 4.6f;                 // tiles a second: faster than this is running (walk 3.5, sprint 5.5)
+        private const float WalkCycle = 1.6f;
+        private const float RunCycle = 2.2f;
+        private const float RunSpeed = 2.7f;                 // tiles a second: faster than this is running (walk 2.1, sprint 3.3)
         private const float StopAfter = 0.15f;               // the simulation moves in ticks: a frame without movement is not a stop yet
 
         // Facing indices; right reuses the left frames mirrored.

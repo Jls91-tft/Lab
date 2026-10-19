@@ -64,7 +64,7 @@ namespace CepaCero.Tests.AI
             Assert.That(map.Blocks.IsSolid(9, 1), Is.False);
             var settings = new PlayerSettings();
             var state = PlayerState.Spawn(new Float2(6.5f, 1.5f), settings);
-            for (int t = 0; t < 40; t++)
+            for (int t = 0; t < 60; t++)
             {
                 PlayerMotor.Step(ref state, PlayerInput.FromVector(new Float2(1, 0), false), Dt, map.Blocks, map.Ground, settings);
             }

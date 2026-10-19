@@ -37,7 +37,7 @@ def test_runtime_shape_is_jsonutility_friendly():
     brute = next(z for z in doc["zombies"] if z["id"] == "brute")
     charge = next(a for a in brute["abilities"] if a["type"] == "charge")
     assert charge["stunned_by"] == ["metal"] and charge["breaks"] == ["wood", "concrete"]
-    assert charge["speed"] == 6.0 and charge["windup"] == 1.2
+    assert charge["speed"] == 3.6 and charge["windup"] == 1.2
     screamer = next(z for z in doc["zombies"] if z["id"] == "screamer")
     scream = screamer["abilities"][0]
     assert (scream["type"], scream["radius"], scream["multiplier"], scream["seconds"]) == ("scream", 40.0, 1.3, 8.0)

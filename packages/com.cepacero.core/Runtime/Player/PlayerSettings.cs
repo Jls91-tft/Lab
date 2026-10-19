@@ -7,8 +7,8 @@ namespace CepaCero.Player
     public sealed class PlayerSettings
     {
         public int MaxHealth = 100;
-        public float WalkSpeed = 3.5f;
-        public float SprintSpeed = 5.5f;
+        public float WalkSpeed = 2.1f;
+        public float SprintSpeed = 3.3f;
         public float Radius = 0.35f;
 
         public float MaxStamina = 100f;

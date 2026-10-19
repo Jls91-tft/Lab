@@ -302,7 +302,7 @@ namespace CepaCero.Tests.Core
             Assert.That(Do(s, p, PlayerIntent.Place(7, 5, Id("floor_wood"), 0, 1)), Is.EqualTo(IntentResult.Ok), "and onwards");
             Assert.That(Do(s, p, PlayerIntent.Place(5, 8, Id("floor_wood"), 0, 1)), Is.Not.EqualTo(IntentResult.Ok), "floating, and too far");
             var move = PlayerInput.FromVector(new Float2(1f, 0f), false);
-            for (int t = 0; t < 8; t++)
+            for (int t = 0; t < 12; t++)
             {
                 s.SetInput(p, move);
                 s.Step();

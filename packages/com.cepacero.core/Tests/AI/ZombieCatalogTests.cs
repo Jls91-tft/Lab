@@ -16,7 +16,7 @@ namespace CepaCero.Tests.AI
             ZombieDefinition walker = catalog[catalog.IndexOf("walker")];
             Assert.That(walker.name, Is.EqualTo("Caminante"));
             Assert.That(walker.health, Is.EqualTo(60));
-            Assert.That(walker.speed, Is.EqualTo(1.2f));
+            Assert.That(walker.speed, Is.EqualTo(0.7f));
             Assert.That(walker.damage_taken.fire, Is.EqualTo(1.5f));
             Assert.That(walker.HasBehavior("chase"), Is.True);
         }

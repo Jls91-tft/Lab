@@ -54,7 +54,7 @@ namespace CepaCero.Tests.AI
             int slot = sim.Spawn(_walker, Center(map.Markers[0]));
             List<Float2> players = PlayersOf(map);
 
-            Run(sim, players, 15f);
+            Run(sim, players, 25f);
 
             Assert.That(sim.GetState(slot), Is.EqualTo(ZombieState.AttackingPlayer));
             var hits = new List<PlayerHit>();
@@ -192,7 +192,7 @@ namespace CepaCero.Tests.AI
             Float2 start = sim.GetPosition(slot);
             Run(sim, PlayersOf(map), 1.0f);
             float speed = (sim.GetPosition(slot) - start).Length / 1.0f;
-            Assert.That(speed, Is.InRange(4.0f, 5.0f), "runner sprints at ~4.8 tiles/s");
+            Assert.That(speed, Is.InRange(2.5f, 3.2f), "runner sprints at ~2.9 tiles/s");
         }
 
         [Test]
@@ -205,8 +205,8 @@ namespace CepaCero.Tests.AI
             var states = new HashSet<ZombieState>();
             for (int step = 0; step < 200; step++)
             {
-                // The player sprints away at 5.5 tiles/s, faster than the runner.
-                player[0] = new Float2(System.Math.Max(0.5f, 119.5f - step * 5.5f * Dt), 0.5f);
+                // The player sprints away at 3.3 tiles/s, faster than the runner.
+                player[0] = new Float2(System.Math.Max(0.5f, 119.5f - step * 3.3f * Dt), 0.5f);
                 sim.Tick(Dt, player);
                 states.Add(sim.GetState(slot));
             }

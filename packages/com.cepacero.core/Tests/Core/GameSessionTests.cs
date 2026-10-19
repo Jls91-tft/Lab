@@ -146,7 +146,7 @@ namespace CepaCero.Tests.Core
             {
                 session.Step();
             }
-            Assert.That(session.Players[p].Position.Y, Is.EqualTo(14f).Within(0.05f));
+            Assert.That(session.Players[p].Position.Y, Is.EqualTo(12.6f).Within(0.05f));
         }
 
         [Test]

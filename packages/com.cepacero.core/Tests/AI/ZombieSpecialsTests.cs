@@ -173,7 +173,7 @@ namespace CepaCero.Tests.AI
             float before = sim.GetPosition(near).X;
             Run(sim, player, 1f);
             float speed = sim.GetPosition(near).X - before;
-            Assert.That(speed, Is.GreaterThan(1.2f * 1.15f), "walker sped up ×1.3 by the scream");
+            Assert.That(speed, Is.GreaterThan(0.7f * 1.15f), "walker sped up ×1.3 by the scream");
         }
 
         [Test]

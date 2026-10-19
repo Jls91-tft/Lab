@@ -34,8 +34,8 @@ namespace CepaCero.Tests.Player
                 PlayerMotor.Step(ref walker, walk, Dt, map.Blocks, map.Ground, _settings);
                 PlayerMotor.Step(ref sprinter, run, Dt, map.Blocks, map.Ground, _settings);
             }
-            Assert.That(walker.Position.X - 1.5f, Is.EqualTo(3.5f).Within(0.01f));
-            Assert.That(sprinter.Position.X - 1.5f, Is.EqualTo(5.5f).Within(0.01f));
+            Assert.That(walker.Position.X - 1.5f, Is.EqualTo(2.1f).Within(0.01f));
+            Assert.That(sprinter.Position.X - 1.5f, Is.EqualTo(3.3f).Within(0.01f));
             Assert.That(sprinter.Stamina, Is.EqualTo(80f).Within(0.01f));
         }
 

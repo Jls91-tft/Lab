@@ -265,3 +265,10 @@ antigua como **Sustituida por D-XXX**.
   - **Alcance cuerpo a cuerpo a la mitad.** Los valores venían de cuando una casilla medía 2 m y el mapa ya está a 1 m (D-026): puño 0,6, bate 0,8, hacha y pico 0,75, martillo 0,6, cuchillo 0,55. Mordisco del caminante y del corredor 0,35 (La Mole 0,7). Es el hueco entre los cuerpos.
   - El atlas de `spritegen` pasa a 2048 px de ancho.
 - **Motivo:** Javier: no se veía al personaje al pasar por detrás de un edificio, los personajes se arrastraban en vez de andar o correr, y el combate cuerpo a cuerpo se hacía desde muy lejos.
+
+## D-034 · Velocidades a escala de 1 m por casilla (19/10/2026)
+- **Decisión:** todas las velocidades pasan a ×0,6 porque venían de cuando una casilla medía 2 m (D-026).
+  - Jugador: 2,1 casillas/s andando y 3,3 corriendo.
+  - Zombis: caminante 0,7, corredor 2,9 (más lento que tú al correr), gritón 1,2, escupidor 0,9, acorazado 0,6, zapador 0,85, La Mole 1,1 (carga 3,6), Paciente Cero 1,5.
+  - El paso de la animación se ajusta: un ciclo cada 1,6 casillas andando y cada 2,2 corriendo, y se corre por encima de 2,7 casillas/s.
+- **Motivo:** Javier: los personajes se movían demasiado rápido, tenían que ser más pausados (3,5 m/s andando era casi trotar).

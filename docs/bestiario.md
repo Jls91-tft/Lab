@@ -9,7 +9,7 @@ de alrededor es solo explicación. Las claves van en inglés porque pasan tal cu
 | Magnitud | Unidad | Referencia del jugador |
 | --- | --- | --- |
 | `health` | puntos de vida | Jugador: 100 |
-| `speed` | tiles/s (1 tile = 1 bloque) | Jugador: 3,5 andando, 5,5 corriendo |
+| `speed` | tiles/s (1 tile = 1 bloque) | Jugador: 2,1 andando, 3,3 corriendo (1 tile = 1 m, D-034) |
 | `damage` | daño por golpe al jugador | Puño: 8; hacha: 20 |
 | `structure_damage` | daño por golpe a bloques | Bloque de madera 100 · metal 300 · hormigón 600 |
 | `attack_interval` | segundos entre golpes | — |
@@ -31,14 +31,14 @@ Silueta/tamaño en tiles para el *placeholder* del prototipo (formas básicas).
 ## Resumen
 | id | Nombre | Nivel | Vida | Vel. | Daño | Papel | MVP |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `walker` | Caminante | Común | 60 | 1,2 | 10 | Masa, presión constante | ✅ |
-| `runner` | Corredor | Común | 40 | 4,8 | 8 | Castiga al que va solo | ✅ |
-| `screamer` | Gritón | Especial | 80 | 2,0 | 0 | Llama a la horda | ✅ |
-| `spitter` | Escupidor | Especial | 70 | 1,5 | 15 (ácido) | Corroe la madera a distancia | ✅ |
-| `armored` | Acorazado | Especial | 250 | 1,0 | 20 | Frontal blindado: flanquear | ❌ |
-| `sapper` | Zapador | Especial (adaptativo) | 150 | 1,4 | 12 | Aparece si fortificáis mucho | ❌ |
-| `brute` | La Mole | Minijefe | 1500 | 1,8 / 6,0 carga | 40 | Derriba muros; se aturde contra metal | ✅ |
-| `patient_zero` | Paciente Cero | Minijefe | 2500 | 2,5 | 30 | Jefe del hospital; lore clave | ❌ |
+| `walker` | Caminante | Común | 60 | 0,7 | 10 | Masa, presión constante | ✅ |
+| `runner` | Corredor | Común | 40 | 2,9 | 8 | Castiga al que va solo | ✅ |
+| `screamer` | Gritón | Especial | 80 | 1,2 | 0 | Llama a la horda | ✅ |
+| `spitter` | Escupidor | Especial | 70 | 0,9 | 15 (ácido) | Corroe la madera a distancia | ✅ |
+| `armored` | Acorazado | Especial | 250 | 0,6 | 20 | Frontal blindado: flanquear | ❌ |
+| `sapper` | Zapador | Especial (adaptativo) | 150 | 0,85 | 12 | Aparece si fortificáis mucho | ❌ |
+| `brute` | La Mole | Minijefe | 1500 | 1,1 / 3,6 carga | 40 | Derriba muros; se aturde contra metal | ✅ |
+| `patient_zero` | Paciente Cero | Minijefe | 2500 | 1,5 | 30 | Jefe del hospital; lore clave | ❌ |
 
 ---
 
@@ -54,7 +54,7 @@ tier: common
 mvp: true
 size_tiles: 0.8
 health: 60
-speed: 1.2
+speed: 0.7
 damage: 10
 attack_interval: 1.5
 attack_range: 0.35
@@ -80,7 +80,7 @@ tier: common
 mvp: true
 size_tiles: 0.7
 health: 40
-speed: 4.8
+speed: 2.9
 damage: 8
 attack_interval: 0.8
 attack_range: 0.35
@@ -111,7 +111,7 @@ tier: special
 mvp: true
 size_tiles: 0.8
 health: 80
-speed: 2.0
+speed: 1.2
 damage: 0
 attack_interval: 0
 attack_range: 0
@@ -140,7 +140,7 @@ tier: special
 mvp: true
 size_tiles: 0.9
 health: 70
-speed: 1.5
+speed: 0.9
 damage: 15
 damage_type: acid
 attack_interval: 3.0
@@ -169,7 +169,7 @@ tier: special
 mvp: false
 size_tiles: 1.0
 health: 250
-speed: 1.0
+speed: 0.6
 damage: 20
 attack_interval: 2.0
 attack_range: 0.45
@@ -196,7 +196,7 @@ mvp: false
 spawn_condition: "blocks_placed_by_team > 150"
 size_tiles: 0.9
 health: 150
-speed: 1.4
+speed: 0.85
 damage: 12
 attack_interval: 1.2
 attack_range: 0.35
@@ -227,7 +227,7 @@ mvp: true
 size_tiles: 2.0
 health: 1500
 health_per_extra_player: 0.5     # +50 % de vida por cada jugador extra
-speed: 1.8
+speed: 1.1
 damage: 40
 attack_interval: 2.5
 attack_range: 0.7
@@ -236,7 +236,7 @@ detect_sight: 12
 detect_hearing: 20
 behavior: [chase, charge_when_blocked, slam_area]
 ability:
-  charge: { speed: 6.0, windup: 1.2, cooldown: 10, breaks_blocks: [wood, concrete], stunned_by: [metal] }
+  charge: { speed: 3.6, windup: 1.2, cooldown: 10, breaks_blocks: [wood, concrete], stunned_by: [metal] }
   stun: { seconds: 4, damage_taken_multiplier: 2.0 }
   slam: { radius: 2.5, damage: 25, knockback: 3, cooldown: 8 }
 damage_taken: { blunt: 0.6, sharp: 1.0, ballistic: 0.8, fire: 1.0, acid: 1.2 }
@@ -259,7 +259,7 @@ mvp: false
 size_tiles: 1.2
 health: 2500
 health_per_extra_player: 0.5
-speed: 2.5
+speed: 1.5
 damage: 30
 attack_interval: 1.5
 attack_range: 0.55
