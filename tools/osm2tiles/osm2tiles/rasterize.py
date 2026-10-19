@@ -479,6 +479,22 @@ def build_map(data: OsmData, proj: Projector, yards: bool = False, city: bool = 
                     candidates.append((road_dist[o], i))
                     break
         if not candidates:
+            # Shut in by its neighbours (D-031): a door through the party wall into the house next door, so no building is sealed.
+            for i in idx:
+                if blk[i] != B["building_wall"]:
+                    continue
+                x, y = i % w, i // w
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    ox, oy, ix, iy = x + dx, y + dy, x - dx, y - dy
+                    if not (0 <= ox < w and 0 <= oy < h and 0 <= ix < w and 0 <= iy < h):
+                        continue
+                    o, inner = oy * w + ox, iy * w + ix
+                    if bid_at[o] not in (0, b) and blk[o] == B["none"] and bid_at[inner] == b and blk[inner] == B["none"]:
+                        candidates.append((0, i))
+                        break
+                if candidates:
+                    break
+        if not candidates:
             continue
         candidates.sort()
         nearest = candidates[0][0]

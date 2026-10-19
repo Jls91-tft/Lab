@@ -69,6 +69,7 @@ namespace CepaCero.Map
                 PlaceRoof(world, b, set, walls, Math.Max(above, 0), reg);          // every building has a roof, so no interior is seen from outside (D-024)
                 built++;
             }
+            OpenSealedBuildings(world, ground, buildings, legacyDoor);
             RoofLooseWalls(world, ground, legacyWall, reg, buildings);
             if (skipped > 0)
             {
@@ -250,6 +251,130 @@ namespace CepaCero.Map
         }
 
         private static bool IsWallCell(BlockWorld world, Int2 p, BlockType legacyWall) => world.InBounds(p.X, p.Y) && world.GetTypeId(p.X, p.Y) == legacyWall.Id;
+
+        /// <summary>
+        /// No building is sealed (D-031): a building whose rooms cannot be walked into from the street gets a door through the wall (one or two
+        /// tiles thick, a party wall) between its floor and a place you can already reach. Repeats until nothing changes, so a block of houses
+        /// opens one into the next.
+        /// </summary>
+        private static void OpenSealedBuildings(BlockWorld world, GroundLayer ground, IReadOnlyList<BuildingInfo> buildings, BlockType door)
+        {
+            int w = world.Width, h = world.Height;
+            for (int pass = 0; pass < 8; pass++)
+            {
+                bool[] reach = Reachable(world);
+                bool changed = false;
+                foreach (BuildingInfo b in buildings)
+                {
+                    if (Entered(world, ground, b, reach))
+                    {
+                        continue;
+                    }
+                    changed |= Breach(world, ground, b, reach, door);
+                }
+                if (!changed)
+                {
+                    return;
+                }
+            }
+        }
+
+        private static bool[] Reachable(BlockWorld world)
+        {
+            int w = world.Width, h = world.Height;
+            var reach = new bool[w * h];
+            var queue = new Queue<int>();
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if ((x == 0 || y == 0 || x == w - 1 || y == h - 1) && Passable(world, x, y))
+                    {
+                        reach[y * w + x] = true;
+                        queue.Enqueue(y * w + x);
+                    }
+                }
+            }
+            while (queue.Count > 0)
+            {
+                int i = queue.Dequeue();
+                int x = i % w, y = i / w;
+                for (int k = 0; k < 4; k++)
+                {
+                    int nx = x + Dx4[k], ny = y + Dy4[k];
+                    if (world.InBounds(nx, ny) && !reach[ny * w + nx] && Passable(world, nx, ny))
+                    {
+                        reach[ny * w + nx] = true;
+                        queue.Enqueue(ny * w + nx);
+                    }
+                }
+            }
+            return reach;
+        }
+
+        private static bool Passable(BlockWorld world, int x, int y)
+        {
+            BlockType t = world.GetBlock(x, y);
+            return t.IsAir || t.ToggleTo != 0;
+        }
+
+        private static bool Entered(BlockWorld world, GroundLayer ground, BuildingInfo b, bool[] reach)
+        {
+            for (int y = b.Min.Y; y <= b.Max.Y; y++)
+            {
+                for (int x = b.Min.X; x <= b.Max.X; x++)
+                {
+                    if (world.InBounds(x, y) && ground.Get(x, y) == GroundType.Floor && world.GetBlock(x, y).IsAir && reach[y * world.Width + x])
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool Breach(BlockWorld world, GroundLayer ground, BuildingInfo b, bool[] reach, BlockType door)
+        {
+            int w = world.Width;
+            for (int y = b.Min.Y; y <= b.Max.Y; y++)
+            {
+                for (int x = b.Min.X; x <= b.Max.X; x++)
+                {
+                    if (!world.InBounds(x, y) || ground.Get(x, y) != GroundType.Floor || !world.GetBlock(x, y).IsAir)
+                    {
+                        continue;                                    // a floor cell of this building
+                    }
+                    for (int k = 0; k < 4; k++)
+                    {
+                        // One wall tile, then a reachable cell; or two wall tiles (a party wall), then a reachable cell.
+                        for (int thick = 1; thick <= 2; thick++)
+                        {
+                            int ex = x + Dx4[k] * (thick + 1), ey = y + Dy4[k] * (thick + 1);
+                            if (!world.InBounds(ex, ey) || !reach[ey * w + ex])
+                            {
+                                continue;
+                            }
+                            bool walls = true;
+                            for (int t = 1; t <= thick && walls; t++)
+                            {
+                                BlockType wt = world.GetBlock(x + Dx4[k] * t, y + Dy4[k] * t);
+                                walls = !wt.IsAir && wt.IsSolid && wt.ToggleTo == 0;
+                            }
+                            if (!walls)
+                            {
+                                continue;
+                            }
+                            for (int t = 1; t <= thick; t++)
+                            {
+                                world.SetBlock(x + Dx4[k] * t, y + Dy4[k] * t, door.Id);
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
 
         /// <summary>Everything that is a building and still has no roof (floor not reached from a door, rooms cut off by walls, solid blocks, odd outlines): roofed too, so no house shows its inside from the street (D-028).</summary>
         private static void RoofLooseWalls(BlockWorld world, GroundLayer ground, BlockType wall, BlockRegistry reg, IReadOnlyList<BuildingInfo> buildings)
