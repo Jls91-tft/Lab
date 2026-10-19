@@ -96,6 +96,7 @@ namespace CepaCero.Unity.Prototype
         private readonly List<SpriteRenderer> _zombies = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _glows = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _players = new List<SpriteRenderer>();
+        private SpriteRenderer _silhouette;                          // you, drawn faintly over everything: seen behind a building (D-029)
         private readonly List<SpriteRenderer> _piles = new List<SpriteRenderer>();
         private readonly List<SpriteRenderer> _containers = new List<SpriteRenderer>();
         private int _used;
@@ -285,8 +286,33 @@ namespace CepaCero.Unity.Prototype
                 int view = ArtView(facing, out bool flipP);
                 Sprite sprite = s.IsDowned ? _downed : (p == me ? _playerFrames : _otherFrames)[view][frame];
                 Place(_players, used++, s.Position, sprite, flipP && !s.IsDowned, c, PlayerBias, s.IsDowned ? 0f : FootOffset);
+                if (p == me)
+                {
+                    Silhouette(s.Position, sprite, flipP && !s.IsDowned, s.IsDowned ? 0f : FootOffset);
+                }
             }
             Trim(_players, used);
+        }
+
+        /// <summary>
+        /// A faint copy of your character above walls and roofs: when a building stands between you and the camera you still see where you are,
+        /// without the building opening up (no spoiling what is inside, D-029). Over your own sprite it barely shows.
+        /// </summary>
+        private void Silhouette(Float2 position, Sprite sprite, bool flip, float footOffset)
+        {
+            if (_silhouette == null)
+            {
+                var go = new GameObject("Your silhouette");
+                go.transform.SetParent(_root, false);
+                _silhouette = go.AddComponent<SpriteRenderer>();
+                PrototypeMaterials.Apply(_silhouette);
+                _silhouette.sortingOrder = short.MaxValue - 6;
+            }
+            Vector3 p = PrototypeIso.ToScreen(position);
+            _silhouette.transform.localPosition = new Vector3(Snap(p.x), Snap(p.y), 0f);
+            _silhouette.sprite = sprite;
+            _silhouette.flipX = flip;
+            _silhouette.color = new Color(0.75f, 0.9f, 1f, 0.38f);
         }
 
         private void DrawPiles(IReadOnlyList<ItemPile> piles, float light)
