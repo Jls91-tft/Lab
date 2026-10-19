@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from . import characters, decor, items, kenney, tiles, ui
+from . import characters, decor, hud, items, kenney, tiles, ui
 from .atlas import describe, pack
 from .canvas import Canvas
 
@@ -49,7 +49,7 @@ def build_sprites() -> dict[str, Canvas]:
     item_ids, zombie_ids = game_ids()
     sprites: dict[str, Canvas] = {}
     people = {name: Canvas.from_image(kenney.grade(c.image)) for name, c in characters.build(zombie_ids).items()}
-    for part in (world_tiles(), decor.build(), people, items.build(item_ids), ui.build()):
+    for part in (world_tiles(), decor.build(), people, items.build(item_ids), ui.build(), hud.build()):
         clash = sprites.keys() & part.keys()
         if clash:
             raise ValueError(f"artgen: duplicate sprite names {sorted(clash)}")

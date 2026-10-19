@@ -38,21 +38,23 @@ namespace UnityEngine
     public struct Quaternion { public static Quaternion Euler(float x, float y, float z) => default; }
     public enum CameraClearFlags { SolidColor }
     public class Camera : Behaviour { public static Camera main => null; public bool orthographic; public float orthographicSize; public float aspect; public CameraClearFlags clearFlags; public Color backgroundColor; public Vector3 ScreenToWorldPoint(Vector3 p) => p; }
-    public static class Mathf { public const float PI = 3.14159265f; public static float Sin(float f) => f; public static float Clamp(float v, float a, float b) => v; public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; public static int Clamp(int v, int a, int b) => v; public static float MoveTowards(float c, float t, float d) => c; }
+    public static class Mathf { public const float PI = 3.14159265f; public static float Sin(float f) => f; public static float Cos(float f) => f; public static float Clamp(float v, float a, float b) => v; public static float Lerp(float a, float b, float t) => a; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a; public static float PingPong(float t, float l) => t; public static int Max(int a, int b) => a; public static float Round(float v) => v; public static int RoundToInt(float v) => 0; public static float Clamp01(float v) => v; public static float Abs(float v) => v; public static int Clamp(int v, int a, int b) => v; public static float MoveTowards(float c, float t, float d) => c; }
     public static class Time { public static float time; public static float fixedDeltaTime; public static float deltaTime; public static float fixedTime; }
     public static class Debug { public static void Log(object o) {} public static void LogWarning(object o) {} public static void LogException(Exception e) {} public static bool isDebugBuild => true; }
     public static class ScreenCapture { public static void CaptureScreenshot(string path) {} }
     public static class Application { public static string dataPath => ""; public static string persistentDataPath => ""; public static bool runInBackground; }
     public static class JsonUtility { public static T FromJson<T>(string s) => default; }
     public static class Screen { public static int width, height; }
-    public enum TextAnchor { UpperLeft, MiddleLeft, MiddleCenter, LowerRight }
+    public enum TextAnchor { UpperLeft, MiddleLeft, MiddleCenter, MiddleRight, LowerRight }
     public class GUIStyleState { public Color textColor; }
     public class Font : Object { }
     public class AudioClip : Object { public static AudioClip Create(string n, int len, int ch, int rate, bool stream) => null; public bool SetData(float[] d, int off) => true; }
     public class AudioSource : Behaviour { public AudioClip clip; public bool playOnAwake; public bool loop; public float spatialBlend; public float volume; public float pitch; public float panStereo; public bool isPlaying => false; public void Play() {} }
     public class GUIStyle { public GUIStyle(GUIStyle o) {} public Font font; public int fontSize; public bool richText; public TextAnchor alignment; public bool wordWrap; public RectOffset padding; public RectOffset margin; public GUIStyleState normal => null; }
     public class GUISkin { public GUIStyle label; public GUIStyle box; }
-    public static class GUI { public static GUISkin skin; public static Color color; public static void Box(Rect r, string t, GUIStyle s) {} public static void Label(Rect r, string t, GUIStyle s) {} public static void DrawTextureWithTexCoords(Rect r, Texture t, Rect uv) {} }
+    public struct Matrix4x4 { }
+    public static class GUIUtility { public static void RotateAroundPivot(float angle, Vector2 pivot) {} }
+    public static class GUI { public static Matrix4x4 matrix; public static GUISkin skin; public static Color color; public static void Box(Rect r, string t, GUIStyle s) {} public static void Label(Rect r, string t, GUIStyle s) {} public static void DrawTextureWithTexCoords(Rect r, Texture t, Rect uv) {} }
     public class TooltipAttribute : Attribute { public TooltipAttribute(string t) {} }
     public class SerializeField : Attribute { }
 }

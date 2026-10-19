@@ -282,3 +282,15 @@ antigua como **Sustituida por D-XXX**.
   - **Paleta:** estos sprites se quedan fuera de la paleta cerrada de D-021, porque cuantizados salían moteados y con otro tono.
   - **Línea de visión:** ahora oscurece solo el suelo (una capa aparte bajo lo que se alza). Proyectada desde el suelo, dejaba manchas oscuras en fachadas y tejados.
 - **Motivo:** el ruido de las texturas realistas, las franjas de dos materiales y las manchas de la línea de visión hacían que una calle se leyera como una masa. Ahora cada edificio es una forma de un color y el detalle lo ponen ventanas, puertas y balcones.
+
+## D-036 · Interfaz de cuaderno de superviviente (19/10/2026)
+- **Decisión:** la interfaz deja las cajas oscuras genéricas y pasa a parecer hecha a mano por un superviviente.
+  - **Tarjetas:** de papel kraft sujetas con cinta adhesiva, con contorno de tinta y sombra.
+  - **Barras:** con contorno de tinta y marcas, que laten cuando quedan bajas. Los iconos de vida y aguante van sobre insignias redondas, y hambre y sed en barras cortas.
+  - **Reloj:** una ventana de cielo con la silueta del Pilar en el horizonte, por la que pasa el sol o la luna según avanza la fase (`ui_dial_day`/`ui_dial_night`, `tools/artgen/artgen/hud.py`).
+  - **Contadores:** las noches superadas se cuentan con palotes, con el quinto tachado en rojo.
+  - **Barra de objetos:** etiquetas de papel sobre una tira de kraft; la de la mano se levanta, lleva borde amarillo y su nombre en una etiqueta.
+  - **Textos:** el diario es una hoja de libreta arrancada, pautada y un poco torcida, con el título en rojo, y los mensajes van escritos en una tira de cinta. Estar caído o muerto se marca con un sello rojo.
+  - **Teclas y cantidades:** las teclas de ayuda se dibujan como teclas, y las cantidades llevan contorno para leerse sobre el icono.
+  - Todo sale de rectángulos y de dos piezas nuevas del atlas de interfaz, dentro de la paleta de 32 colores.
+- **Motivo:** Javier: la interfaz era muy básica y parecía hecha por una IA. Ahora tiene una identidad propia que casa con los edificios estilizados (D-035) y con el tono del juego.
